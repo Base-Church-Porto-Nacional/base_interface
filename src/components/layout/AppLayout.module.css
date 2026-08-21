@@ -1,0 +1,26 @@
+.shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 400px at 0% -10%, rgba(0, 0, 0, 0.05), transparent 55%),
+    var(--color-bg);
+}
+
+.main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+
+@media (min-width: 640px) {
+  .content {
+    padding: var(--space-8) var(--space-6) var(--space-16);
+  }
+}
