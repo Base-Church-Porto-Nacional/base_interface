@@ -1,0 +1,201 @@
+import 'package:flutter/material.dart';
+
+import '../theme/app_colors.dart';
+
+class SectionTabBar extends StatelessWidget {
+  const SectionTabBar({
+    super.key,
+    required this.tabs,
+    required this.selectedIndex,
+    required this.onChanged,
+  });
+
+  final List<String> tabs;
+  final int selectedIndex;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < tabs.length; i++)
+            Expanded(
+              child: _TabItem(
+                label: tabs[i],
+                selected: selectedIndex == i,
+                onTap: () => onChanged(i),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabItem extends StatelessWidget {
+  const _TabItem({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: selected ? AppColors.black : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              color: selected ? AppColors.black : AppColors.textMuted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DetailInfoCard extends StatelessWidget {
+  const DetailInfoCard({super.key, required this.rows});
+
+  final List<DetailInfoRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 96,
+                    child: Text(
+                      rows[i].label,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  ),
+                  Expanded(
+                    child: rows[i].value is Widget
+                        ? rows[i].value as Widget
+                        : Text(
+                            rows[i].value as String,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                  ),
+                ],
+              ),
+            ),
+            if (i < rows.length - 1)
+              const Divider(height: 1, indent: 16, endIndent: 16),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class DetailInfoRow {
+  const DetailInfoRow(this.label, this.value);
+
+  final String label;
+  final Object value;
+}
+
+class EmptyStateCard extends StatelessWidget {
+  const EmptyStateCard({
+    super.key,
+    required this.message,
+    this.icon = Icons.inbox_outlined,
+  });
+
+  final String message;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          children: [
+            Icon(icon, size: 28, color: AppColors.textMuted),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PersonAvatar extends StatelessWidget {
+  const PersonAvatar({super.key, required this.name, this.size = 48});
+
+  final String name;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: AppColors.gray50,
+        borderRadius: BorderRadius.circular(size / 2),
+        border: Border.all(color: AppColors.border),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        _initials(name),
+        style: TextStyle(
+          fontSize: size * 0.32,
+          fontWeight: FontWeight.w600,
+          color: AppColors.black,
+          letterSpacing: -0.5,
+        ),
+      ),
+    );
+  }
+
+  String _initials(String value) {
+    final parts = value.trim().split(' ').where((p) => p.isNotEmpty).toList();
+    if (parts.length >= 2) {
+      return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
+    }
+    return value.isNotEmpty ? value[0].toUpperCase() : '?';
+  }
+}
