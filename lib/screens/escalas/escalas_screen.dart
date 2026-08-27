@@ -1,0 +1,183 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '../../models/models.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/igreja_context.dart';
+import '../../services/escala_service.dart';
+import '../../services/ministerio_service.dart';
+import '../../utils/format.dart';
+import '../../utils/permissions.dart';
+import '../../widgets/common.dart';
+
+class EscalasScreen extends StatefulWidget {
+  const EscalasScreen({super.key});
+
+  @override
+  State<EscalasScreen> createState() => _EscalasScreenState();
+}
+
+class _EscalasScreenState extends State<EscalasScreen> {
+  List<Escala> _items = [];
+  List<Ministerio> _ministerios = [];
+  bool _loading = true;
+  String? _error;
+  String? _loadedFor;
+  late String _competencia;
+
+  @override
+  void initState() {
+    super.initState();
+    _competencia = competenciaFrom(DateTime(2026, 8));
+  }
+
+  Future<void> _load() async {
+    final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final service = context.read<EscalaService>();
+      final minService = context.read<MinisterioService>();
+      final results = await Future.wait([
+        service.list(igrejaId: igrejaId, competencia: _competencia),
+        minService.list(igrejaId: igrejaId),
+      ]);
+      if (mounted) {
+        setState(() {
+          _items = results[0] as List<Escala>;
+          _ministerios = results[1] as List<Ministerio>;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _pickCompetencia() async {
+    final parts = _competencia.split('-');
+    var year = int.tryParse(parts[0]) ?? 2026;
+    var month = int.tryParse(parts[1]) ?? 8;
+    final picked = await showDialog<(int, int)>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Competência'),
+          content: StatefulBuilder(
+            builder: (context, setLocal) {
+              return Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      value: month,
+                      decoration: const InputDecoration(labelText: 'Mês'),
+                      items: [
+                        for (var i = 1; i <= 12; i++)
+                          DropdownMenuItem(value: i, child: Text(mesesPt[i - 1])),
+                      ],
+                      onChanged: (v) => setLocal(() => month = v ?? month),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      value: year,
+                      decoration: const InputDecoration(labelText: 'Ano'),
+                      items: [
+                        for (var y = 2025; y <= 2028; y++)
+                          DropdownMenuItem(value: y, child: Text('$y')),
+                      ],
+                      onChanged: (v) => setLocal(() => year = v ?? year),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, (year, month)),
+              child: const Text('Aplicar'),
+            ),
+          ],
+        );
+      },
+    );
+    if (picked == null) return;
+    setState(() => _competencia = competenciaFrom(DateTime(picked.$1, picked.$2)));
+    _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final igrejaId = context.watch<IgrejaContext>().selectedIgrejaId;
+    if (igrejaId != _loadedFor) {
+      _loadedFor = igrejaId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _load();
+      });
+    }
+
+    final user = context.watch<AuthProvider>().user;
+    final canCreateAny = EscalaTipo.values.any(
+      (t) => podeCriarTipoEscala(
+        user: user,
+        tipo: t,
+        ministerios: _ministerios,
+        escalas: _items,
+        competencia: _competencia,
+        igrejaId: igrejaId ?? '',
+      ),
+    );
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        PageHeader(
+          title: 'Escalas',
+          description: 'Escalas são mensais. Competência em evidência na criação.',
+          actions: [
+            OutlinedButton(
+              onPressed: _pickCompetencia,
+              child: Text(formatCompetencia(_competencia)),
+            ),
+            if (canCreateAny)
+              FilledButton(
+                onPressed: () => context.push(
+                  '/voluntariado/escalas/nova?competencia=$_competencia',
+                ),
+                child: const Text('Nova escala'),
+              ),
+          ],
+        ),
+        if (_loading)
+          const LoadingView()
+        else if (_error != null)
+          ErrorView(message: _error!, onRetry: _load)
+        else if (_items.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(child: Text('Nenhuma escala nesta competência.')),
+          )
+        else
+          ..._items.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: MobileListTile(
+                title: e.titulo,
+                subtitle:
+                    '${escalaTipoLabel(e.tipo)}${e.ministerioNome != null ? ' · ${e.ministerioNome}' : ''} · Supervisor: ${e.supervisorNome}',
+                trailing: StatusBadge(label: escalaTipoLabel(e.tipo).toUpperCase()),
+                onTap: () => context.push('/voluntariado/escalas/${e.id}'),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
