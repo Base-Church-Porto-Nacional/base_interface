@@ -1,30 +1,35 @@
-# Base Church — Gestão (Frontend)
+# Base Church — Gestão
 
-Frontend React + TypeScript do sistema de gestão. Consome a API Spring Boot (`base_api`) como fonte única da verdade: o front só monta telas, tipa DTOs e envia/recebe JSON.
+App Flutter (iOS, Android e Web) do sistema de gestão da Base Church. Consome a API Spring Boot (`base_api`) ou roda com dados mock locais.
 
 ## Stack
 
-- React · TypeScript · Vite
-- `fetch` tipado (`src/services/api.ts`)
-- JWT em `localStorage` (`Authorization: Bearer <token>`)
-- 401 → limpa sessão e redireciona para `/login`
+- Flutter · Dart 3
+- `go_router` — navegação
+- `provider` — estado (auth + serviços)
+- `google_fonts` — DM Sans + Syne
+- `share_plus` — exportação (TXT, Markdown, Excel como texto)
+- Mock local ou API Spring Boot
 
 ## Começar
 
 ```bash
-npm install
-cp .env.example .env
-npm run dev
+flutter pub get
+flutter run
 ```
 
-Abra `http://localhost:5173`.
+Login mock: `admin` / `admin123`
 
-## Variáveis de ambiente
+## Configuração
 
-| Variável | Descrição | Padrão |
-|----------|-----------|--------|
-| `VITE_API_URL` | Base da API (com `/api`) | `http://localhost:8080/api` |
-| `VITE_USE_MOCK` | `true` = dados locais; `false` = API real | `false` |
+Em `lib/config/app_config.dart`:
+
+| Constante | Descrição | Padrão |
+|-----------|-----------|--------|
+| `useMock` | `true` = dados locais | `true` |
+| `apiUrl` | Base da API | `http://localhost:8080/api` |
+
+Para API real, altere `useMock` para `false` e aponte `apiUrl` para o backend.
 
 Com a API:
 
@@ -36,53 +41,54 @@ docker compose up -d postgres
 
 Login da API: `admin` / `admin123`
 
+## Telas
+
+- Login
+- Dashboard (indicadores + exportação)
+- Membros / Pessoas (busca, filtros, exportação com histórico)
+- Ficha de pessoa (perfil, jornada, histórico)
+- Líderes
+- Ministérios (lista + detalhe + edição)
+- Placeholders: Voluntários, Escalas, Usuários, Perfil
+
+## Design
+
+- Paleta preto/branco/cinza (`lib/theme/`)
+- Layout mobile-first: cards compactos, filtro por ícone, botão Exportar com dropdown
+- Drawer lateral para navegação principal
+
+## Estrutura
+
+```text
+lib/
+  config/       # API URL, mock
+  models/       # Entidades
+  navigation/   # Menu e filtros
+  providers/    # Auth
+  router/       # go_router
+  screens/      # Telas
+  services/     # HTTP + mocks
+  theme/        # Cores e ThemeData
+  utils/        # Permissões, formatação
+  widgets/      # Componentes reutilizáveis
+android/  ios/  web/  # Plataformas
+```
+
+## Scripts
+
+```bash
+flutter analyze
+flutter test
+flutter build apk
+flutter build ios
+```
+
 ## Mapa tela → endpoint
 
 | Tela | Endpoints |
 |------|-----------|
 | Login | `POST /auth/login` |
 | Pessoas | `GET/POST/PUT /pessoas` + export |
-| Pessoa → Histórico | `CRUD /pessoas/{id}/historico` |
-| Pessoa → Jornada | `GET/PUT /pessoas/{id}/jornada` · catálogo `/jornada-etapas` |
-| Ministérios / Serviços | `/ministerios` · `/ministerios/{id}/servicos` · `/servicos/{id}` |
-| Voluntários (vínculo) | `CRUD /voluntarios` |
-| Escalas | `/escalas` · `/escalas/{id}/servicos` · `/escalas/{id}/voluntarios` |
-| Disponibilidade | `/disponibilidades/semanal/...` · `/disponibilidades/indisponibilidades/...` |
-| Usuários / Papéis | `CRUD /usuarios` · `GET /papeis` |
-| Exportação | `GET /export/{recurso}?formato=txt\|md\|xlsx` |
-
-## Tipagem
-
-Contratos da API em `src/types/api.ts`. Modelos de UI em `src/types/index.ts`. Mappers em `src/types/mappers.ts`.
-
-Erros padronizados da API (`message`) são exibidos em toast/alerta via `ApiError`.
-
-## Scripts
-
-| Comando | Descrição |
-|---------|-----------|
-| `npm run dev` | Servidor de desenvolvimento |
-| `npm run build` | Build de produção |
-| `npm run preview` | Preview do build |
-| `npm run lint` | ESLint |
-
-## Estrutura
-
-```text
-src/
-  components/   # UI e layout
-  contexts/     # AuthContext
-  mocks/        # Dados locais (VITE_USE_MOCK=true)
-  pages/        # Telas
-  routes/       # ProtectedRoute / PermissionGuard
-  services/     # Camada HTTP
-  styles/       # Design tokens
-  types/        # DTOs e modelos
-```
-
-## Observações
-
-- Pessoa ≠ Usuário (relação 1:0..1).
-- Voluntário = vínculo `pessoa ↔ serviço` (cargo, data entrada, líder, ativo).
-- Geração automática de escala ainda é stub no backend.
-- Validação forte fica no backend (Bean Validation).
+| Pessoa → Histórico | `GET /pessoas/{id}/historico` |
+| Ministérios | `/ministerios` |
+| Exportação | share local (mock) ou `GET /export/{recurso}` |
