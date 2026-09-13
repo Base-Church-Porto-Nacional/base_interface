@@ -282,6 +282,64 @@ final mockHistoricos = <PessoaHistorico>[
   ),
 ];
 
+final mockBasesMinisteriais = <BaseMinisterial>[
+  const BaseMinisterial(
+    id: 'b1',
+    nome: 'Adoração',
+    descricao: 'Louvor, mídia e ambientação dos cultos.',
+    liderNome: 'João da Silva',
+    liderPessoaId: 'p2',
+    coordenadorPessoaId: 'p3',
+    coordenadorNome: 'Maria Oliveira',
+    ativo: true,
+    igrejaId: 'i1',
+  ),
+  const BaseMinisterial(
+    id: 'b2',
+    nome: 'Serviço',
+    descricao: 'Recepção, estacionamento e suporte à igreja.',
+    liderNome: 'Ana Costa',
+    liderPessoaId: 'p1',
+    coordenadorPessoaId: 'p5',
+    coordenadorNome: 'Fernanda Dias',
+    ativo: true,
+    igrejaId: 'i1',
+  ),
+  const BaseMinisterial(
+    id: 'b3',
+    nome: 'Missão',
+    descricao: 'Evangelismo e ação missionária.',
+    liderNome: 'Carlos Lima',
+    liderPessoaId: 'p7',
+    coordenadorPessoaId: 'p4',
+    coordenadorNome: 'Bruno Santos',
+    ativo: true,
+    igrejaId: 'i1',
+  ),
+  const BaseMinisterial(
+    id: 'b4',
+    nome: 'Conectados',
+    descricao: 'Acolhimento, redes e integração de novos membros.',
+    liderNome: 'Carla Mendes',
+    liderPessoaId: 'p6',
+    coordenadorPessoaId: 'p9',
+    coordenadorNome: 'Luciana Rocha',
+    ativo: true,
+    igrejaId: 'i1',
+  ),
+  const BaseMinisterial(
+    id: 'b5',
+    nome: 'Discipulado',
+    descricao: 'Ensino, células e formação de líderes.',
+    liderNome: 'Pedro Alves',
+    liderPessoaId: 'p8',
+    coordenadorPessoaId: 'p10',
+    coordenadorNome: 'Rafael Souza',
+    ativo: true,
+    igrejaId: 'i1',
+  ),
+];
+
 final mockMinisterios = <Ministerio>[
   Ministerio(
     id: 'm1',
@@ -298,6 +356,8 @@ final mockMinisterios = <Ministerio>[
     descricao: 'Ministério de música e louvor.',
     anotacoes: 'Ensaio às quintas, 20h.',
     ordem: 'Abertura · Ofertório · Encerramento',
+    baseMinisterialId: 'b1',
+    baseMinisterialNome: 'Adoração',
     servicos: const [
       Servico(id: 's1c', ministerioId: 'm1', nome: 'Coordenador', ficcao: true, ativo: true),
       Servico(id: 's1a', ministerioId: 'm1', nome: 'Vocal', ficcao: false, ativo: true),
@@ -317,6 +377,8 @@ final mockMinisterios = <Ministerio>[
     igrejaId: 'i1',
     tipo: MinisterioTipo.midia,
     descricao: 'Projeção, som e transmissões.',
+    baseMinisterialId: 'b1',
+    baseMinisterialNome: 'Adoração',
     servicos: const [
       Servico(id: 's2c', ministerioId: 'm2', nome: 'Coordenador', ficcao: true, ativo: true),
       Servico(id: 's2a', ministerioId: 'm2', nome: 'Projeção', ficcao: false, ativo: true),
@@ -335,6 +397,8 @@ final mockMinisterios = <Ministerio>[
     ativo: true,
     igrejaId: 'i1',
     tipo: MinisterioTipo.geral,
+    baseMinisterialId: 'b5',
+    baseMinisterialNome: 'Discipulado',
     servicos: const [
       Servico(id: 's3c', ministerioId: 'm3', nome: 'Coordenador', ficcao: true, ativo: true),
       Servico(id: 's3a', ministerioId: 'm3', nome: 'Professor', ficcao: false, ativo: true),
@@ -352,6 +416,8 @@ final mockMinisterios = <Ministerio>[
     ativo: true,
     igrejaId: 'i1',
     tipo: MinisterioTipo.geral,
+    baseMinisterialId: 'b2',
+    baseMinisterialNome: 'Serviço',
     servicos: const [
       Servico(id: 's4c', ministerioId: 'm4', nome: 'Coordenador', ficcao: true, ativo: true),
       Servico(id: 's4a', ministerioId: 'm4', nome: 'Recepção', ficcao: false, ativo: true),
@@ -369,9 +435,51 @@ final mockMinisterios = <Ministerio>[
     ativo: true,
     igrejaId: 'i2',
     tipo: MinisterioTipo.musica,
+    baseMinisterialId: 'b1',
+    baseMinisterialNome: 'Adoração',
     servicos: const [
       Servico(id: 's5c', ministerioId: 'm5', nome: 'Coordenador', ficcao: true, ativo: true),
       Servico(id: 's5a', ministerioId: 'm5', nome: 'Vocal', ficcao: false, ativo: true),
+    ],
+  ),
+  Ministerio(
+    id: 'm6',
+    nome: 'Missões',
+    liderNome: 'Carlos Lima',
+    liderPessoaId: 'p7',
+    coordenadorPessoaId: 'p4',
+    coordenadorNome: 'Bruno Santos',
+    totalVoluntarios: 2,
+    totalServicos: 2,
+    ativo: true,
+    igrejaId: 'i1',
+    tipo: MinisterioTipo.geral,
+    descricao: 'Ação missionária e evangelismo.',
+    baseMinisterialId: 'b3',
+    baseMinisterialNome: 'Missão',
+    servicos: const [
+      Servico(id: 's6c', ministerioId: 'm6', nome: 'Coordenador', ficcao: true, ativo: true),
+      Servico(id: 's6a', ministerioId: 'm6', nome: 'Evangelismo', ficcao: false, ativo: true),
+    ],
+  ),
+  Ministerio(
+    id: 'm7',
+    nome: 'Acolhimento',
+    liderNome: 'Carla Mendes',
+    liderPessoaId: 'p6',
+    coordenadorPessoaId: 'p9',
+    coordenadorNome: 'Luciana Rocha',
+    totalVoluntarios: 2,
+    totalServicos: 1,
+    ativo: true,
+    igrejaId: 'i1',
+    tipo: MinisterioTipo.geral,
+    descricao: 'Acolhimento de visitantes e integração.',
+    baseMinisterialId: 'b4',
+    baseMinisterialNome: 'Conectados',
+    servicos: const [
+      Servico(id: 's7c', ministerioId: 'm7', nome: 'Coordenador', ficcao: true, ativo: true),
+      Servico(id: 's7a', ministerioId: 'm7', nome: 'Recepção de visitantes', ficcao: false, ativo: true),
     ],
   ),
 ];
@@ -627,6 +735,83 @@ final mockEscalas = <Escala>[
   ),
 ];
 
+final mockSmallGroups = <SmallGroup>[
+  SmallGroup(
+    id: 'cl1',
+    nome: 'Pequeno grupo Vila Madalena',
+    igrejaId: 'i1',
+    diaSemana: DiaSemana.quarta,
+    horario: '19:30',
+    liderPessoaId: 'p2',
+    liderNome: 'João da Silva',
+    ativo: true,
+    nota: 4,
+    encontros: const [
+      SmallGroupEncontro(
+        id: 'ce1',
+        smallGroupId: 'cl1',
+        data: '2026-08-05',
+        anfitriaoPessoaId: 'p2',
+        anfitriaoNome: 'João da Silva',
+        compareceram: [
+          SmallGroupParticipante(pessoaId: 'p2', pessoaNome: 'João da Silva'),
+          SmallGroupParticipante(pessoaId: 'p3', pessoaNome: 'Maria Oliveira'),
+          SmallGroupParticipante(pessoaId: 'p4', pessoaNome: 'Bruno Santos'),
+        ],
+        anotacoes: 'Boa reunião, estudo de João 15.',
+      ),
+      SmallGroupEncontro(
+        id: 'ce2',
+        smallGroupId: 'cl1',
+        data: '2026-08-12',
+        anfitriaoPessoaId: 'p3',
+        anfitriaoNome: 'Maria Oliveira',
+        compareceram: [
+          SmallGroupParticipante(pessoaId: 'p2', pessoaNome: 'João da Silva'),
+          SmallGroupParticipante(pessoaId: 'p3', pessoaNome: 'Maria Oliveira'),
+        ],
+        anotacoes: 'Grupo menor, convidar novos.',
+      ),
+    ],
+  ),
+  SmallGroup(
+    id: 'cl2',
+    nome: 'Pequeno grupo Pinheiros',
+    igrejaId: 'i1',
+    diaSemana: DiaSemana.quinta,
+    horario: '20:00',
+    liderPessoaId: 'p7',
+    liderNome: 'Carlos Lima',
+    ativo: true,
+    nota: 5,
+    encontros: const [
+      SmallGroupEncontro(
+        id: 'ce3',
+        smallGroupId: 'cl2',
+        data: '2026-08-06',
+        anfitriaoPessoaId: 'p7',
+        anfitriaoNome: 'Carlos Lima',
+        compareceram: [
+          SmallGroupParticipante(pessoaId: 'p7', pessoaNome: 'Carlos Lima'),
+          SmallGroupParticipante(pessoaId: 'p4', pessoaNome: 'Bruno Santos'),
+          SmallGroupParticipante(pessoaId: 'p5', pessoaNome: 'Fernanda Dias'),
+        ],
+      ),
+    ],
+  ),
+  SmallGroup(
+    id: 'cl3',
+    nome: 'Pequeno grupo Zona Sul',
+    igrejaId: 'i2',
+    diaSemana: DiaSemana.terca,
+    horario: '19:00',
+    liderPessoaId: 'p10',
+    liderNome: 'Rafael Souza',
+    ativo: true,
+    nota: 0,
+  ),
+];
+
 final mockDisponibilidades = <String, DisponibilidadePessoa>{
   'p2': DisponibilidadePessoa(
     pessoaId: 'p2',
@@ -714,4 +899,8 @@ List<Pessoa> pessoasDaIgreja(String? igrejaId) {
 List<Ministerio> ministeriosDaIgreja(String? igrejaId) {
   if (igrejaId == null || igrejaId.isEmpty) return [];
   return mockMinisterios.where((m) => m.igrejaId == igrejaId).toList();
+}
+
+List<BaseMinisterial> basesMinisteriaisDaIgreja(String? igrejaId) {
+  return List.of(mockBasesMinisteriais);
 }

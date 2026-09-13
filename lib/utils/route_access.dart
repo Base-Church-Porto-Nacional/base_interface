@@ -36,6 +36,10 @@ bool canAccessPath(AuthUser? user, String path) {
     return hasPermission(user.roles, 'membros:view') || isPastorOuAdmin(user);
   }
 
+  if (path.startsWith('/pequenos-grupos')) {
+    return hasPermission(user.roles, 'small_groups:view') || isPastorOuAdmin(user);
+  }
+
   if (path == '/voluntariado/escalas/nova' || path.startsWith('/voluntariado/escalas/nova')) {
     return _podeAbrirCriacaoEscala(user);
   }
@@ -46,6 +50,9 @@ bool canAccessPath(AuthUser? user, String path) {
   }
   if (path.startsWith('/voluntariado/ministerios')) {
     return hasPermission(user.roles, 'ministerios:view') || isPastorOuAdmin(user);
+  }
+  if (path.startsWith('/voluntariado/relatorios')) {
+    return hasPermission(user.roles, 'relatorios:view') || isPastorOuAdmin(user);
   }
   if (path.startsWith('/voluntariado')) {
     return hasPermission(user.roles, 'voluntarios:view') || isPastorOuAdmin(user);
@@ -87,6 +94,11 @@ bool canMutatePessoas(AuthUser? user) {
 bool canCreateMinisterio(AuthUser? user) {
   if (user == null) return false;
   return hasPermission(user.roles, 'ministerios:create') || isPastorOuAdmin(user);
+}
+
+bool canCreateBaseMinisterial(AuthUser? user) {
+  if (user == null) return false;
+  return isPastorOuAdmin(user);
 }
 
 bool canCreateUsuario(AuthUser? user) {

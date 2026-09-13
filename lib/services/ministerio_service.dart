@@ -42,6 +42,8 @@ class MinisterioService {
     String? coordenadorNome,
     String? anotacoes,
     String? ordem,
+    String? baseMinisterialId,
+    String? baseMinisterialNome,
   }) async {
     if (AppConfig.useMock) {
       final index = mockMinisterios.indexWhere((m) => m.id == id);
@@ -57,6 +59,8 @@ class MinisterioService {
         coordenadorNome: coordenadorNome,
         anotacoes: anotacoes,
         ordem: ordem,
+        baseMinisterialId: baseMinisterialId,
+        baseMinisterialNome: baseMinisterialNome,
       );
       return mockDelay(mockMinisterios[index]);
     }
@@ -69,6 +73,7 @@ class MinisterioService {
       'coordenadorPessoaId': coordenadorPessoaId,
       'anotacoes': anotacoes,
       'ordem': ordem,
+      'baseMinisterialId': baseMinisterialId,
     }) as Map<String, dynamic>;
     return _map(json);
   }
@@ -83,6 +88,8 @@ class MinisterioService {
     String? liderNome,
     String? coordenadorPessoaId,
     String? coordenadorNome,
+    String? baseMinisterialId,
+    String? baseMinisterialNome,
   }) async {
     if (AppConfig.useMock) {
       final id = 'm${DateTime.now().millisecondsSinceEpoch}';
@@ -99,6 +106,8 @@ class MinisterioService {
         descricao: descricao,
         igrejaId: igrejaId,
         tipo: tipo,
+        baseMinisterialId: baseMinisterialId,
+        baseMinisterialNome: baseMinisterialNome,
         servicos: [
           Servico(
             id: 's${id}c',
@@ -120,6 +129,7 @@ class MinisterioService {
       'tipo': ministerioTipoToString(tipo),
       'liderPessoaId': liderPessoaId,
       'coordenadorPessoaId': coordenadorPessoaId,
+      'baseMinisterialId': baseMinisterialId,
     }) as Map<String, dynamic>;
     return _map(json);
   }
@@ -141,6 +151,8 @@ class MinisterioService {
       tipo: ministerioTipoFromString(json['tipo'] as String? ?? 'GERAL'),
       anotacoes: json['anotacoes'] as String?,
       ordem: json['ordem'] as String?,
+      baseMinisterialId: json['baseMinisterialId'] as String?,
+      baseMinisterialNome: json['baseMinisterialNome'] as String?,
       servicos: servicosJson
           .map(
             (e) => Servico(

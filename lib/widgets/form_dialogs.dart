@@ -96,7 +96,9 @@ class MinisterioFormDialog extends StatefulWidget {
     this.initialTipo = MinisterioTipo.geral,
     this.initialLiderId,
     this.initialCoordenadorId,
+    this.initialBaseMinisterialId,
     this.pessoas = const [],
+    this.bases = const [],
     this.title = 'Novo ministério',
   });
 
@@ -106,7 +108,9 @@ class MinisterioFormDialog extends StatefulWidget {
   final MinisterioTipo initialTipo;
   final String? initialLiderId;
   final String? initialCoordenadorId;
+  final String? initialBaseMinisterialId;
   final List<Pessoa> pessoas;
+  final List<BaseMinisterial> bases;
   final String title;
 
   @override
@@ -120,6 +124,7 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
   late MinisterioTipo _tipo;
   String? _liderId;
   String? _coordenadorId;
+  String? _baseMinisterialId;
 
   @override
   void initState() {
@@ -130,6 +135,7 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
     _tipo = widget.initialTipo;
     _liderId = widget.initialLiderId;
     _coordenadorId = widget.initialCoordenadorId;
+    _baseMinisterialId = widget.initialBaseMinisterialId;
   }
 
   @override
@@ -162,6 +168,20 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
               onChanged: (v) => setState(() => _tipo = v ?? MinisterioTipo.geral),
             ),
             const SizedBox(height: 12),
+            if (widget.bases.isNotEmpty) ...[
+              DropdownButtonFormField<String>(
+                initialValue: _baseMinisterialId ?? '',
+                decoration: const InputDecoration(labelText: 'Base ministerial'),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('—')),
+                  for (final b in widget.bases)
+                    DropdownMenuItem(value: b.id, child: Text(b.nome)),
+                ],
+                onChanged: (v) =>
+                    setState(() => _baseMinisterialId = (v == null || v.isEmpty) ? null : v),
+              ),
+              const SizedBox(height: 12),
+            ],
             if (widget.pessoas.isNotEmpty) ...[
               DropdownButtonFormField<String>(
                 initialValue: _liderId ?? '',
@@ -215,11 +235,146 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
               if (p.id == _liderId) lider = p;
               if (p.id == _coordenadorId) coord = p;
             }
+            BaseMinisterial? base;
+            for (final b in widget.bases) {
+              if (b.id == _baseMinisterialId) base = b;
+            }
             Navigator.pop(context, {
               'nome': _nome.text.trim(),
               'descricao': _descricao.text.trim(),
               'ativo': _ativo,
               'tipo': _tipo,
+              'liderPessoaId': _liderId,
+              'liderNome': lider?.nome,
+              'coordenadorPessoaId': _coordenadorId,
+              'coordenadorNome': coord?.nome,
+              'baseMinisterialId': _baseMinisterialId,
+              'baseMinisterialNome': base?.nome,
+            });
+          },
+          child: const Text('Salvar'),
+        ),
+      ],
+    );
+  }
+}
+
+class BaseMinisterialFormDialog extends StatefulWidget {
+  const BaseMinisterialFormDialog({
+    super.key,
+    this.initialNome = '',
+    this.initialDescricao = '',
+    this.initialAtivo = true,
+    this.initialLiderId,
+    this.initialCoordenadorId,
+    this.pessoas = const [],
+    this.title = 'Nova base ministerial',
+  });
+
+  final String initialNome;
+  final String initialDescricao;
+  final bool initialAtivo;
+  final String? initialLiderId;
+  final String? initialCoordenadorId;
+  final List<Pessoa> pessoas;
+  final String title;
+
+  @override
+  State<BaseMinisterialFormDialog> createState() => _BaseMinisterialFormDialogState();
+}
+
+class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
+  late final TextEditingController _nome;
+  late final TextEditingController _descricao;
+  late bool _ativo;
+  String? _liderId;
+  String? _coordenadorId;
+
+  @override
+  void initState() {
+    super.initState();
+    _nome = TextEditingController(text: widget.initialNome);
+    _descricao = TextEditingController(text: widget.initialDescricao);
+    _ativo = widget.initialAtivo;
+    _liderId = widget.initialLiderId;
+    _coordenadorId = widget.initialCoordenadorId;
+  }
+
+  @override
+  void dispose() {
+    _nome.dispose();
+    _descricao.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nome,
+              decoration: const InputDecoration(labelText: 'Nome *'),
+            ),
+            const SizedBox(height: 12),
+            if (widget.pessoas.isNotEmpty) ...[
+              DropdownButtonFormField<String>(
+                initialValue: _liderId ?? '',
+                decoration: const InputDecoration(labelText: 'Líder'),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('—')),
+                  for (final p in widget.pessoas)
+                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
+                ],
+                onChanged: (v) => setState(() => _liderId = (v == null || v.isEmpty) ? null : v),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _coordenadorId ?? '',
+                decoration: const InputDecoration(labelText: 'Coordenador'),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('—')),
+                  for (final p in widget.pessoas)
+                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
+                ],
+                onChanged: (v) =>
+                    setState(() => _coordenadorId = (v == null || v.isEmpty) ? null : v),
+              ),
+              const SizedBox(height: 12),
+            ],
+            TextField(
+              controller: _descricao,
+              decoration: const InputDecoration(labelText: 'Descrição'),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Ativa'),
+              value: _ativo,
+              onChanged: (v) => setState(() => _ativo = v),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        FilledButton(
+          onPressed: () {
+            if (_nome.text.trim().isEmpty) return;
+            Pessoa? lider;
+            Pessoa? coord;
+            for (final p in widget.pessoas) {
+              if (p.id == _liderId) lider = p;
+              if (p.id == _coordenadorId) coord = p;
+            }
+            Navigator.pop(context, {
+              'nome': _nome.text.trim(),
+              'descricao': _descricao.text.trim(),
+              'ativo': _ativo,
               'liderPessoaId': _liderId,
               'liderNome': lider?.nome,
               'coordenadorPessoaId': _coordenadorId,
@@ -432,6 +587,164 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
             });
           },
           child: const Text('Criar'),
+        ),
+      ],
+    );
+  }
+}
+
+class SmallGroupFormDialog extends StatefulWidget {
+  const SmallGroupFormDialog({
+    super.key,
+    this.initialNome = '',
+    this.initialHorario = '',
+    this.initialAtivo = true,
+    this.initialDiaSemana = DiaSemana.domingo,
+    this.initialLiderId,
+    this.initialNota = 0,
+    this.pessoas = const [],
+    this.title = 'Novo pequeno grupo',
+  });
+
+  final String initialNome;
+  final String initialHorario;
+  final bool initialAtivo;
+  final DiaSemana initialDiaSemana;
+  final String? initialLiderId;
+  final int initialNota;
+  final List<Pessoa> pessoas;
+  final String title;
+
+  @override
+  State<SmallGroupFormDialog> createState() => _SmallGroupFormDialogState();
+}
+
+class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
+  late final TextEditingController _nome;
+  late final TextEditingController _horario;
+  late bool _ativo;
+  late DiaSemana _diaSemana;
+  String? _liderId;
+  late int _nota;
+
+  @override
+  void initState() {
+    super.initState();
+    _nome = TextEditingController(text: widget.initialNome);
+    _horario = TextEditingController(text: widget.initialHorario);
+    _ativo = widget.initialAtivo;
+    _diaSemana = widget.initialDiaSemana;
+    _liderId = widget.initialLiderId;
+    _nota = widget.initialNota;
+  }
+
+  @override
+  void dispose() {
+    _nome.dispose();
+    _horario.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nome,
+              decoration: const InputDecoration(labelText: 'Nome *'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<DiaSemana>(
+              initialValue: _diaSemana,
+              decoration: const InputDecoration(
+                labelText: 'Dia da semana',
+                helperText: 'O pequeno grupo ocorre toda semana neste dia.',
+              ),
+              items: [
+                for (final d in DiaSemana.values)
+                  DropdownMenuItem(value: d, child: Text(diaSemanaLabel(d))),
+              ],
+              onChanged: (v) => setState(() => _diaSemana = v ?? DiaSemana.domingo),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _horario,
+              decoration: const InputDecoration(labelText: 'Horário'),
+              keyboardType: TextInputType.datetime,
+            ),
+            const SizedBox(height: 12),
+            if (widget.pessoas.isNotEmpty) ...[
+              DropdownButtonFormField<String>(
+                initialValue: _liderId ?? '',
+                decoration: const InputDecoration(labelText: 'Líder *'),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('—')),
+                  for (final p in widget.pessoas)
+                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
+                ],
+                onChanged: (v) =>
+                    setState(() => _liderId = (v == null || v.isEmpty) ? null : v),
+              ),
+              const SizedBox(height: 12),
+            ],
+            Row(
+              children: [
+                const Text('Nota'),
+                const SizedBox(width: 4),
+                for (var i = 1; i <= 5; i++)
+                  InkWell(
+                    onTap: () => setState(() => _nota = i),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Icon(
+                        i <= _nota ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                IconButton(
+                  onPressed: () => setState(() => _nota = 0),
+                  icon: const Icon(Icons.clear, size: 18),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Limpar nota',
+                ),
+                Text(_nota == 0 ? 'Sem nota' : '$_nota / 5'),
+              ],
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Ativa'),
+              value: _ativo,
+              onChanged: (v) => setState(() => _ativo = v),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        FilledButton(
+          onPressed: () {
+            if (_nome.text.trim().isEmpty || _liderId == null) return;
+            Pessoa? lider;
+            for (final p in widget.pessoas) {
+              if (p.id == _liderId) lider = p;
+            }
+            Navigator.pop(context, {
+              'nome': _nome.text.trim(),
+              'diaSemana': _diaSemana,
+              'horario': _horario.text.trim(),
+              'liderPessoaId': _liderId,
+              'liderNome': lider?.nome,
+              'nota': _nota,
+              'ativo': _ativo,
+            });
+          },
+          child: const Text('Salvar'),
         ),
       ],
     );

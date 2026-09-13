@@ -10,6 +10,7 @@ import '../../services/ministerio_service.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
+import '../../widgets/filter_search.dart';
 
 class EscalasScreen extends StatefulWidget {
   const EscalasScreen({super.key});
@@ -135,48 +136,63 @@ class _EscalasScreenState extends State<EscalasScreen> {
       ),
     );
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Column(
       children: [
-        PageHeader(
-          title: 'Escalas',
-          description: 'Escalas são mensais. Competência em evidência na criação.',
-          actions: [
-            OutlinedButton(
-              onPressed: _pickCompetencia,
-              child: Text(formatCompetencia(_competencia)),
-            ),
-            if (canCreateAny)
-              FilledButton(
-                onPressed: () => context.push(
-                  '/voluntariado/escalas/nova?competencia=$_competencia',
-                ),
-                child: const Text('Nova escala'),
-              ),
+        const SectionTabs(
+          currentPath: '/voluntariado/escalas',
+          tabs: [
+            ('/voluntariado/voluntarios', 'Voluntários'),
+            ('/voluntariado/escalas', 'Escalas'),
+            ('/voluntariado/ministerios', 'Ministérios'),
+            ('/voluntariado/relatorios', 'Relatórios'),
           ],
         ),
-        if (_loading)
-          const LoadingView()
-        else if (_error != null)
-          ErrorView(message: _error!, onRetry: _load)
-        else if (_items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: Text('Nenhuma escala nesta competência.')),
-          )
-        else
-          ..._items.map(
-            (e) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: MobileListTile(
-                title: e.titulo,
-                subtitle:
-                    '${escalaTipoLabel(e.tipo)}${e.ministerioNome != null ? ' · ${e.ministerioNome}' : ''} · Supervisor: ${e.supervisorNome}',
-                trailing: StatusBadge(label: escalaTipoLabel(e.tipo).toUpperCase()),
-                onTap: () => context.push('/voluntariado/escalas/${e.id}'),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              PageHeader(
+                title: 'Escalas',
+                description: 'Escalas são mensais. Competência em evidência na criação.',
+                actions: [
+                  OutlinedButton(
+                    onPressed: _pickCompetencia,
+                    child: Text(formatCompetencia(_competencia)),
+                  ),
+                  if (canCreateAny)
+                    FilledButton(
+                      onPressed: () => context.push(
+                        '/voluntariado/escalas/nova?competencia=$_competencia',
+                      ),
+                      child: const Text('Nova escala'),
+                    ),
+                ],
               ),
-            ),
+              if (_loading)
+                const LoadingView()
+              else if (_error != null)
+                ErrorView(message: _error!, onRetry: _load)
+              else if (_items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: Text('Nenhuma escala nesta competência.')),
+                )
+              else
+                ..._items.map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: MobileListTile(
+                      title: e.titulo,
+                      subtitle:
+                          '${escalaTipoLabel(e.tipo)}${e.ministerioNome != null ? ' · ${e.ministerioNome}' : ''} · Supervisor: ${e.supervisorNome}',
+                      trailing: StatusBadge(label: escalaTipoLabel(e.tipo).toUpperCase()),
+                      onTap: () => context.push('/voluntariado/escalas/${e.id}'),
+                    ),
+                  ),
+                ),
+            ],
           ),
+        ),
       ],
     );
   }

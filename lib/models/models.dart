@@ -207,6 +207,56 @@ class Servico {
   final String? descricao;
 }
 
+class BaseMinisterial {
+  const BaseMinisterial({
+    required this.id,
+    required this.nome,
+    required this.liderNome,
+    required this.ativo,
+    required this.igrejaId,
+    this.descricao,
+    this.liderPessoaId,
+    this.coordenadorPessoaId,
+    this.coordenadorNome,
+    this.ordem,
+  });
+
+  final String id;
+  final String nome;
+  final String liderNome;
+  final bool ativo;
+  final String? descricao;
+  final String igrejaId;
+  final String? liderPessoaId;
+  final String? coordenadorPessoaId;
+  final String? coordenadorNome;
+  final String? ordem;
+
+  BaseMinisterial copyWith({
+    String? nome,
+    String? descricao,
+    bool? ativo,
+    String? liderPessoaId,
+    String? liderNome,
+    String? coordenadorPessoaId,
+    String? coordenadorNome,
+    String? ordem,
+  }) {
+    return BaseMinisterial(
+      id: id,
+      nome: nome ?? this.nome,
+      liderNome: liderNome ?? this.liderNome,
+      ativo: ativo ?? this.ativo,
+      descricao: descricao ?? this.descricao,
+      igrejaId: igrejaId,
+      liderPessoaId: liderPessoaId ?? this.liderPessoaId,
+      coordenadorPessoaId: coordenadorPessoaId ?? this.coordenadorPessoaId,
+      coordenadorNome: coordenadorNome ?? this.coordenadorNome,
+      ordem: ordem ?? this.ordem,
+    );
+  }
+}
+
 class Ministerio {
   const Ministerio({
     required this.id,
@@ -223,6 +273,8 @@ class Ministerio {
     this.coordenadorNome,
     this.anotacoes,
     this.ordem,
+    this.baseMinisterialId,
+    this.baseMinisterialNome,
     this.servicos = const [],
   });
 
@@ -240,6 +292,8 @@ class Ministerio {
   final String? coordenadorNome;
   final String? anotacoes;
   final String? ordem;
+  final String? baseMinisterialId;
+  final String? baseMinisterialNome;
   final List<Servico> servicos;
 
   List<Servico> get servicosReais => servicos.where((s) => !s.ficcao).toList();
@@ -262,6 +316,8 @@ class Ministerio {
     MinisterioTipo? tipo,
     String? anotacoes,
     String? ordem,
+    String? baseMinisterialId,
+    String? baseMinisterialNome,
     List<Servico>? servicos,
     int? totalVoluntarios,
     int? totalServicos,
@@ -281,6 +337,8 @@ class Ministerio {
       coordenadorNome: coordenadorNome ?? this.coordenadorNome,
       anotacoes: anotacoes ?? this.anotacoes,
       ordem: ordem ?? this.ordem,
+      baseMinisterialId: baseMinisterialId ?? this.baseMinisterialId,
+      baseMinisterialNome: baseMinisterialNome ?? this.baseMinisterialNome,
       servicos: servicos ?? this.servicos,
     );
   }
@@ -364,6 +422,78 @@ class Escala {
   final String? pregadorNome;
   final bool ativo;
   final List<EscalaItem> itens;
+}
+
+class SmallGroupParticipante {
+  const SmallGroupParticipante({required this.pessoaId, required this.pessoaNome});
+
+  final String pessoaId;
+  final String pessoaNome;
+}
+
+class SmallGroupEncontro {
+  const SmallGroupEncontro({
+    required this.id,
+    required this.smallGroupId,
+    required this.data,
+    required this.compareceram,
+    this.anfitriaoPessoaId,
+    this.anfitriaoNome,
+    this.anotacoes,
+  });
+
+  final String id;
+  final String smallGroupId;
+  final String data;
+  final String? anfitriaoPessoaId;
+  final String? anfitriaoNome;
+  final List<SmallGroupParticipante> compareceram;
+  final String? anotacoes;
+
+  SmallGroupEncontro copyWith({
+    String? anfitriaoPessoaId,
+    String? anfitriaoNome,
+    List<SmallGroupParticipante>? compareceram,
+    String? anotacoes,
+  }) {
+    return SmallGroupEncontro(
+      id: id,
+      smallGroupId: smallGroupId,
+      data: data,
+      anfitriaoPessoaId: anfitriaoPessoaId ?? this.anfitriaoPessoaId,
+      anfitriaoNome: anfitriaoNome ?? this.anfitriaoNome,
+      compareceram: compareceram ?? this.compareceram,
+      anotacoes: anotacoes ?? this.anotacoes,
+    );
+  }
+}
+
+class SmallGroup {
+  const SmallGroup({
+    required this.id,
+    required this.nome,
+    required this.igrejaId,
+    required this.diaSemana,
+    required this.liderPessoaId,
+    required this.liderNome,
+    required this.ativo,
+    required this.nota,
+    this.horario,
+    this.encontros = const [],
+  });
+
+  final String id;
+  final String nome;
+  final String igrejaId;
+  final DiaSemana diaSemana;
+  final String? horario;
+  final String liderPessoaId;
+  final String liderNome;
+  final bool ativo;
+  final int nota;
+  final List<SmallGroupEncontro> encontros;
+
+  String get notaLabel => nota == 0 ? 'Sem nota' : '$nota / 5';
 }
 
 class CultoEvento {

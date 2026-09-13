@@ -10,6 +10,7 @@ import '../../utils/format.dart';
 import '../../utils/route_access.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common.dart';
+import '../../widgets/filter_search.dart';
 
 class CronogramaScreen extends StatefulWidget {
   const CronogramaScreen({super.key});
@@ -168,40 +169,54 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
     }
     final canCreate = canCreateCronograma(context.watch<AuthProvider>().user);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Column(
       children: [
-        PageHeader(
-          title: 'Agenda',
-          description: 'Cultos e eventos da igreja. Cada um tem um supervisor (padrão: pastor).',
-          actions: [
-            if (canCreate) FilledButton(onPressed: _novo, child: const Text('Novo')),
+        const SectionTabs(
+          currentPath: '/cultos',
+          tabs: [
+            ('/cultos', 'Agenda'),
+            ('/cultos/conteudo', 'Gestão de culto'),
           ],
         ),
-        if (_loading)
-          const LoadingView()
-        else if (_error != null)
-          ErrorView(message: _error!, onRetry: _load)
-        else if (_items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: Text('Nenhum culto ou evento.')),
-          )
-        else
-          ..._items.map(
-            (e) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: MobileListTile(
-                title: e.titulo,
-                subtitle:
-                    '${formatDate(e.data)} · ${e.horaInicio} · Supervisor: ${e.supervisorNome}',
-                trailing: StatusBadge(label: tipoEventoLabel(e.tipo).toUpperCase()),
-                onTap: e.tipo == TipoEvento.culto
-                    ? () => context.push('/cultos/conteudo?eventoId=${e.id}')
-                    : null,
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              PageHeader(
+                title: 'Agenda',
+                description:
+                    'Cultos e eventos da igreja. Cada um tem um supervisor (padrão: pastor).',
+                actions: [
+                  if (canCreate) FilledButton(onPressed: _novo, child: const Text('Novo')),
+                ],
               ),
-            ),
+              if (_loading)
+                const LoadingView()
+              else if (_error != null)
+                ErrorView(message: _error!, onRetry: _load)
+              else if (_items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: Text('Nenhum culto ou evento.')),
+                )
+              else
+                ..._items.map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: MobileListTile(
+                      title: e.titulo,
+                      subtitle:
+                          '${formatDate(e.data)} · ${e.horaInicio} · Supervisor: ${e.supervisorNome}',
+                      trailing: StatusBadge(label: tipoEventoLabel(e.tipo).toUpperCase()),
+                      onTap: e.tipo == TipoEvento.culto
+                          ? () => context.push('/cultos/conteudo?eventoId=${e.id}')
+                          : null,
+                    ),
+                  ),
+                ),
+            ],
           ),
+        ),
       ],
     );
   }

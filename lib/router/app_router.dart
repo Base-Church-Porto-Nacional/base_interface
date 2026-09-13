@@ -18,9 +18,11 @@ import '../screens/ministerios/ministerio_detail_screen.dart';
 import '../screens/ministerios/ministerios_screen.dart';
 import '../screens/pessoas/pessoa_detail_screen.dart';
 import '../screens/pessoas/pessoas_screen.dart';
+import '../screens/pequenos_grupos/small_group_detail_screen.dart';
+import '../screens/pequenos_grupos/small_groups_screen.dart';
 import '../screens/shell/app_shell.dart';
 import '../screens/usuarios/usuarios_screen.dart';
-import '../screens/voluntariado/lideres_screen.dart';
+import '../screens/voluntariado/relatorios_screen.dart';
 import '../screens/voluntariado/voluntarios_screen.dart';
 import '../utils/route_access.dart';
 import '../widgets/placeholder_screen.dart';
@@ -79,8 +81,14 @@ GoRouter createRouter(AuthProvider auth) {
             ),
           ),
           GoRoute(
-            path: '/voluntariado/lideres',
-            builder: (_, _) => const LideresScreen(),
+            path: '/pequenos-grupos',
+            builder: (_, _) => const SmallGroupsScreen(),
+          ),
+          GoRoute(
+            path: '/pequenos-grupos/:id',
+            builder: (_, state) => SmallGroupDetailScreen(
+              groupId: state.pathParameters['id']!,
+            ),
           ),
           GoRoute(
             path: '/voluntariado/ministerios',
@@ -91,6 +99,10 @@ GoRouter createRouter(AuthProvider auth) {
             builder: (_, state) => MinisterioDetailScreen(
               ministerioId: state.pathParameters['id']!,
             ),
+          ),
+          GoRoute(
+            path: '/voluntariado/relatorios',
+            builder: (_, _) => const RelatoriosScreen(),
           ),
           GoRoute(
             path: '/voluntariado/voluntarios',

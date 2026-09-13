@@ -109,25 +109,7 @@ class AppShell extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   children: [
                     for (final item in navItems)
-                      ListTile(
-                        title: Text(
-                          item.label,
-                          style: TextStyle(
-                            color: _isActive(location, item.path)
-                                ? AppColors.white
-                                : Colors.white70,
-                            fontWeight: _isActive(location, item.path)
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                          ),
-                        ),
-                        selected: _isActive(location, item.path),
-                        selectedTileColor: Colors.white12,
-                        onTap: () {
-                          Navigator.pop(context);
-                          context.go(item.path);
-                        },
-                      ),
+                      _navTile(context, item.label, item.path, location),
                   ],
                 ),
               ),
@@ -136,6 +118,25 @@ class AppShell extends StatelessWidget {
         ),
       ),
       body: child,
+    );
+  }
+
+  Widget _navTile(BuildContext context, String label, String path, String location) {
+    final active = _isActive(location, path);
+    return ListTile(
+      title: Text(
+        label,
+        style: TextStyle(
+          color: active ? AppColors.white : Colors.white70,
+          fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+        ),
+      ),
+      selected: active,
+      selectedTileColor: Colors.white12,
+      onTap: () {
+        Navigator.pop(context);
+        context.go(path);
+      },
     );
   }
 

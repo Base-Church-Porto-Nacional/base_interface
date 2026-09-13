@@ -28,17 +28,26 @@ const mainNav = [
     ],
   ),
   NavItem(
+    label: 'Pequenos grupos',
+    path: '/pequenos-grupos',
+    permission: 'small_groups:view',
+  ),
+  NavItem(
     label: 'Voluntariado',
     path: '/voluntariado/voluntarios',
     permission: 'voluntarios:view',
     children: [
       NavItem(label: 'Voluntários', path: '/voluntariado/voluntarios'),
-      NavItem(label: 'Líderes', path: '/voluntariado/lideres'),
       NavItem(label: 'Escalas', path: '/voluntariado/escalas'),
       NavItem(
         label: 'Ministérios',
         path: '/voluntariado/ministerios',
         permission: 'ministerios:view',
+      ),
+      NavItem(
+        label: 'Relatórios',
+        path: '/voluntariado/relatorios',
+        permission: 'relatorios:view',
       ),
     ],
   ),
