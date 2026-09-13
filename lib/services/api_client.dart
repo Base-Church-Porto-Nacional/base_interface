@@ -88,7 +88,11 @@ class ApiClient {
     }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
-      return jsonDecode(response.body);
+      try {
+        return jsonDecode(response.body);
+      } catch (_) {
+        return response.body;
+      }
     }
     try {
       final body = jsonDecode(response.body) as Map<String, dynamic>;

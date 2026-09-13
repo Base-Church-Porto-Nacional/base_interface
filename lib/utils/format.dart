@@ -67,3 +67,17 @@ String isoDate(DateTime date) {
   final d = date.day.toString().padLeft(2, '0');
   return '${date.year}-$m-$d';
 }
+
+String formatHora(String? hora) {
+  if (hora == null || hora.isEmpty) return '';
+  if (hora.length >= 5) return hora.substring(0, 5);
+  return hora;
+}
+
+String normalizeHoraApi(String hora) {
+  final h = hora.trim();
+  if (h.isEmpty) return h;
+  final parts = h.split(':');
+  if (parts.length == 2) return '$h:00';
+  return h;
+}

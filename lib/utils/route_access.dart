@@ -58,6 +58,11 @@ bool canAccessPath(AuthUser? user, String path) {
     return hasPermission(user.roles, 'voluntarios:view') || isPastorOuAdmin(user);
   }
 
+  if (path.startsWith('/cultos/mes') ||
+      path.startsWith('/cultos/categorias') ||
+      path.startsWith('/cultos/culto/')) {
+    return hasPermission(user.roles, 'culto:view') || isPastorOuAdmin(user);
+  }
   if (path.startsWith('/cultos/conteudo')) {
     return hasPermission(user.roles, 'culto:view') || isPastorOuAdmin(user);
   }

@@ -16,6 +16,8 @@ enum TipoEvento { culto, evento, ensaio, reuniao, outro }
 
 enum DiaSemana { domingo, segunda, terca, quarta, quinta, sexta, sabado }
 
+enum CultoStatus { agendado, aberto, realizado, cancelado }
+
 enum EscalaItemStatus { pendente, confirmado, recusado, substituido }
 
 class Igreja {
@@ -557,6 +559,220 @@ class ConteudoCulto {
   }
 }
 
+class CategoriaCulto {
+  const CategoriaCulto({
+    required this.id,
+    required this.igrejaId,
+    required this.titulo,
+    required this.diaSemana,
+    required this.horaInicio,
+    required this.duracaoMinutos,
+    required this.ativo,
+    this.descricao,
+    this.pregadorPadraoId,
+    this.pregadorPadraoNome,
+  });
+
+  final String id;
+  final String igrejaId;
+  final String titulo;
+  final String? descricao;
+  final DiaSemana diaSemana;
+  final String horaInicio;
+  final int duracaoMinutos;
+  final String? pregadorPadraoId;
+  final String? pregadorPadraoNome;
+  final bool ativo;
+
+  CategoriaCulto copyWith({
+    String? titulo,
+    String? descricao,
+    DiaSemana? diaSemana,
+    String? horaInicio,
+    int? duracaoMinutos,
+    String? pregadorPadraoId,
+    String? pregadorPadraoNome,
+    bool? ativo,
+  }) {
+    return CategoriaCulto(
+      id: id,
+      igrejaId: igrejaId,
+      titulo: titulo ?? this.titulo,
+      descricao: descricao ?? this.descricao,
+      diaSemana: diaSemana ?? this.diaSemana,
+      horaInicio: horaInicio ?? this.horaInicio,
+      duracaoMinutos: duracaoMinutos ?? this.duracaoMinutos,
+      pregadorPadraoId: pregadorPadraoId ?? this.pregadorPadraoId,
+      pregadorPadraoNome: pregadorPadraoNome ?? this.pregadorPadraoNome,
+      ativo: ativo ?? this.ativo,
+    );
+  }
+}
+
+class Culto {
+  const Culto({
+    required this.id,
+    required this.igrejaId,
+    required this.categoriaCultoId,
+    required this.categoriaCultoTitulo,
+    required this.titulo,
+    required this.data,
+    required this.horaInicio,
+    required this.status,
+    required this.competencia,
+    required this.ativo,
+    required this.janelaConfiguracaoAberta,
+    required this.temRelatorio,
+    this.tema,
+    this.horaFim,
+    this.pregadorId,
+    this.pregadorNome,
+    this.escalaId,
+  });
+
+  final String id;
+  final String igrejaId;
+  final String categoriaCultoId;
+  final String categoriaCultoTitulo;
+  final String titulo;
+  final String? tema;
+  final String data;
+  final String horaInicio;
+  final String? horaFim;
+  final String? pregadorId;
+  final String? pregadorNome;
+  final CultoStatus status;
+  final String competencia;
+  final String? escalaId;
+  final bool ativo;
+  final bool janelaConfiguracaoAberta;
+  final bool temRelatorio;
+
+  Culto copyWith({
+    String? titulo,
+    String? tema,
+    String? data,
+    String? horaInicio,
+    String? horaFim,
+    String? pregadorId,
+    String? pregadorNome,
+    CultoStatus? status,
+    bool? ativo,
+    bool? janelaConfiguracaoAberta,
+    bool? temRelatorio,
+  }) {
+    return Culto(
+      id: id,
+      igrejaId: igrejaId,
+      categoriaCultoId: categoriaCultoId,
+      categoriaCultoTitulo: categoriaCultoTitulo,
+      titulo: titulo ?? this.titulo,
+      tema: tema ?? this.tema,
+      data: data ?? this.data,
+      horaInicio: horaInicio ?? this.horaInicio,
+      horaFim: horaFim ?? this.horaFim,
+      pregadorId: pregadorId ?? this.pregadorId,
+      pregadorNome: pregadorNome ?? this.pregadorNome,
+      status: status ?? this.status,
+      competencia: competencia,
+      escalaId: escalaId,
+      ativo: ativo ?? this.ativo,
+      janelaConfiguracaoAberta:
+          janelaConfiguracaoAberta ?? this.janelaConfiguracaoAberta,
+      temRelatorio: temRelatorio ?? this.temRelatorio,
+    );
+  }
+}
+
+class CultoConteudo {
+  const CultoConteudo({
+    required this.cultoId,
+    this.textoPregacao,
+    this.louvor,
+    this.tema,
+    this.pregadorId,
+    this.pregadorNome,
+  });
+
+  final String cultoId;
+  final String? textoPregacao;
+  final String? louvor;
+  final String? tema;
+  final String? pregadorId;
+  final String? pregadorNome;
+
+  CultoConteudo copyWith({
+    String? textoPregacao,
+    String? louvor,
+    String? tema,
+    String? pregadorId,
+    String? pregadorNome,
+  }) {
+    return CultoConteudo(
+      cultoId: cultoId,
+      textoPregacao: textoPregacao ?? this.textoPregacao,
+      louvor: louvor ?? this.louvor,
+      tema: tema ?? this.tema,
+      pregadorId: pregadorId ?? this.pregadorId,
+      pregadorNome: pregadorNome ?? this.pregadorNome,
+    );
+  }
+}
+
+class CultoRelatorio {
+  const CultoRelatorio({
+    required this.cultoId,
+    this.adultos = 0,
+    this.criancas = 0,
+    this.conversoes = 0,
+    this.reconciliacoes = 0,
+    this.aliancas = 0,
+    this.carros = 0,
+    this.motos = 0,
+    this.bicicletas = 0,
+    this.observacoes,
+  });
+
+  final String cultoId;
+  final int adultos;
+  final int criancas;
+  final int conversoes;
+  final int reconciliacoes;
+  final int aliancas;
+  final int carros;
+  final int motos;
+  final int bicicletas;
+  final String? observacoes;
+
+  int get totalPresentes => adultos + criancas;
+  int get totalVeiculos => carros + motos + bicicletas;
+
+  CultoRelatorio copyWith({
+    int? adultos,
+    int? criancas,
+    int? conversoes,
+    int? reconciliacoes,
+    int? aliancas,
+    int? carros,
+    int? motos,
+    int? bicicletas,
+    String? observacoes,
+  }) {
+    return CultoRelatorio(
+      cultoId: cultoId,
+      adultos: adultos ?? this.adultos,
+      criancas: criancas ?? this.criancas,
+      conversoes: conversoes ?? this.conversoes,
+      reconciliacoes: reconciliacoes ?? this.reconciliacoes,
+      aliancas: aliancas ?? this.aliancas,
+      carros: carros ?? this.carros,
+      motos: motos ?? this.motos,
+      bicicletas: bicicletas ?? this.bicicletas,
+      observacoes: observacoes ?? this.observacoes,
+    );
+  }
+}
+
 class IndisponibilidadeSemanal {
   const IndisponibilidadeSemanal({
     required this.dia,
@@ -809,6 +1025,87 @@ String diaSemanaLabel(DiaSemana dia) {
       return 'Sexta';
     case DiaSemana.sabado:
       return 'Sábado';
+  }
+}
+
+String diaSemanaApiToString(DiaSemana dia) {
+  switch (dia) {
+    case DiaSemana.domingo:
+      return 'DOMINGO';
+    case DiaSemana.segunda:
+      return 'SEGUNDA';
+    case DiaSemana.terca:
+      return 'TERCA';
+    case DiaSemana.quarta:
+      return 'QUARTA';
+    case DiaSemana.quinta:
+      return 'QUINTA';
+    case DiaSemana.sexta:
+      return 'SEXTA';
+    case DiaSemana.sabado:
+      return 'SABADO';
+  }
+}
+
+DiaSemana diaSemanaFromApi(String value) {
+  switch (value.toUpperCase()) {
+    case 'DOMINGO':
+      return DiaSemana.domingo;
+    case 'SEGUNDA':
+      return DiaSemana.segunda;
+    case 'TERCA':
+      return DiaSemana.terca;
+    case 'QUARTA':
+      return DiaSemana.quarta;
+    case 'QUINTA':
+      return DiaSemana.quinta;
+    case 'SEXTA':
+      return DiaSemana.sexta;
+    case 'SABADO':
+      return DiaSemana.sabado;
+    default:
+      return DiaSemana.domingo;
+  }
+}
+
+String cultoStatusLabel(CultoStatus status) {
+  switch (status) {
+    case CultoStatus.agendado:
+      return 'Agendado';
+    case CultoStatus.aberto:
+      return 'Aberto';
+    case CultoStatus.realizado:
+      return 'Realizado';
+    case CultoStatus.cancelado:
+      return 'Cancelado';
+  }
+}
+
+String cultoStatusApiToString(CultoStatus status) {
+  switch (status) {
+    case CultoStatus.agendado:
+      return 'AGENDADO';
+    case CultoStatus.aberto:
+      return 'ABERTO';
+    case CultoStatus.realizado:
+      return 'REALIZADO';
+    case CultoStatus.cancelado:
+      return 'CANCELADO';
+  }
+}
+
+CultoStatus cultoStatusFromApi(String value) {
+  switch (value.toUpperCase()) {
+    case 'AGENDADO':
+      return CultoStatus.agendado;
+    case 'ABERTO':
+      return CultoStatus.aberto;
+    case 'REALIZADO':
+      return CultoStatus.realizado;
+    case 'CANCELADO':
+      return CultoStatus.cancelado;
+    default:
+      return CultoStatus.agendado;
   }
 }
 

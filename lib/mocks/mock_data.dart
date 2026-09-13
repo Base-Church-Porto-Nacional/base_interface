@@ -1,4 +1,5 @@
 import '../models/models.dart';
+import '../utils/format.dart';
 
 const mockIgrejaMatriz = Igreja(
   id: 'i1',
@@ -661,6 +662,294 @@ final mockConteudosCulto = <ConteudoCulto>[
   ),
 ];
 
+final mockCategoriasCulto = <CategoriaCulto>[
+  const CategoriaCulto(
+    id: 'cat1',
+    igrejaId: 'i1',
+    titulo: 'Domingo inesquecível',
+    descricao: 'Culto oficial de domingo.',
+    diaSemana: DiaSemana.domingo,
+    horaInicio: '20:00:00',
+    duracaoMinutos: 90,
+    pregadorPadraoId: 'p1',
+    pregadorPadraoNome: 'Ana Costa',
+    ativo: true,
+  ),
+  const CategoriaCulto(
+    id: 'cat2',
+    igrejaId: 'i1',
+    titulo: 'Sábado jovem',
+    descricao: 'Culto voltado aos jovens.',
+    diaSemana: DiaSemana.sabado,
+    horaInicio: '19:30:00',
+    duracaoMinutos: 120,
+    pregadorPadraoId: 'p2',
+    pregadorPadraoNome: 'João da Silva',
+    ativo: true,
+  ),
+  const CategoriaCulto(
+    id: 'cat3',
+    igrejaId: 'i2',
+    titulo: 'Domingo Zona Sul',
+    descricao: null,
+    diaSemana: DiaSemana.domingo,
+    horaInicio: '18:00:00',
+    duracaoMinutos: 90,
+    pregadorPadraoId: 'p8',
+    pregadorPadraoNome: 'Pedro Alves',
+    ativo: true,
+  ),
+];
+
+final mockCultos = <Culto>[
+  Culto(
+    id: 'culto-1',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat1',
+    categoriaCultoTitulo: 'Domingo inesquecível',
+    titulo: 'Culto de domingo',
+    tema: 'Destravados: Conforto',
+    data: '2026-09-06',
+    horaInicio: '20:00:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p1',
+    pregadorNome: 'Ana Costa',
+    status: CultoStatus.realizado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: true,
+  ),
+  Culto(
+    id: 'culto-2',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat1',
+    categoriaCultoTitulo: 'Domingo inesquecível',
+    titulo: 'Culto de domingo',
+    tema: 'Vinde a mim',
+    data: '2026-09-13',
+    horaInicio: '20:00:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p1',
+    pregadorNome: 'Ana Costa',
+    status: CultoStatus.aberto,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-3',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat1',
+    categoriaCultoTitulo: 'Domingo inesquecível',
+    titulo: 'Culto de domingo',
+    tema: null,
+    data: '2026-09-20',
+    horaInicio: '20:00:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p1',
+    pregadorNome: 'Ana Costa',
+    status: CultoStatus.agendado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-4',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat1',
+    categoriaCultoTitulo: 'Domingo inesquecível',
+    titulo: 'Culto de domingo',
+    tema: null,
+    data: '2026-09-27',
+    horaInicio: '20:00:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p8',
+    pregadorNome: 'Pedro Alves',
+    status: CultoStatus.agendado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: false,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-5',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat2',
+    categoriaCultoTitulo: 'Sábado jovem',
+    titulo: 'Culto jovem',
+    tema: 'Identidade',
+    data: '2026-09-05',
+    horaInicio: '19:30:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p2',
+    pregadorNome: 'João da Silva',
+    status: CultoStatus.realizado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: true,
+  ),
+  Culto(
+    id: 'culto-6',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat2',
+    categoriaCultoTitulo: 'Sábado jovem',
+    titulo: 'Culto jovem',
+    tema: null,
+    data: '2026-09-12',
+    horaInicio: '19:30:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p2',
+    pregadorNome: 'João da Silva',
+    status: CultoStatus.aberto,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-7',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat2',
+    categoriaCultoTitulo: 'Sábado jovem',
+    titulo: 'Culto jovem',
+    tema: null,
+    data: '2026-09-19',
+    horaInicio: '19:30:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p2',
+    pregadorNome: 'João da Silva',
+    status: CultoStatus.agendado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-8',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat2',
+    categoriaCultoTitulo: 'Sábado jovem',
+    titulo: 'Culto jovem',
+    tema: null,
+    data: '2026-09-26',
+    horaInicio: '19:30:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p3',
+    pregadorNome: 'Maria Oliveira',
+    status: CultoStatus.agendado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: false,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-9',
+    igrejaId: 'i2',
+    categoriaCultoId: 'cat3',
+    categoriaCultoTitulo: 'Domingo Zona Sul',
+    titulo: 'Culto de domingo',
+    tema: 'Renascer',
+    data: '2026-09-06',
+    horaInicio: '18:00:00',
+    horaFim: '19:30:00',
+    pregadorId: 'p8',
+    pregadorNome: 'Pedro Alves',
+    status: CultoStatus.realizado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: true,
+  ),
+  Culto(
+    id: 'culto-10',
+    igrejaId: 'i2',
+    categoriaCultoId: 'cat3',
+    categoriaCultoTitulo: 'Domingo Zona Sul',
+    titulo: 'Culto de domingo',
+    tema: null,
+    data: '2026-09-13',
+    horaInicio: '18:00:00',
+    horaFim: '19:30:00',
+    pregadorId: 'p8',
+    pregadorNome: 'Pedro Alves',
+    status: CultoStatus.aberto,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: false,
+  ),
+];
+
+final mockCultosConteudos = <CultoConteudo>[
+  const CultoConteudo(
+    cultoId: 'culto-1',
+    textoPregacao: 'Isaías 61 — Conforto aos destravados.',
+    louvor: '1. Bondade de Deus\n2. Teu Santo Nome\n3. Ao único',
+    tema: 'Destravados: Conforto',
+    pregadorId: 'p1',
+    pregadorNome: 'Ana Costa',
+  ),
+  const CultoConteudo(
+    cultoId: 'culto-2',
+    textoPregacao: 'Mateus 11:28 — Vinde a mim.',
+    louvor: '1. Vem, esta é a hora\n2. Gratidão',
+    tema: 'Vinde a mim',
+    pregadorId: 'p1',
+    pregadorNome: 'Ana Costa',
+  ),
+  const CultoConteudo(
+    cultoId: 'culto-5',
+    textoPregacao: 'Gênesis 1 — Somos imagem de Deus.',
+    louvor: '1. Me Ama\n2. A alegria do Senhor',
+    tema: 'Identidade',
+    pregadorId: 'p2',
+    pregadorNome: 'João da Silva',
+  ),
+];
+
+final mockCultosRelatorios = <CultoRelatorio>[
+  const CultoRelatorio(
+    cultoId: 'culto-1',
+    adultos: 19,
+    criancas: 2,
+    conversoes: 2,
+    reconciliacoes: 1,
+    aliancas: 3,
+    carros: 7,
+    motos: 4,
+    bicicletas: 0,
+    observacoes: 'Culto de celebração com batismos.',
+  ),
+  const CultoRelatorio(
+    cultoId: 'culto-5',
+    adultos: 25,
+    criancas: 5,
+    conversoes: 1,
+    reconciliacoes: 0,
+    aliancas: 0,
+    carros: 5,
+    motos: 2,
+    bicicletas: 1,
+    observacoes: 'Culto jovem.',
+  ),
+  const CultoRelatorio(
+    cultoId: 'culto-9',
+    adultos: 12,
+    criancas: 1,
+    conversoes: 0,
+    reconciliacoes: 0,
+    aliancas: 1,
+    carros: 4,
+    motos: 1,
+    bicicletas: 0,
+    observacoes: null,
+  ),
+];
+
 final mockEscalas = <Escala>[
   Escala(
     id: 'e-sup',
@@ -861,6 +1150,102 @@ const mockDashboard = DashboardStats(
     novosMembros: 5,
   ),
 );
+
+int _weekdayNumber(DiaSemana dia) {
+  switch (dia) {
+    case DiaSemana.domingo:
+      return 7;
+    case DiaSemana.segunda:
+      return 1;
+    case DiaSemana.terca:
+      return 2;
+    case DiaSemana.quarta:
+      return 3;
+    case DiaSemana.quinta:
+      return 4;
+    case DiaSemana.sexta:
+      return 5;
+    case DiaSemana.sabado:
+      return 6;
+  }
+}
+
+String _somaDuracao(String hora, int duracao) {
+  final parts = hora.split(':');
+  if (parts.length < 2) return hora;
+  final h = int.tryParse(parts[0]) ?? 0;
+  final m = int.tryParse(parts[1]) ?? 0;
+  final total = h * 60 + m + duracao;
+  final hh = ((total ~/ 60) % 24).toString().padLeft(2, '0');
+  final mm = (total % 60).toString().padLeft(2, '0');
+  return '$hh:$mm:00';
+}
+
+bool janelaConfiguracaoAbertaMock(String dataIso) {
+  final hoje = DateTime.now();
+  final data = DateTime.tryParse(dataIso);
+  if (data == null) return false;
+  final hojeInicio = DateTime(hoje.year, hoje.month, hoje.day);
+  return !data.isAfter(hojeInicio.add(const Duration(days: 8)));
+}
+
+String competenciaProximoMes() {
+  final hoje = DateTime.now();
+  return '${hoje.year}-${(hoje.month + 1).toString().padLeft(2, '0')}';
+}
+
+List<String> datasDaCompetencia(DiaSemana dia, String competencia) {
+  final parts = competencia.split('-');
+  if (parts.length != 2) return [];
+  final year = int.tryParse(parts[0]) ?? DateTime.now().year;
+  final month = int.tryParse(parts[1]) ?? DateTime.now().month;
+  final target = _weekdayNumber(dia);
+  final daysInMonth = DateTime(year, month + 1, 0).day;
+  final dates = <String>[];
+  for (var day = 1; day <= daysInMonth; day++) {
+    final date = DateTime(year, month, day);
+    if (date.weekday == target) dates.add(isoDate(date));
+  }
+  return dates;
+}
+
+List<Culto> gerarCultosCategoriaMock(CategoriaCulto categoria, String competencia) {
+  final dates = datasDaCompetencia(categoria.diaSemana, competencia);
+  final created = <Culto>[];
+  for (final dataIso in dates) {
+    final exists = mockCultos.any(
+      (c) => c.categoriaCultoId == categoria.id && c.data == dataIso,
+    );
+    if (exists) continue;
+    final culto = Culto(
+      id: 'culto-ger-${DateTime.now().millisecondsSinceEpoch}-$dataIso',
+      igrejaId: categoria.igrejaId,
+      categoriaCultoId: categoria.id,
+      categoriaCultoTitulo: categoria.titulo,
+      titulo: categoria.titulo,
+      data: dataIso,
+      horaInicio: categoria.horaInicio,
+      horaFim: _somaDuracao(categoria.horaInicio, categoria.duracaoMinutos),
+      pregadorId: categoria.pregadorPadraoId,
+      pregadorNome: categoria.pregadorPadraoNome,
+      status: CultoStatus.agendado,
+      competencia: competencia,
+      ativo: true,
+      janelaConfiguracaoAberta: janelaConfiguracaoAbertaMock(dataIso),
+      temRelatorio: false,
+    );
+    mockCultos.add(culto);
+    created.add(culto);
+  }
+  return created;
+}
+
+CategoriaCulto? categoriaCultoById(String id) {
+  for (final c in mockCategoriasCulto) {
+    if (c.id == id) return c;
+  }
+  return null;
+}
 
 Future<T> mockDelay<T>(T value, [int ms = 280]) =>
     Future.delayed(Duration(milliseconds: ms), () => value);

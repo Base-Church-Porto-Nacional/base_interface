@@ -53,11 +53,11 @@ const mainNav = [
   ),
   NavItem(
     label: 'Cultos',
-    path: '/cultos',
+    path: '/cultos/mes',
     permission: 'cronograma:view',
     children: [
-      NavItem(label: 'Agenda', path: '/cultos'),
-      NavItem(label: 'Gestão de culto', path: '/cultos/conteudo', permission: 'culto:view'),
+      NavItem(label: 'Mês', path: '/cultos/mes'),
+      NavItem(label: 'Categorias', path: '/cultos/categorias'),
     ],
   ),
   NavItem(label: 'Usuários', path: '/usuarios', permission: 'usuarios:view'),
