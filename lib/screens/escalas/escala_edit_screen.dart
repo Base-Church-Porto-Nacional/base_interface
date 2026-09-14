@@ -286,6 +286,24 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
     }
   }
 
+  Future<void> _aprovarEmNome(EscalaVoluntario v) async {
+    setState(() => _nestedLoading = true);
+    try {
+      await context.read<EscalaService>().updateVoluntarioStatus(
+            widget.escalaId,
+            v.id,
+            status: EscalaItemStatus.confirmado,
+            observacoes: 'Confirmado em nome do voluntário',
+            confirmadoPeloVoluntario: true,
+          );
+      await _reload();
+    } catch (e) {
+      _snack('$e');
+    } finally {
+      if (mounted) setState(() => _nestedLoading = false);
+    }
+  }
+
   Future<void> _substituir(EscalaVoluntario v) async {
     setState(() => _nestedLoading = true);
     try {
@@ -487,9 +505,22 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
                 child: MobileListTile(
                   title: v.pessoaNome ?? '—',
                   subtitle: '${escalaItemStatusLabel(v.status)}${v.data != null ? ' · ${formatDate(v.data!)}' : ''}',
-                  trailing: StatusBadge(
-                    label: v.status.name.toUpperCase(),
-                    success: v.status == EscalaItemStatus.confirmado,
+                  trailing: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      StatusBadge(
+                        label: v.status.name.toUpperCase(),
+                        success: v.status == EscalaItemStatus.confirmado,
+                      ),
+                      if (v.aprovadoPeloVoluntario) ...[
+                        const SizedBox(height: 4),
+                        const StatusBadge(
+                          label: 'APROVADO PELO VOLUNTÁRIO',
+                          success: true,
+                        ),
+                      ],
+                    ],
                   ),
                   actions: [
                     TextButton.icon(
@@ -513,11 +544,18 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
                       ),
                     ),
                     PopupMenuButton<EscalaItemStatus>(
-                      onSelected: (s) => _confirmar(v, s),
+                      onSelected: (s) {
+                        if (s == EscalaItemStatus.confirmado) {
+                          _aprovarEmNome(v);
+                        } else {
+                          _confirmar(v, s);
+                        }
+                      },
                       itemBuilder: (_) => const [
                         PopupMenuItem(value: EscalaItemStatus.recusado, child: Text('Recusar')),
                         PopupMenuItem(value: EscalaItemStatus.pendente, child: Text('Marcar pendente')),
                         PopupMenuItem(value: EscalaItemStatus.substituido, child: Text('Marcar substituído')),
+                        PopupMenuItem(value: EscalaItemStatus.confirmado, child: Text('Aprovar em nome do voluntário')),
                       ],
                       tooltip: 'Mais ações',
                     ),

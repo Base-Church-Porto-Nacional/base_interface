@@ -342,6 +342,7 @@ class EscalaService {
     String designacaoId, {
     required EscalaItemStatus status,
     String? observacoes,
+    bool? confirmadoPeloVoluntario,
   }) async {
     if (AppConfig.useMock) {
       final idx = mockEscalas.indexWhere((e) => e.id == id);
@@ -361,6 +362,8 @@ class EscalaService {
         status: status,
         observacoes: observacoes ?? atualizado.observacoes,
         data: atualizado.data,
+        confirmadoPeloVoluntario:
+            confirmadoPeloVoluntario ?? atualizado.confirmadoPeloVoluntario,
       );
       mockEscalas[idx] = escala.copyWith(
         voluntarios: escala.voluntarios
@@ -370,6 +373,60 @@ class EscalaService {
       return mockDelay(novo);
     }
     final json = await _api.put('/escalas/$id/voluntarios/$designacaoId/status', {
+      'status': escalaItemStatusToString(status),
+      'observacoes': observacoes,
+      'confirmadoPeloVoluntario': ?confirmadoPeloVoluntario,
+    }) as Map<String, dynamic>;
+    return _mapVoluntario(json);
+  }
+
+  Future<EscalaVoluntario> responderDesignacao(
+    String id,
+    String designacaoId, {
+    required EscalaItemStatus status,
+    String? observacoes,
+    String? pessoaId,
+  }) async {
+    if (AppConfig.useMock) {
+      final idx = mockEscalas.indexWhere((e) => e.id == id);
+      if (idx < 0) throw Exception('Escala não encontrada.');
+      final escala = mockEscalas[idx];
+      if (escala.status != EscalaStatus.emAndamento) {
+        throw Exception(
+          'A escala precisa estar lançada para o voluntário responder.',
+        );
+      }
+      final atual = escala.voluntarios.firstWhere(
+        (v) => v.id == designacaoId,
+        orElse: () => throw Exception('Designação não encontrada.'),
+      );
+      if (pessoaId != null && atual.pessoaId != pessoaId) {
+        throw Exception('Você só pode responder à sua própria designação.');
+      }
+      if (status == EscalaItemStatus.recusado &&
+          (observacoes == null || observacoes.trim().isEmpty)) {
+        throw Exception('Informe o motivo da recusa.');
+      }
+      final novo = EscalaVoluntario(
+        id: atual.id,
+        escalaId: atual.escalaId,
+        pessoaId: atual.pessoaId,
+        pessoaNome: atual.pessoaNome,
+        servicoId: atual.servicoId,
+        servicoNome: atual.servicoNome,
+        status: status,
+        observacoes: observacoes ?? atual.observacoes,
+        data: atual.data,
+        confirmadoPeloVoluntario: true,
+      );
+      mockEscalas[idx] = escala.copyWith(
+        voluntarios: escala.voluntarios
+            .map((v) => v.id == designacaoId ? novo : v)
+            .toList(),
+      );
+      return mockDelay(novo);
+    }
+    final json = await _api.post('/escalas/$id/voluntarios/$designacaoId/resposta', {
       'status': escalaItemStatusToString(status),
       'observacoes': observacoes,
     }) as Map<String, dynamic>;
@@ -596,6 +653,7 @@ class EscalaService {
       status: escalaItemStatusFromString(e['status'] as String? ?? 'PENDENTE'),
       observacoes: e['observacoes'] as String?,
       data: e['data'] as String?,
+      confirmadoPeloVoluntario: e['confirmadoPeloVoluntario'] as bool? ?? false,
     );
   }
 

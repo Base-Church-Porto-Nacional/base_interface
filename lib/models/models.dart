@@ -423,6 +423,7 @@ class EscalaVoluntario {
     this.status = EscalaItemStatus.pendente,
     this.observacoes,
     this.data,
+    this.confirmadoPeloVoluntario = false,
   });
 
   final String id;
@@ -434,6 +435,10 @@ class EscalaVoluntario {
   final EscalaItemStatus status;
   final String? observacoes;
   final String? data;
+  final bool confirmadoPeloVoluntario;
+
+  bool get aprovadoPeloVoluntario =>
+      confirmadoPeloVoluntario && status == EscalaItemStatus.confirmado;
 }
 
 class Escala {

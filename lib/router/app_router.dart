@@ -18,6 +18,7 @@ import '../screens/igrejas/igrejas_screen.dart';
 import '../screens/login/login_screen.dart';
 import '../screens/membros/membros_screen.dart';
 import '../screens/meu_servico/meu_servico_screen.dart';
+import '../screens/meu_servico/responder_escalas_screen.dart';
 import '../screens/ministerios/ministerio_detail_screen.dart';
 import '../screens/ministerios/ministerios_screen.dart';
 import '../screens/pessoas/pessoa_detail_screen.dart';
@@ -167,6 +168,10 @@ GoRouter createRouter(AuthProvider auth) {
           GoRoute(
             path: '/meu-servico',
             builder: (_, _) => const MeuServicoScreen(),
+          ),
+          GoRoute(
+            path: '/meu-servico/responder',
+            builder: (_, _) => const ResponderEscalasScreen(),
           ),
           GoRoute(
             path: '/perfil/disponibilidade',

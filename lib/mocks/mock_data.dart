@@ -1037,7 +1037,30 @@ final mockEscalas = <Escala>[
     ],
     voluntarios: const [
       EscalaVoluntario(id: 'vl1', pessoaId: 'p3', pessoaNome: 'Maria Oliveira', servicoId: 's1a', servicoNome: 'Vocal', data: '2026-08-09', status: EscalaItemStatus.pendente),
-      EscalaVoluntario(id: 'vl2', pessoaId: 'p2', pessoaNome: 'João da Silva', servicoId: 's1b', servicoNome: 'Violão', data: '2026-08-09', status: EscalaItemStatus.confirmado),
+      EscalaVoluntario(id: 'vl2', pessoaId: 'p2', pessoaNome: 'João da Silva', servicoId: 's1b', servicoNome: 'Violão', data: '2026-08-09', status: EscalaItemStatus.confirmado, confirmadoPeloVoluntario: true),
+    ],
+  ),
+  Escala(
+    id: 'e-culto-set-lancado',
+    titulo: 'Escala de culto — setembro (lançada)',
+    competencia: '2026-09',
+    tipo: EscalaTipo.culto,
+    igrejaId: 'i1',
+    supervisorPessoaId: 'p1',
+    supervisorNome: 'Ana Costa',
+    status: EscalaStatus.emAndamento,
+    dataLancamento: '2026-09-01T10:10:00',
+    dataEvento: '2026-09-13',
+    horaInicio: '18:00:00',
+    horaFim: '20:00:00',
+    ativo: true,
+    servicos: const [
+      EscalaServico(id: 'sla1', servicoId: 's1b', servicoNome: 'Violão', quantidadeNecessaria: 1),
+      EscalaServico(id: 'sla2', servicoId: 's2b', servicoNome: 'Som', quantidadeNecessaria: 1),
+    ],
+    voluntarios: const [
+      EscalaVoluntario(id: 'sla-v1', pessoaId: 'p3', pessoaNome: 'Maria Oliveira', servicoId: 's1b', servicoNome: 'Violão', data: '2026-09-13', status: EscalaItemStatus.pendente),
+      EscalaVoluntario(id: 'sla-v2', pessoaId: 'p7', pessoaNome: 'Carlos Lima', servicoId: 's2b', servicoNome: 'Som', data: '2026-09-13', status: EscalaItemStatus.pendente),
     ],
   ),
   Escala(

@@ -319,9 +319,22 @@ class _EscalaDetailScreenState extends State<EscalaDetailScreen> {
                   if (v.servicoNome != null) v.servicoNome!,
                   if (v.data != null) formatDate(v.data!),
                 ].join(' · '),
-                trailing: StatusBadge(
-                  label: escalaItemStatusLabel(v.status).toUpperCase(),
-                  success: v.status == EscalaItemStatus.confirmado,
+                trailing: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    StatusBadge(
+                      label: escalaItemStatusLabel(v.status).toUpperCase(),
+                      success: v.status == EscalaItemStatus.confirmado,
+                    ),
+                    if (v.aprovadoPeloVoluntario) ...[
+                      const SizedBox(height: 4),
+                      const StatusBadge(
+                        label: 'APROVADO PELO VOLUNTÁRIO',
+                        success: true,
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),

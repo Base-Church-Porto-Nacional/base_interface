@@ -57,11 +57,9 @@ class _MeuServicoScreenState extends State<MeuServicoScreen> {
   @override
   Widget build(BuildContext context) {
     final proximos = _eventos.take(5).toList();
-    final designacoes = <EscalaVoluntario>[];
-    for (final e in _escalas) {
-      designacoes.addAll(e.voluntarios);
-    }
-    designacoes.sort((a, b) => (a.data ?? '').compareTo(b.data ?? ''));
+    final escalasComDesignacoes = _escalas
+        .where((e) => e.voluntarios.isNotEmpty || e.itens.isNotEmpty)
+        .toList();
 
     return Column(
       children: [
@@ -69,6 +67,7 @@ class _MeuServicoScreenState extends State<MeuServicoScreen> {
           currentPath: '/meu-servico',
           tabs: [
             ('/meu-servico', 'Visão geral'),
+            ('/meu-servico/responder', 'Responder escalas'),
             ('/perfil/disponibilidade', 'Disponibilidade'),
           ],
         ),
@@ -107,27 +106,83 @@ class _MeuServicoScreenState extends State<MeuServicoScreen> {
                         const SizedBox(height: 8),
                         Text('Minhas escalas', style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: 8),
-                        if (designacoes.isEmpty)
+                        if (escalasComDesignacoes.isEmpty)
                           const Text('Você ainda não está em nenhuma escala.')
                         else
-                          for (final item in designacoes)
+                          for (final e in escalasComDesignacoes)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
-                              child: MobileListTile(
-                                title: item.pessoaNome ?? 'Você',
-                                subtitle: [
-                                  if (item.data != null) formatDate(item.data!),
-                                  if (item.servicoNome != null) item.servicoNome!,
-                                ].join(' · '),
-                                trailing: StatusBadge(
-                                  label: escalaItemStatusLabel(item.status).toUpperCase(),
-                                  success: item.status == EscalaItemStatus.confirmado,
-                                ),
-                              ),
+                              child: _EscalaCard(escala: e),
                             ),
                       ],
                     ),
         ),
+      ],
+    );
+  }
+}
+
+class _EscalaCard extends StatelessWidget {
+  const _EscalaCard({required this.escala});
+
+  final Escala escala;
+
+  @override
+  Widget build(BuildContext context) {
+    final escalaName = escala.titulo;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Text(
+            escalaName,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+        ),
+        for (final v in escala.voluntarios)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: MobileListTile(
+              title: v.servicoNome ?? 'Designação',
+              subtitle: [
+                if (v.data != null) formatDate(v.data!),
+                escalaStatusLabel(escala.status),
+              ].join(' · '),
+              trailing: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  StatusBadge(
+                    label: escalaItemStatusLabel(v.status).toUpperCase(),
+                    success: v.status == EscalaItemStatus.confirmado,
+                  ),
+                  if (v.aprovadoPeloVoluntario) ...[
+                    const SizedBox(height: 4),
+                    const StatusBadge(
+                      label: 'APROVADO PELO VOLUNTÁRIO',
+                      success: true,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        for (final i in escala.itens)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: MobileListTile(
+              title: i.servicoNome ?? 'Designação',
+              subtitle: [
+                if (i.data.isNotEmpty) formatDate(i.data),
+                escalaStatusLabel(escala.status),
+              ].join(' · '),
+              trailing: StatusBadge(
+                label: escalaItemStatusLabel(i.status).toUpperCase(),
+                success: i.status == EscalaItemStatus.confirmado,
+              ),
+            ),
+          ),
       ],
     );
   }

@@ -67,6 +67,7 @@ const mainNav = [
     permission: 'meu_servico:view',
     children: [
       NavItem(label: 'Visão geral', path: '/meu-servico'),
+      NavItem(label: 'Responder escalas', path: '/meu-servico/responder'),
       NavItem(label: 'Disponibilidade', path: '/perfil/disponibilidade'),
     ],
   ),
