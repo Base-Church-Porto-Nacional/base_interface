@@ -132,6 +132,7 @@ class Pessoa {
     this.nascimento,
     this.jornada = const [],
     this.usuarioId,
+    this.papeis = const [],
   });
 
   final String id;
@@ -146,8 +147,11 @@ class Pessoa {
   final List<JornadaEtapa> jornada;
   final String igrejaId;
   final String? usuarioId;
+  final List<Role> papeis;
 
   bool get temUsuario => usuarioId != null && usuarioId!.isNotEmpty;
+
+  List<Role> get papeisExibiveis => papeis.isNotEmpty ? papeis : _papeisDeTipos(tipos);
 
   Pessoa copyWith({
     String? nome,
@@ -171,8 +175,47 @@ class Pessoa {
       jornada: jornada,
       igrejaId: igrejaId,
       usuarioId: usuarioId ?? this.usuarioId,
+      papeis: papeis,
     );
   }
+}
+
+List<Role> _papeisDeTipos(List<PessoaTipo> tipos) {
+  final papeis = <Role>[];
+  for (final t in tipos) {
+    switch (t) {
+      case PessoaTipo.membro:
+        papeis.add(Role.membro);
+      case PessoaTipo.voluntario:
+        papeis.add(Role.voluntario);
+      case PessoaTipo.lider:
+        papeis.add(Role.lider);
+      case PessoaTipo.pastor:
+        papeis.add(Role.pastor);
+      case PessoaTipo.visitante:
+        break;
+    }
+  }
+  return papeis;
+}
+
+List<PessoaTipo> pessoaTiposDePapeis(List<Role> papeis) {
+  final tipos = <PessoaTipo>[];
+  for (final r in papeis) {
+    switch (r) {
+      case Role.pastor:
+        tipos.add(PessoaTipo.pastor);
+      case Role.lider:
+        tipos.add(PessoaTipo.lider);
+      case Role.voluntario:
+        tipos.add(PessoaTipo.voluntario);
+      case Role.membro:
+        tipos.add(PessoaTipo.membro);
+      case Role.admin:
+        break;
+    }
+  }
+  return tipos.isNotEmpty ? tipos : <PessoaTipo>[PessoaTipo.visitante];
 }
 
 class PessoaHistorico {

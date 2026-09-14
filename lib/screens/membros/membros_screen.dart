@@ -156,6 +156,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
                       subtitle: p.ministerios.isNotEmpty
                           ? p.ministerios.join(', ')
                           : pessoaStatusLabel(p.status),
+                      badges: p.papeisExibiveis.map(roleLabel).toList(),
                       trailing: StatusBadge(
                         label: pessoaStatusLabel(p.status),
                         success: p.status == PessoaStatus.ativo,

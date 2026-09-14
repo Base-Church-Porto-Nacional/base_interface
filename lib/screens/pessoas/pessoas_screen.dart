@@ -205,10 +205,7 @@ class _PessoasScreenState extends State<PessoasScreen> {
                         if (p.ministerios.isNotEmpty) p.ministerios.join(', '),
                         pessoaStatusLabel(p.status),
                       ].where((s) => s.isNotEmpty).join(' · '),
-                      trailing: StatusBadge(
-                        label: p.tipos.map((t) => t.name.toUpperCase()).join(', '),
-                        success: p.status == PessoaStatus.ativo,
-                      ),
+                      badges: p.papeisExibiveis.map(roleLabel).toList(),
                       onTap: () => context.push('/membros/pessoa/${p.id}'),
                       actions: [
                         if (podeMutar)

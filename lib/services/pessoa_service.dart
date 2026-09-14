@@ -144,6 +144,9 @@ class PessoaService {
   }
 
   Pessoa _mapPessoa(Map<String, dynamic> json) {
+    final papeis = (json['papeis'] as List<dynamic>? ?? const [])
+        .map((r) => roleFromString(r as String))
+        .toList();
     return Pessoa(
       id: json['id'] as String,
       nome: json['nome'] as String,
@@ -152,11 +155,12 @@ class PessoaService {
       status: (json['ativo'] as bool? ?? true)
           ? PessoaStatus.ativo
           : PessoaStatus.inativo,
-      tipos: const [PessoaTipo.visitante],
+      tipos: pessoaTiposDePapeis(papeis),
       ministerios: const [],
       dataCadastro: json['dataCadastro'] as String? ?? '',
       igrejaId: json['igrejaId'] as String? ?? '',
       usuarioId: json['usuarioId'] as String?,
+      papeis: papeis,
     );
   }
 }
