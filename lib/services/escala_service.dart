@@ -263,6 +263,8 @@ class EscalaService {
     String? servicoNome,
     String? observacoes,
     String? data,
+    String? eventoId,
+    String? horario,
   }) async {
     if (AppConfig.useMock) {
       final idx = mockEscalas.indexWhere((e) => e.id == id);
@@ -288,6 +290,9 @@ class EscalaService {
       'pessoaId': pessoaId,
       'servicoId': servicoId,
       'observacoes': observacoes,
+      'data': ?data,
+      'eventoId': ?eventoId,
+      'horario': ?horario,
     }) as Map<String, dynamic>;
     return _mapVoluntario(json);
   }
@@ -529,6 +534,34 @@ class EscalaService {
     return text;
   }
 
+  Future<List<VisaoMensalEscala>> visaoMensal({
+    String? igrejaId,
+    String? competencia,
+    String? ministerioId,
+    String? pessoaId,
+    bool administrador = false,
+  }) async {
+    if (AppConfig.useMock) {
+      return mockDelay(mockVisaoMensal(
+        igrejaId: igrejaId,
+        competencia: competencia,
+        ministerioId: ministerioId,
+        pessoaId: pessoaId,
+        administrador: administrador,
+      ));
+    }
+    final query = <String, String>{
+      'igrejaId': ?igrejaId,
+      'competencia': ?competencia,
+      'ministerioId': ?ministerioId,
+    };
+    final list = await _api.get(
+      '/escalas/visao-mensal',
+      query: query.isEmpty ? null : query,
+    ) as List<dynamic>;
+    return list.map((e) => _mapVisaoMensal(e as Map<String, dynamic>)).toList();
+  }
+
   List<EscalaVoluntario> _gerarSugestoesPara(
     Escala escala,
     List<EscalaServico> servicos,
@@ -707,6 +740,61 @@ class EscalaService {
       servicoNome: json['servicoNome'] as String?,
       data: json['data'] as String?,
       horario: json['horario'] as String?,
+    );
+  }
+
+  VisaoMensalEscala _mapVisaoMensal(Map<String, dynamic> json) {
+    final escalaStatusRaw = json['escalaStatus'] as String?;
+    return VisaoMensalEscala(
+      competencia: json['competencia'] as String? ?? '',
+      igrejaId: json['igrejaId'] as String? ?? '',
+      ministerioId: json['ministerioId'] as String? ?? '',
+      ministerioNome: json['ministerioNome'] as String? ?? '',
+      escalaId: json['escalaId'] as String?,
+      escalaTitulo: json['escalaTitulo'] as String?,
+      escalaStatus: escalaStatusRaw == null
+          ? null
+          : escalaStatusFromString(escalaStatusRaw),
+      itens: (json['itens'] as List<dynamic>? ?? [])
+          .map((e) => _mapItemVisao(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  ItemVisaoMensal _mapItemVisao(Map<String, dynamic> json) {
+    return ItemVisaoMensal(
+      origem: json['origem'] as String? ?? 'EVENTO',
+      id: json['id'] as String? ?? '',
+      titulo: json['titulo'] as String? ?? '',
+      data: json['data'] as String? ?? '',
+      horaInicio: json['horaInicio'] as String?,
+      horaFim: json['horaFim'] as String?,
+      localEvento: json['localEvento'] as String?,
+      servicos: (json['servicos'] as List<dynamic>? ?? [])
+          .map((e) => _mapServicoVisao(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  ServicoVisaoMensal _mapServicoVisao(Map<String, dynamic> json) {
+    return ServicoVisaoMensal(
+      servicoId: json['servicoId'] as String?,
+      servicoNome: json['servicoNome'] as String? ?? 'Serviço',
+      quantidadeNecessaria: (json['quantidadeNecessaria'] as num? ?? 1).toInt(),
+      designados: (json['designados'] as List<dynamic>? ?? [])
+          .map((e) => _mapDesignadoVisao(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  DesignadoVisao _mapDesignadoVisao(Map<String, dynamic> json) {
+    return DesignadoVisao(
+      designacaoId: json['designacaoId'] as String? ?? '',
+      pessoaId: json['pessoaId'] as String?,
+      pessoaNome: json['pessoaNome'] as String? ?? '—',
+      status: escalaItemStatusFromString(json['status'] as String? ?? 'PENDENTE'),
+      confirmadoPeloVoluntario: json['confirmadoPeloVoluntario'] as bool? ?? false,
+      observacoes: json['observacoes'] as String?,
     );
   }
 

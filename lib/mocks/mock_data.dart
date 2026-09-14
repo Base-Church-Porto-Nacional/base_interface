@@ -1494,3 +1494,169 @@ AnaliseDiaCandidato _analiseDiaCandidato(Pessoa p, String? igrejaId, String data
     conflitos: conflitos,
   );
 }
+
+List<VisaoMensalEscala> mockVisaoMensal({
+  String? igrejaId,
+  String? competencia,
+  String? ministerioId,
+  String? pessoaId,
+  bool administrador = false,
+}) {
+  if (igrejaId == null || igrejaId.isEmpty) return [];
+  final mes = competencia == null || competencia.isEmpty
+      ? competenciaFrom(DateTime.now())
+      : competencia;
+
+  final visiveis = ministeriosDaIgreja(igrejaId).where((m) {
+    if (administrador) return true;
+    return m.liderPessoaId == pessoaId || m.coordenadorPessoaId == pessoaId;
+  }).toList();
+  if (ministerioId != null && ministerioId.isNotEmpty) {
+    final alvo = visiveis.where((m) => m.id == ministerioId).toList();
+    if (alvo.isEmpty) return [];
+    visiveis
+      ..clear()
+      ..addAll(alvo);
+  }
+  if (visiveis.isEmpty) return [];
+
+  final cultos = mockCultos
+      .where((c) => c.igrejaId == igrejaId && c.ativo && _mesDaData(c.data) == mes)
+      .toList();
+  final eventos = mockEventos
+      .where(
+        (e) => e.igrejaId == igrejaId && e.ativo && _mesDaData(e.data) == mes,
+      )
+      .toList();
+
+  final resultado = <VisaoMensalEscala>[];
+  for (final m in visiveis) {
+    Escala? mensal;
+    for (final e in mockEscalas) {
+      if (e.igrejaId == igrejaId &&
+          e.competencia == mes &&
+          e.ativo &&
+          e.tipo == EscalaTipo.ministerio &&
+          e.ministerioId == m.id &&
+          e.eventoId == null) {
+        mensal = e;
+        break;
+      }
+    }
+    final designacoes = mensal?.voluntarios ?? const <EscalaVoluntario>[];
+
+    final itens = <ItemVisaoMensal>[
+      for (final culto in cultos)
+        ItemVisaoMensal(
+          origem: 'CULTO',
+          id: culto.id,
+          titulo: culto.titulo,
+          data: culto.data,
+          horaInicio: culto.horaInicio,
+          horaFim: culto.horaFim,
+          localEvento: null,
+          servicos: _montarServicosVisao(
+            mensal,
+            designacoes.where((v) => v.data == culto.data).toList(),
+          ),
+        ),
+      for (final evento in eventos)
+        ItemVisaoMensal(
+          origem: 'EVENTO',
+          id: evento.id,
+          titulo: evento.titulo,
+          data: evento.data,
+          horaInicio: evento.horaInicio,
+          horaFim: evento.horaFim,
+          localEvento: evento.localEvento,
+          servicos: _montarServicosVisao(
+            mensal,
+            designacoes.where((v) => v.eventoId == evento.id).toList(),
+          ),
+        ),
+    ];
+    itens.sort((a, b) {
+      final byData = a.data.compareTo(b.data);
+      if (byData != 0) return byData;
+      final byHora = (a.horaInicio ?? '').compareTo(b.horaInicio ?? '');
+      if (byHora != 0) return byHora;
+      return a.origem.compareTo(b.origem);
+    });
+
+    resultado.add(
+      VisaoMensalEscala(
+        competencia: mes,
+        igrejaId: igrejaId,
+        ministerioId: m.id,
+        ministerioNome: m.nome,
+        escalaId: mensal?.id,
+        escalaTitulo: mensal?.titulo,
+        escalaStatus: mensal?.status,
+        itens: itens,
+      ),
+    );
+  }
+  return resultado;
+}
+
+List<ServicoVisaoMensal> _montarServicosVisao(
+  Escala? mensal,
+  List<EscalaVoluntario> designacoes,
+) {
+  final necessidades = <String, int>{};
+  if (mensal != null) {
+    for (final s in mensal.servicos) {
+      if (s.servicoId != null) {
+        necessidades[s.servicoId!] = s.quantidadeNecessaria;
+      }
+    }
+  }
+  final nomes = <String, String>{
+    for (final s in mensal?.servicos ?? const <EscalaServico>[])
+      if (s.servicoId != null) s.servicoId!: s.servicoNome ?? s.servicoId!,
+  };
+
+  final agrupadas = <String, List<EscalaVoluntario>>{};
+  for (final d in designacoes) {
+    if (d.servicoId == null) continue;
+    agrupadas.putIfAbsent(d.servicoId!, () => []).add(d);
+    if (!nomes.containsKey(d.servicoId)) {
+      nomes[d.servicoId!] = d.servicoNome ?? d.servicoId!;
+    }
+  }
+
+  final servicoIds = <String>{...necessidades.keys, ...agrupadas.keys};
+  final servicos = <ServicoVisaoMensal>[];
+  for (final servicoId in servicoIds.toList()
+    ..sort((a, b) => nomes[a]!.compareTo(nomes[b]!))) {
+    final unicos = <String, EscalaVoluntario>{};
+    for (final d in agrupadas[servicoId] ?? const <EscalaVoluntario>[]) {
+      unicos.putIfAbsent(d.pessoaId ?? '', () => d);
+    }
+    final designados = unicos.values.toList()
+      ..sort((a, b) => (a.pessoaNome ?? '').compareTo(b.pessoaNome ?? ''));
+    final qtd = necessidades[servicoId];
+    servicos.add(
+      ServicoVisaoMensal(
+        servicoId: servicoId,
+        servicoNome: nomes[servicoId] ?? servicoId,
+        quantidadeNecessaria: qtd ?? designados.length,
+        designados: designados
+            .map(
+              (v) => DesignadoVisao(
+                designacaoId: v.id,
+                pessoaId: v.pessoaId,
+                pessoaNome: v.pessoaNome ?? '—',
+                status: v.status,
+                confirmadoPeloVoluntario: v.confirmadoPeloVoluntario,
+                observacoes: v.observacoes,
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+  return servicos;
+}
+
+String _mesDaData(String data) => data.length >= 7 ? data.substring(0, 7) : '';

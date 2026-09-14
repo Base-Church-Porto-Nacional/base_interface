@@ -183,6 +183,12 @@ class _EscalasScreenState extends State<EscalasScreen> {
                     onPressed: _pickCompetencia,
                     child: Text(formatCompetencia(_competencia)),
                   ),
+                  OutlinedButton(
+                    onPressed: () => context.push(
+                      '/voluntariado/escalas/visao-mensal?competencia=$_competencia',
+                    ),
+                    child: const Text('Visão mensal'),
+                  ),
                   if (canCreateAny)
                     FilledButton(
                       onPressed: () => context.push(

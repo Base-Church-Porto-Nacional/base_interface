@@ -466,6 +466,8 @@ class EscalaVoluntario {
     this.status = EscalaItemStatus.pendente,
     this.observacoes,
     this.data,
+    this.eventoId,
+    this.horario,
     this.confirmadoPeloVoluntario = false,
   });
 
@@ -478,6 +480,8 @@ class EscalaVoluntario {
   final EscalaItemStatus status;
   final String? observacoes;
   final String? data;
+  final String? eventoId;
+  final String? horario;
   final bool confirmadoPeloVoluntario;
 
   bool get aprovadoPeloVoluntario =>
@@ -594,6 +598,87 @@ class Escala {
       itens: itens ?? this.itens,
     );
   }
+}
+
+class VisaoMensalEscala {
+  const VisaoMensalEscala({
+    required this.competencia,
+    required this.igrejaId,
+    required this.ministerioId,
+    required this.ministerioNome,
+    this.escalaId,
+    this.escalaTitulo,
+    this.escalaStatus,
+    this.itens = const [],
+  });
+
+  final String competencia;
+  final String igrejaId;
+  final String ministerioId;
+  final String ministerioNome;
+  final String? escalaId;
+  final String? escalaTitulo;
+  final EscalaStatus? escalaStatus;
+  final List<ItemVisaoMensal> itens;
+}
+
+class ItemVisaoMensal {
+  const ItemVisaoMensal({
+    required this.origem,
+    required this.id,
+    required this.titulo,
+    required this.data,
+    this.horaInicio,
+    this.horaFim,
+    this.localEvento,
+    this.servicos = const [],
+  });
+
+  final String origem;
+  final String id;
+  final String titulo;
+  final String data;
+  final String? horaInicio;
+  final String? horaFim;
+  final String? localEvento;
+  final List<ServicoVisaoMensal> servicos;
+
+  bool get isCulto => origem.toUpperCase() == 'CULTO';
+}
+
+class ServicoVisaoMensal {
+  const ServicoVisaoMensal({
+    this.servicoId,
+    required this.servicoNome,
+    required this.quantidadeNecessaria,
+    this.designados = const [],
+  });
+
+  final String? servicoId;
+  final String servicoNome;
+  final int quantidadeNecessaria;
+  final List<DesignadoVisao> designados;
+
+  int get vagasEmAberto =>
+      (quantidadeNecessaria - designados.length).clamp(0, quantidadeNecessaria);
+}
+
+class DesignadoVisao {
+  const DesignadoVisao({
+    required this.designacaoId,
+    this.pessoaId,
+    required this.pessoaNome,
+    this.status = EscalaItemStatus.pendente,
+    this.confirmadoPeloVoluntario = false,
+    this.observacoes,
+  });
+
+  final String designacaoId;
+  final String? pessoaId;
+  final String pessoaNome;
+  final EscalaItemStatus status;
+  final bool confirmadoPeloVoluntario;
+  final String? observacoes;
 }
 
 class EscalaCandidato {
