@@ -108,8 +108,10 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
         _eventos = eventos;
         _servicosDisponiveis = servicos.values.toList()
           ..sort((a, b) => a.nome.compareTo(b.nome));
-        _supervisorId ??= igreja?.pastorPessoaId;
-        _pregadorId ??= igreja?.pastorPessoaId;
+        _supervisorId = _coercePessoa(_supervisorId ?? igreja?.pastorPessoaId);
+        _pregadorId = _coercePessoa(_pregadorId ?? igreja?.pastorPessoaId);
+        _ministerioId = _coerceId(_ministerioId, ministerios);
+        _eventoId = _coerceId(_eventoId, eventos);
         _loading = false;
       });
     } catch (e) {
@@ -137,6 +139,16 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
           ),
         )
         .toList();
+  }
+
+  String? _coercePessoa(String? id) {
+    if (id != null && _pessoas.any((p) => p.id == id)) return id;
+    return _pessoas.isNotEmpty ? _pessoas.first.id : null;
+  }
+
+  String? _coerceId(String? id, List<dynamic> items) {
+    if (id != null && items.any((i) => (i as dynamic).id == id)) return id;
+    return items.isEmpty ? null : (items.first as dynamic).id as String?;
   }
 
   List<Ministerio> get _ministeriosPermitidos {
