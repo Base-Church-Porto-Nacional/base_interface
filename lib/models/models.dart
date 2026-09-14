@@ -12,6 +12,8 @@ enum MinisterioTipo { geral, musica, midia }
 
 enum EscalaTipo { supervisor, pregador, culto, ministerio }
 
+enum EscalaStatus { sugerida, editando, emAndamento, finalizada }
+
 enum TipoEvento { culto, evento, ensaio, reuniao, outro }
 
 enum DiaSemana { domingo, segunda, terca, quarta, quinta, sexta, sabado }
@@ -394,6 +396,46 @@ class EscalaItem {
   final EscalaItemStatus status;
 }
 
+class EscalaServico {
+  const EscalaServico({
+    required this.id,
+    this.escalaId,
+    this.servicoId,
+    this.servicoNome,
+    this.quantidadeNecessaria = 1,
+  });
+
+  final String id;
+  final String? escalaId;
+  final String? servicoId;
+  final String? servicoNome;
+  final int quantidadeNecessaria;
+}
+
+class EscalaVoluntario {
+  const EscalaVoluntario({
+    required this.id,
+    this.escalaId,
+    this.pessoaId,
+    this.pessoaNome,
+    this.servicoId,
+    this.servicoNome,
+    this.status = EscalaItemStatus.pendente,
+    this.observacoes,
+    this.data,
+  });
+
+  final String id;
+  final String? escalaId;
+  final String? pessoaId;
+  final String? pessoaNome;
+  final String? servicoId;
+  final String? servicoNome;
+  final EscalaItemStatus status;
+  final String? observacoes;
+  final String? data;
+}
+
 class Escala {
   const Escala({
     required this.id,
@@ -404,10 +446,20 @@ class Escala {
     required this.supervisorPessoaId,
     required this.supervisorNome,
     required this.ativo,
+    this.descricao,
     this.ministerioId,
     this.ministerioNome,
     this.pregadorPessoaId,
     this.pregadorNome,
+    this.status = EscalaStatus.editando,
+    this.dataLancamento,
+    this.dataFinalizacao,
+    this.dataEvento,
+    this.horaInicio,
+    this.horaFim,
+    this.eventoId,
+    this.servicos = const [],
+    this.voluntarios = const [],
     this.itens = const [],
   });
 
@@ -423,7 +475,179 @@ class Escala {
   final String? pregadorPessoaId;
   final String? pregadorNome;
   final bool ativo;
+  final String? descricao;
+  final EscalaStatus status;
+  final String? dataLancamento;
+  final String? dataFinalizacao;
+  final String? dataEvento;
+  final String? horaInicio;
+  final String? horaFim;
+  final String? eventoId;
+  final List<EscalaServico> servicos;
+  final List<EscalaVoluntario> voluntarios;
   final List<EscalaItem> itens;
+
+  bool geraAuto() => status == EscalaStatus.sugerida;
+
+  int preenchidosDoServico(String? servicoId) => voluntarios
+      .where((v) => v.servicoId == servicoId && v.status != EscalaItemStatus.recusado)
+      .length;
+
+  List<EscalaVoluntario> voluntariosDoServico(String? servicoId) => voluntarios
+      .where((v) => v.servicoId == servicoId && v.status != EscalaItemStatus.recusado)
+      .toList();
+
+  Escala copyWith({
+    String? titulo,
+    String? descricao,
+    String? competencia,
+    EscalaTipo? tipo,
+    String? ministerioId,
+    String? ministerioNome,
+    String? supervisorPessoaId,
+    String? supervisorNome,
+    String? pregadorPessoaId,
+    String? pregadorNome,
+    EscalaStatus? status,
+    String? dataLancamento,
+    String? dataFinalizacao,
+    String? dataEvento,
+    String? horaInicio,
+    String? horaFim,
+    String? eventoId,
+    bool? ativo,
+    List<EscalaServico>? servicos,
+    List<EscalaVoluntario>? voluntarios,
+    List<EscalaItem>? itens,
+  }) {
+    return Escala(
+      id: id,
+      titulo: titulo ?? this.titulo,
+      descricao: descricao ?? this.descricao,
+      competencia: competencia ?? this.competencia,
+      tipo: tipo ?? this.tipo,
+      igrejaId: igrejaId,
+      ministerioId: ministerioId ?? this.ministerioId,
+      ministerioNome: ministerioNome ?? this.ministerioNome,
+      supervisorPessoaId: supervisorPessoaId ?? this.supervisorPessoaId,
+      supervisorNome: supervisorNome ?? this.supervisorNome,
+      pregadorPessoaId: pregadorPessoaId ?? this.pregadorPessoaId,
+      pregadorNome: pregadorNome ?? this.pregadorNome,
+      status: status ?? this.status,
+      dataLancamento: dataLancamento ?? this.dataLancamento,
+      dataFinalizacao: dataFinalizacao ?? this.dataFinalizacao,
+      dataEvento: dataEvento ?? this.dataEvento,
+      horaInicio: horaInicio ?? this.horaInicio,
+      horaFim: horaFim ?? this.horaFim,
+      eventoId: eventoId ?? this.eventoId,
+      ativo: ativo ?? this.ativo,
+      servicos: servicos ?? this.servicos,
+      voluntarios: voluntarios ?? this.voluntarios,
+      itens: itens ?? this.itens,
+    );
+  }
+}
+
+class EscalaCandidato {
+  const EscalaCandidato({
+    required this.pessoaId,
+    required this.pessoaNome,
+    this.servicoId,
+    this.servicoNome,
+    this.servicosQueServe = const [],
+    this.diasDisponiveis = const [],
+    this.analiseDia,
+  });
+
+  final String? servicoId;
+  final String? servicoNome;
+  final String pessoaId;
+  final String pessoaNome;
+  final List<String> servicosQueServe;
+  final List<DiaDisponivel> diasDisponiveis;
+  final AnaliseDiaCandidato? analiseDia;
+}
+
+class DiaDisponivel {
+  const DiaDisponivel({
+    required this.diaSemana,
+    this.horaInicio,
+    this.horaFim,
+    this.disponivel = true,
+  });
+
+  final DiaSemana diaSemana;
+  final String? horaInicio;
+  final String? horaFim;
+  final bool disponivel;
+}
+
+class AnaliseDiaCandidato {
+  const AnaliseDiaCandidato({
+    this.data,
+    this.tituloEvento,
+    this.disponivel = true,
+    this.motivosIndisponibilidade = const [],
+    this.conflitos = const [],
+  });
+
+  final String? data;
+  final String? tituloEvento;
+  final bool disponivel;
+  final List<String> motivosIndisponibilidade;
+  final List<ConflitoEscala> conflitos;
+}
+
+class ConflitoEscala {
+  const ConflitoEscala({
+    this.escalaId,
+    this.escalaTitulo,
+    this.ministerioNome,
+    this.servicoNome,
+    this.data,
+    this.horario,
+  });
+
+  final String? escalaId;
+  final String? escalaTitulo;
+  final String? ministerioNome;
+  final String? servicoNome;
+  final String? data;
+  final String? horario;
+}
+
+class SugestaoResultado {
+  const SugestaoResultado({
+    required this.escalaId,
+    required this.status,
+    required this.message,
+    this.sugestoes = const [],
+  });
+
+  final String escalaId;
+  final String status;
+  final String message;
+  final List<SugestaoItem> sugestoes;
+}
+
+class SugestaoItem {
+  const SugestaoItem({
+    this.servicoId,
+    this.servicoNome,
+    this.pessoaId,
+    this.pessoaNome,
+    this.data,
+    this.eventoId,
+    this.motivo,
+  });
+
+  final String? servicoId;
+  final String? servicoNome;
+  final String? pessoaId;
+  final String? pessoaNome;
+  final String? data;
+  final String? eventoId;
+  final String? motivo;
 }
 
 class SmallGroupParticipante {
@@ -1173,6 +1397,119 @@ String escalaTipoToString(EscalaTipo tipo) {
       return 'CULTO';
     case EscalaTipo.ministerio:
       return 'MINISTERIO';
+  }
+}
+
+String escalaStatusLabel(EscalaStatus status) {
+  switch (status) {
+    case EscalaStatus.sugerida:
+      return 'Sugerida';
+    case EscalaStatus.editando:
+      return 'Editando';
+    case EscalaStatus.emAndamento:
+      return 'Em andamento';
+    case EscalaStatus.finalizada:
+      return 'Finalizada';
+  }
+}
+
+EscalaStatus escalaStatusFromString(String value) {
+  switch (value.toUpperCase()) {
+    case 'SUGERIDA':
+      return EscalaStatus.sugerida;
+    case 'EDITANDO':
+      return EscalaStatus.editando;
+    case 'EM_ANDAMENTO':
+      return EscalaStatus.emAndamento;
+    case 'FINALIZADA':
+      return EscalaStatus.finalizada;
+    default:
+      return EscalaStatus.editando;
+  }
+}
+
+String escalaStatusToString(EscalaStatus status) {
+  switch (status) {
+    case EscalaStatus.sugerida:
+      return 'SUGERIDA';
+    case EscalaStatus.editando:
+      return 'EDITANDO';
+    case EscalaStatus.emAndamento:
+      return 'EM_ANDAMENTO';
+    case EscalaStatus.finalizada:
+      return 'FINALIZADA';
+  }
+}
+
+bool podeTransicionarEscalaStatus(EscalaStatus de, EscalaStatus para) {
+  switch (de) {
+    case EscalaStatus.sugerida:
+      return para == EscalaStatus.editando || para == EscalaStatus.emAndamento;
+    case EscalaStatus.editando:
+      return para == EscalaStatus.sugerida || para == EscalaStatus.emAndamento;
+    case EscalaStatus.emAndamento:
+      return para == EscalaStatus.editando || para == EscalaStatus.finalizada;
+    case EscalaStatus.finalizada:
+      return para == EscalaStatus.emAndamento;
+  }
+}
+
+String escalaItemStatusLabel(EscalaItemStatus status) {
+  switch (status) {
+    case EscalaItemStatus.pendente:
+      return 'Pendente';
+    case EscalaItemStatus.confirmado:
+      return 'Confirmado';
+    case EscalaItemStatus.recusado:
+      return 'Recusado';
+    case EscalaItemStatus.substituido:
+      return 'Substituído';
+  }
+}
+
+EscalaItemStatus escalaItemStatusFromString(String value) {
+  switch (value.toUpperCase()) {
+    case 'CONFIRMADO':
+      return EscalaItemStatus.confirmado;
+    case 'RECUSADO':
+      return EscalaItemStatus.recusado;
+    case 'SUBSTITUIDO':
+    case 'SUBSTITUÍDO':
+      return EscalaItemStatus.substituido;
+    default:
+      return EscalaItemStatus.pendente;
+  }
+}
+
+String escalaItemStatusToString(EscalaItemStatus status) {
+  switch (status) {
+    case EscalaItemStatus.pendente:
+      return 'PENDENTE';
+    case EscalaItemStatus.confirmado:
+      return 'CONFIRMADO';
+    case EscalaItemStatus.recusado:
+      return 'RECUSADO';
+    case EscalaItemStatus.substituido:
+      return 'SUBSTITUIDO';
+  }
+}
+
+DiaSemana diaSemanaFromString(String value) {
+  switch (value.toUpperCase()) {
+    case 'SEGUNDA':
+      return DiaSemana.segunda;
+    case 'TERCA':
+      return DiaSemana.terca;
+    case 'QUARTA':
+      return DiaSemana.quarta;
+    case 'QUINTA':
+      return DiaSemana.quinta;
+    case 'SEXTA':
+      return DiaSemana.sexta;
+    case 'SABADO':
+      return DiaSemana.sabado;
+    default:
+      return DiaSemana.domingo;
   }
 }
 

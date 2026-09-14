@@ -57,11 +57,11 @@ class _MeuServicoScreenState extends State<MeuServicoScreen> {
   @override
   Widget build(BuildContext context) {
     final proximos = _eventos.take(5).toList();
-    final itens = <EscalaItem>[];
+    final designacoes = <EscalaVoluntario>[];
     for (final e in _escalas) {
-      itens.addAll(e.itens);
+      designacoes.addAll(e.voluntarios);
     }
-    itens.sort((a, b) => a.data.compareTo(b.data));
+    designacoes.sort((a, b) => (a.data ?? '').compareTo(b.data ?? ''));
 
     return Column(
       children: [
@@ -107,18 +107,20 @@ class _MeuServicoScreenState extends State<MeuServicoScreen> {
                         const SizedBox(height: 8),
                         Text('Minhas escalas', style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: 8),
-                        if (itens.isEmpty)
+                        if (designacoes.isEmpty)
                           const Text('Você ainda não está em nenhuma escala.')
                         else
-                          for (final item in itens)
+                          for (final item in designacoes)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: MobileListTile(
                                 title: item.pessoaNome ?? 'Você',
-                                subtitle:
-                                    '${formatDate(item.data)}${item.servicoNome != null ? ' · ${item.servicoNome}' : ''}',
+                                subtitle: [
+                                  if (item.data != null) formatDate(item.data!),
+                                  if (item.servicoNome != null) item.servicoNome!,
+                                ].join(' · '),
                                 trailing: StatusBadge(
-                                  label: item.status.name.toUpperCase(),
+                                  label: escalaItemStatusLabel(item.status).toUpperCase(),
                                   success: item.status == EscalaItemStatus.confirmado,
                                 ),
                               ),

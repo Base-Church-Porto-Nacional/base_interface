@@ -120,7 +120,8 @@ bool isSupervisorNoMes({
         e.tipo == EscalaTipo.supervisor &&
         e.competencia == competencia &&
         e.igrejaId == igrejaId &&
-        e.itens.any((i) => i.pessoaId == user!.pessoaId),
+        (e.supervisorPessoaId == user!.pessoaId ||
+            e.voluntarios.any((v) => v.pessoaId == user.pessoaId)),
   );
 }
 

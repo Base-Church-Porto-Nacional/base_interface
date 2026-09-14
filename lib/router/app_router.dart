@@ -10,6 +10,7 @@ import '../screens/culto/cultos_mes_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/disponibilidade/disponibilidade_screen.dart';
 import '../screens/escalas/escala_detail_screen.dart';
+import '../screens/escalas/escala_edit_screen.dart';
 import '../screens/escalas/escala_form_screen.dart';
 import '../screens/escalas/escalas_screen.dart';
 import '../screens/igrejas/igreja_detail_screen.dart';
@@ -115,6 +116,12 @@ GoRouter createRouter(AuthProvider auth) {
             path: '/voluntariado/escalas/nova',
             builder: (_, state) => EscalaFormScreen(
               competencia: state.uri.queryParameters['competencia'],
+            ),
+          ),
+          GoRoute(
+            path: '/voluntariado/escalas/:id/editar',
+            builder: (_, state) => EscalaEditScreen(
+              escalaId: state.pathParameters['id']!,
             ),
           ),
           GoRoute(
