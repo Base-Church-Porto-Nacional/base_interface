@@ -1181,6 +1181,80 @@ class DisponibilidadePessoa {
   final List<IndisponibilidadeData> datas;
 }
 
+/// Texto padrão do parabéns de aniversário. O back-end resolve as variáveis
+/// por membro e decide quem recebe e quando: aqui só existe o molde.
+class MensagemAniversario {
+  const MensagemAniversario({
+    required this.igrejaId,
+    required this.mensagem,
+    this.id,
+  });
+
+  final String? id;
+  final String igrejaId;
+  final String mensagem;
+
+  MensagemAniversario copyWith({String? mensagem}) {
+    return MensagemAniversario(
+      id: id,
+      igrejaId: igrejaId,
+      mensagem: mensagem ?? this.mensagem,
+    );
+  }
+}
+
+/// Placeholder de personalização disponível na mensagem de aniversário.
+class MensagemVariavel {
+  const MensagemVariavel({
+    required this.chave,
+    required this.rotulo,
+    required this.exemplo,
+  });
+
+  final String chave;
+  final String rotulo;
+  final String exemplo;
+
+  String get placeholder => '[$chave]';
+}
+
+const mensagemAniversarioVariaveis = [
+  MensagemVariavel(
+    chave: 'Nome',
+    rotulo: 'Nome do membro',
+    exemplo: 'Gustavo',
+  ),
+  MensagemVariavel(
+    chave: 'Nome Completo',
+    rotulo: 'Nome completo do membro',
+    exemplo: 'Gustavo Antunes',
+  ),
+  MensagemVariavel(
+    chave: 'Igreja',
+    rotulo: 'Nome da igreja',
+    exemplo: 'Base Church',
+  ),
+];
+
+bool mensagemUsaVariavel(String mensagem, String chave) =>
+    mensagem.contains('[$chave]');
+
+/// Substitui os placeholders conhecidos. Placeholders desconhecidos ficam como
+/// estão, para o back-end resolver o que o front-end ainda não conhece.
+String formatarMensagemAniversario(
+  String mensagem, {
+  Map<String, String> valores = const {},
+}) {
+  var resultado = mensagem;
+  for (final variavel in mensagemAniversarioVariaveis) {
+    resultado = resultado.replaceAll(
+      variavel.placeholder,
+      valores[variavel.chave] ?? variavel.exemplo,
+    );
+  }
+  return resultado;
+}
+
 class DashboardStats {
   const DashboardStats({
     required this.totalPessoas,

@@ -1234,6 +1234,22 @@ final mockDisponibilidades = <String, DisponibilidadePessoa>{
   ),
 };
 
+final mockMensagensAniversario = <String, MensagemAniversario>{
+  'i1': const MensagemAniversario(
+    id: 'ma1',
+    igrejaId: 'i1',
+    mensagem: 'Feliz aniversário, [Nome]! 🎉\n'
+        'Desejamos um dia muito especial e que Deus continue abençoando sua vida, '
+        'sua família e sua caminhada. 🙏🎂',
+  ),
+  'i2': const MensagemAniversario(
+    id: 'ma2',
+    igrejaId: 'i2',
+    mensagem: 'Feliz aniversário, [Nome]! Que o Senhor abençoe abundantly o seu '
+        'novo ano de vida. 🎉',
+  ),
+};
+
 const mockDashboard = DashboardStats(
   totalPessoas: 248,
   totalMembros: 183,

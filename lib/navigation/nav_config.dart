@@ -62,6 +62,11 @@ const mainNav = [
   ),
   NavItem(label: 'Usuários', path: '/usuarios', permission: 'usuarios:view'),
   NavItem(
+    label: 'Configurações',
+    path: '/configuracoes/mensagem-aniversario',
+    permission: 'mensagens:manage',
+  ),
+  NavItem(
     label: 'Meu serviço',
     path: '/meu-servico',
     permission: 'meu_servico:view',

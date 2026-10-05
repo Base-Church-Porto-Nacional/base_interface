@@ -19,6 +19,7 @@ import 'services/disponibilidade_service.dart';
 import 'services/escala_service.dart';
 import 'services/export_service.dart';
 import 'services/igreja_service.dart';
+import 'services/mensagem_aniversario_service.dart';
 import 'services/ministerio_service.dart';
 import 'services/pessoa_service.dart';
 import 'services/usuario_service.dart';
@@ -61,6 +62,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
     final conteudoCultoService = ConteudoCultoService(api);
     final categoriaCultoService = CategoriaCultoService(api);
     final cultoService = CultoService(api);
+    final mensagemAniversarioService = MensagemAniversarioService(api);
     final authProvider = AuthProvider(authService);
     final igrejaContext = IgrejaContext(igrejaService, prefs);
 
@@ -88,6 +90,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
           conteudoCultoService: conteudoCultoService,
           categoriaCultoService: categoriaCultoService,
           cultoService: cultoService,
+          mensagemAniversarioService: mensagemAniversarioService,
         );
         _authProvider = authProvider;
         _igrejaContext = igrejaContext;
@@ -129,6 +132,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
         Provider.value(value: services.conteudoCultoService),
         Provider.value(value: services.categoriaCultoService),
         Provider.value(value: services.cultoService),
+        Provider.value(value: services.mensagemAniversarioService),
       ],
       child: MaterialApp.router(
         title: 'Base Church',
@@ -157,6 +161,7 @@ class AppServices {
     required this.conteudoCultoService,
     required this.categoriaCultoService,
     required this.cultoService,
+    required this.mensagemAniversarioService,
   });
 
   final ApiClient api;
@@ -175,4 +180,5 @@ class AppServices {
   final ConteudoCultoService conteudoCultoService;
   final CategoriaCultoService categoriaCultoService;
   final CultoService cultoService;
+  final MensagemAniversarioService mensagemAniversarioService;
 }

@@ -7,6 +7,7 @@ import '../screens/culto/categorias_culto_screen.dart';
 import '../screens/culto/conteudo_culto_screen.dart';
 import '../screens/culto/culto_detail_screen.dart';
 import '../screens/culto/cultos_mes_screen.dart';
+import '../screens/configuracoes/mensagem_aniversario_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/disponibilidade/disponibilidade_screen.dart';
 import '../screens/escalas/escala_detail_screen.dart';
@@ -183,6 +184,10 @@ GoRouter createRouter(AuthProvider auth) {
           GoRoute(
             path: '/perfil/disponibilidade',
             builder: (_, _) => const DisponibilidadeScreen(),
+          ),
+          GoRoute(
+            path: '/configuracoes/mensagem-aniversario',
+            builder: (_, _) => const MensagemAniversarioScreen(),
           ),
           GoRoute(
             path: '/perfil',
