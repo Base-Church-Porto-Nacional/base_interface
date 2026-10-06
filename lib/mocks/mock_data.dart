@@ -98,6 +98,18 @@ const mockUserMembro = AuthUser(
   igrejasVisiveis: [mockIgrejaMatriz],
 );
 
+const mockUserContador = AuthUser(
+  id: 'u8',
+  nome: 'Bruno Santos',
+  email: 'bruno.santos@email.com',
+  roles: [Role.contador, Role.voluntario, Role.membro],
+  pessoaId: 'p4',
+  igrejaId: 'i1',
+  igrejaTipo: IgrejaTipo.matriz,
+  igrejaNome: 'Base Church',
+  igrejasVisiveis: [mockIgrejaMatriz],
+);
+
 const mockUserPastorFilial = AuthUser(
   id: 'u7',
   nome: 'Pedro Alves',
@@ -124,6 +136,8 @@ AuthUser mockUserByLogin(String username) {
       return mockUserMembro;
     case 'pedro':
       return mockUserPastorFilial;
+    case 'contador':
+      return mockUserContador;
     default:
       return mockUser;
   }
@@ -578,6 +592,17 @@ final mockUsuarios = <UsuarioConta>[
     igrejaId: 'i2',
     igrejaNome: 'Base Church — Zona Sul',
     papeis: [Role.pastor],
+    ativo: true,
+  ),
+  const UsuarioConta(
+    id: 'u8',
+    username: 'contador',
+    email: 'bruno.santos@email.com',
+    pessoaId: 'p4',
+    pessoaNome: 'Bruno Santos',
+    igrejaId: 'i1',
+    igrejaNome: 'Base Church',
+    papeis: [Role.contador, Role.voluntario, Role.membro],
     ativo: true,
   ),
 ];

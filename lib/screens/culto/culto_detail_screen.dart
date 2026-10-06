@@ -433,7 +433,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
             const SizedBox(height: 16),
             _cardConteudo(canTexto, canLouvor, canManage),
             const SizedBox(height: 16),
-            _cardRelatorio(canManage),
+            _cardRelatorio(podeLancarContagem(user)),
           ],
         );
   }

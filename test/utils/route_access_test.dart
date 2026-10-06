@@ -51,6 +51,23 @@ void main() {
     });
   });
 
+  group('contador', () {
+    test('acessa os cultos do mês e o detalhe do culto', () {
+      expect(canAccessPath(mockUserContador, '/cultos/mes'), isTrue);
+      expect(canAccessPath(mockUserContador, '/cultos/culto/c1'), isTrue);
+      expect(canAccessPath(mockUserContador, '/dashboard'), isTrue);
+    });
+
+    test('não acessa gestão de pessoas, usuários nem configurações', () {
+      expect(canAccessPath(mockUserContador, '/membros/pessoas'), isFalse);
+      expect(canAccessPath(mockUserContador, '/usuarios'), isFalse);
+      expect(
+        canAccessPath(mockUserContador, '/configuracoes/mensagem-aniversario'),
+        isFalse,
+      );
+    });
+  });
+
   group('dashboard e perfil', () {
     test('admin, pastor e papéis com dashboard:view acessam', () {
       expect(canAccessPath(admin, '/dashboard'), isTrue);

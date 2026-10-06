@@ -50,6 +50,26 @@ void main() {
     });
   });
 
+  group('podeLancarContagem', () {
+    test('pastor, admin e contador lançam a contagem', () {
+      expect(podeLancarContagem(mockUser), isTrue);
+      expect(podeLancarContagem(mockUserPastorFilial), isTrue);
+      expect(podeLancarContagem(mockUserContador), isTrue);
+    });
+
+    test('nega para líder, membro e usuário nulo', () {
+      expect(podeLancarContagem(mockUserLider), isFalse);
+      expect(podeLancarContagem(mockUserMembro), isFalse);
+      expect(podeLancarContagem(null), isFalse);
+    });
+
+    test('contador não ganha gestão do culto', () {
+      expect(isPastorOuAdmin(mockUserContador), isFalse);
+      expect(hasPermission([Role.contador], 'culto:edit'), isFalse);
+      expect(hasPermission([Role.contador], 'pessoas:view'), isFalse);
+    });
+  });
+
   group('isPastorOuAdmin', () {
     test('reconhece pastor e admin', () {
       expect(isPastorOuAdmin(mockUser), isTrue);
