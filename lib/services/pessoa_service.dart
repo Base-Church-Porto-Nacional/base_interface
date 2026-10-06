@@ -72,14 +72,17 @@ class PessoaService {
     required String nome,
     String? telefone,
     String? email,
+    String? whatsapp,
     String? igrejaId,
   }) async {
+    final wa = _whatsappNormalizado(whatsapp);
     if (AppConfig.useMock) {
       final created = Pessoa(
         id: 'p${DateTime.now().millisecondsSinceEpoch}',
         nome: nome,
         telefone: telefone ?? '',
         email: email ?? '',
+        whatsapp: wa ?? '',
         status: PessoaStatus.ativo,
         tipos: [PessoaTipo.visitante],
         ministerios: [],
@@ -93,6 +96,7 @@ class PessoaService {
       'nome': nome,
       if (telefone != null && telefone.isNotEmpty) 'telefone': telefone,
       if (email != null && email.isNotEmpty) 'email': email,
+      if (wa != null) 'whatsapp': wa,
       if (igrejaId != null) 'igrejaId': igrejaId,
     }) as Map<String, dynamic>;
     return _mapPessoa(json);
@@ -103,7 +107,9 @@ class PessoaService {
     required String nome,
     String? telefone,
     String? email,
+    String? whatsapp,
   }) async {
+    final wa = _whatsappNormalizado(whatsapp);
     if (AppConfig.useMock) {
       final index = mockPessoas.indexWhere((p) => p.id == id);
       if (index < 0) throw Exception('Pessoa não encontrada.');
@@ -111,6 +117,7 @@ class PessoaService {
         nome: nome,
         telefone: telefone ?? '',
         email: email ?? '',
+        whatsapp: wa ?? '',
       );
       return mockDelay(mockPessoas[index]);
     }
@@ -118,8 +125,16 @@ class PessoaService {
       'nome': nome,
       'telefone': telefone,
       'email': email,
+      'whatsapp': wa,
     }) as Map<String, dynamic>;
     return _mapPessoa(json);
+  }
+
+  /// O banco guarda a string como o usuário digitou. Vazio vira null para
+  /// signify "não recebe mensagem".
+  String? _whatsappNormalizado(String? valor) {
+    final texto = valor?.trim() ?? '';
+    return texto.isEmpty ? null : texto;
   }
 
   Future<List<PessoaHistorico>> listHistorico(String pessoaId) async {
@@ -152,6 +167,7 @@ class PessoaService {
       nome: json['nome'] as String,
       telefone: json['telefone'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      whatsapp: json['whatsapp'] as String? ?? '',
       status: (json['ativo'] as bool? ?? true)
           ? PessoaStatus.ativo
           : PessoaStatus.inativo,

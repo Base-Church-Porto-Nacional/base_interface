@@ -27,6 +27,7 @@ const mainNav = [
       NavItem(label: 'Pessoas', path: '/membros/pessoas', permission: 'pessoas:view'),
     ],
   ),
+  NavItem(label: 'Aniversariantes', path: '/aniversariantes'),
   NavItem(
     label: 'Pequenos grupos',
     path: '/pequenos-grupos',
@@ -61,6 +62,11 @@ const mainNav = [
     ],
   ),
   NavItem(label: 'Usuários', path: '/usuarios', permission: 'usuarios:view'),
+  NavItem(
+    label: 'Configurações',
+    path: '/configuracoes/mensagem-aniversario',
+    permission: 'mensagens:manage',
+  ),
   NavItem(
     label: 'Meu serviço',
     path: '/meu-servico',

@@ -1,4 +1,4 @@
-enum Role { admin, pastor, lider, voluntario, membro }
+enum Role { admin, pastor, lider, voluntario, membro, contador }
 
 enum PessoaStatus { ativo, inativo }
 
@@ -130,6 +130,7 @@ class Pessoa {
     required this.dataCadastro,
     required this.igrejaId,
     this.nascimento,
+    this.whatsapp = '',
     this.jornada = const [],
     this.usuarioId,
     this.papeis = const [],
@@ -144,6 +145,10 @@ class Pessoa {
   final List<String> ministerios;
   final String dataCadastro;
   final String? nascimento;
+
+  /// Guardado exatamente como o usuário digitou, com máscara. Vazio significa
+  /// que a pessoa não recebe mensagem de aniversário.
+  final String whatsapp;
   final List<JornadaEtapa> jornada;
   final String igrejaId;
   final String? usuarioId;
@@ -151,12 +156,15 @@ class Pessoa {
 
   bool get temUsuario => usuarioId != null && usuarioId!.isNotEmpty;
 
+  bool get temWhatsapp => whatsapp.trim().isNotEmpty;
+
   List<Role> get papeisExibiveis => papeis.isNotEmpty ? papeis : _papeisDeTipos(tipos);
 
   Pessoa copyWith({
     String? nome,
     String? telefone,
     String? email,
+    String? whatsapp,
     PessoaStatus? status,
     String? usuarioId,
     List<String>? ministerios,
@@ -167,6 +175,7 @@ class Pessoa {
       nome: nome ?? this.nome,
       telefone: telefone ?? this.telefone,
       email: email ?? this.email,
+      whatsapp: whatsapp ?? this.whatsapp,
       status: status ?? this.status,
       tipos: tipos ?? this.tipos,
       ministerios: ministerios ?? this.ministerios,
@@ -212,6 +221,7 @@ List<PessoaTipo> pessoaTiposDePapeis(List<Role> papeis) {
       case Role.membro:
         tipos.add(PessoaTipo.membro);
       case Role.admin:
+      case Role.contador:
         break;
     }
   }
@@ -1181,6 +1191,152 @@ class DisponibilidadePessoa {
   final List<IndisponibilidadeData> datas;
 }
 
+/// Texto padrão do parabéns de aniversário. O back-end resolve as variáveis
+/// por membro e decide quem recebe e quando: aqui só existe o molde.
+class MensagemAniversario {
+  const MensagemAniversario({
+    required this.igrejaId,
+    required this.mensagem,
+    this.id,
+  });
+
+  final String? id;
+  final String igrejaId;
+  final String mensagem;
+
+  MensagemAniversario copyWith({String? mensagem}) {
+    return MensagemAniversario(
+      id: id,
+      igrejaId: igrejaId,
+      mensagem: mensagem ?? this.mensagem,
+    );
+  }
+}
+
+/// Aniversariante do dia. `enviado` já vem resolvido pelo back-end, inclusive
+/// para falhas: quem falhou continua com `envido == false` e mantém o reenvio.
+class Aniversariante {
+  const Aniversariante({
+    required this.pessoaId,
+    required this.nome,
+    required this.dataNascimento,
+    required this.idade,
+    required this.mensagem,
+    required this.enviado,
+  });
+
+  final String pessoaId;
+  final String nome;
+  final String dataNascimento;
+  final int idade;
+  final String mensagem;
+  final bool enviado;
+}
+
+/// Resumo do POST /aniversarios/enviar.
+class EnvioAniversarioResumo {
+  const EnvioAniversarioResumo({
+    required this.data,
+    required this.enviados,
+    required this.enfileirados,
+    required this.ignorados,
+    required this.falhas,
+  });
+
+  final String data;
+  final int enviados;
+  final int enfileirados;
+  final int ignorados;
+  final int falhas;
+
+  /// Com Rabbit habilitado o envio responde enfileirado: quem está com
+  /// `enfileirados > 0` ainda não tem resultado definitivo.
+  bool get temPendencia => enfileirados > 0;
+
+  String get resumo =>
+      'Aniversariantes de $data: $enviados enviados, $enfileirados enfileirados, '
+      '$ignorados ignorados, $falhas falhas.';
+}
+
+/// Status de um envio individual, conforme gravado pelo back-end.
+enum AniversarioEnvioStatus { pendente, enviado, falha }
+
+class AniversarioEnvio {
+  const AniversarioEnvio({
+    required this.id,
+    required this.pessoaId,
+    required this.igrejaId,
+    required this.dataAniversario,
+    required this.dataProcessamento,
+    required this.mensagem,
+    required this.status,
+    this.erro,
+  });
+
+  final String id;
+  final String pessoaId;
+  final String igrejaId;
+  final String dataAniversario;
+  final String dataProcessamento;
+  final String mensagem;
+  final AniversarioEnvioStatus status;
+
+  /// Mensagem do canal. É o que o front mostra como causa da falha.
+  final String? erro;
+}
+
+/// Placeholder de personalização disponível na mensagem de aniversário.
+class MensagemVariavel {
+  const MensagemVariavel({
+    required this.chave,
+    required this.rotulo,
+    required this.exemplo,
+  });
+
+  final String chave;
+  final String rotulo;
+  final String exemplo;
+
+  String get placeholder => '[$chave]';
+}
+
+const mensagemAniversarioVariaveis = [
+  MensagemVariavel(
+    chave: 'Nome',
+    rotulo: 'Nome do membro',
+    exemplo: 'Gustavo',
+  ),
+  MensagemVariavel(
+    chave: 'Nome Completo',
+    rotulo: 'Nome completo do membro',
+    exemplo: 'Gustavo Antunes',
+  ),
+  MensagemVariavel(
+    chave: 'Igreja',
+    rotulo: 'Nome da igreja',
+    exemplo: 'Base Church',
+  ),
+];
+
+bool mensagemUsaVariavel(String mensagem, String chave) =>
+    mensagem.contains('[$chave]');
+
+/// Substitui os placeholders conhecidos. Placeholders desconhecidos ficam como
+/// estão, para o back-end resolver o que o front-end ainda não conhece.
+String formatarMensagemAniversario(
+  String mensagem, {
+  Map<String, String> valores = const {},
+}) {
+  var resultado = mensagem;
+  for (final variavel in mensagemAniversarioVariaveis) {
+    resultado = resultado.replaceAll(
+      variavel.placeholder,
+      valores[variavel.chave] ?? variavel.exemplo,
+    );
+  }
+  return resultado;
+}
+
 class DashboardStats {
   const DashboardStats({
     required this.totalPessoas,
@@ -1265,6 +1421,8 @@ Role _roleFromString(String value) {
       return Role.lider;
     case 'VOLUNTARIO':
       return Role.voluntario;
+    case 'CONTADOR':
+      return Role.contador;
     default:
       return Role.membro;
   }
@@ -1282,6 +1440,8 @@ String _roleToString(Role role) {
       return 'VOLUNTARIO';
     case Role.membro:
       return 'MEMBRO';
+    case Role.contador:
+      return 'CONTADOR';
   }
 }
 
@@ -1478,6 +1638,8 @@ String roleLabel(Role role) {
       return 'Voluntário';
     case Role.membro:
       return 'Membro';
+    case Role.contador:
+      return 'Contador';
   }
 }
 
@@ -1645,6 +1807,37 @@ DiaSemana diaSemanaFromString(String value) {
       return DiaSemana.domingo;
   }
 }
+
+AniversarioEnvioStatus aniversarioEnvioStatusFromString(String value) {
+  switch (value.toUpperCase()) {
+    case 'ENVIADO':
+      return AniversarioEnvioStatus.enviado;
+    case 'FALHA':
+      return AniversarioEnvioStatus.falha;
+    case 'PENDENTE':
+      return AniversarioEnvioStatus.pendente;
+    default:
+      return AniversarioEnvioStatus.pendente;
+  }
+}
+
+String aniversarioEnvioStatusLabel(AniversarioEnvioStatus status) {
+  switch (status) {
+    case AniversarioEnvioStatus.pendente:
+      return 'PENDENTE';
+    case AniversarioEnvioStatus.enviado:
+      return 'ENVIADO';
+    case AniversarioEnvioStatus.falha:
+      return 'FALHA';
+  }
+}
+
+String aniversarioEnvioStatusToString(AniversarioEnvioStatus status) =>
+    switch (status) {
+      AniversarioEnvioStatus.pendente => 'PENDENTE',
+      AniversarioEnvioStatus.enviado => 'ENVIADO',
+      AniversarioEnvioStatus.falha => 'FALHA',
+    };
 
 TipoEvento tipoEventoFromString(String value) {
   switch (value.toUpperCase()) {

@@ -85,6 +85,7 @@ class _PessoasScreenState extends State<PessoasScreen> {
         initialNome: editing?.nome ?? '',
         initialTelefone: editing?.telefone ?? '',
         initialEmail: editing?.email ?? '',
+        initialWhatsapp: editing?.whatsapp ?? '',
       ),
     );
     if (result == null || !mounted) return;
@@ -96,6 +97,7 @@ class _PessoasScreenState extends State<PessoasScreen> {
           nome: result['nome']!,
           telefone: result['telefone'],
           email: result['email'],
+          whatsapp: result['whatsapp'],
           igrejaId: context.read<IgrejaContext>().selectedIgrejaId,
         );
       } else {
@@ -104,6 +106,7 @@ class _PessoasScreenState extends State<PessoasScreen> {
           nome: result['nome']!,
           telefone: result['telefone'],
           email: result['email'],
+          whatsapp: result['whatsapp'],
         );
       }
       if (mounted) {

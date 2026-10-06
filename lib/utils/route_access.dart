@@ -79,6 +79,17 @@ bool canAccessPath(AuthUser? user, String path) {
         isPastorOuAdmin(user);
   }
 
+  if (path == '/aniversariantes/envios') {
+    return isPastorOuAdmin(user);
+  }
+  if (path.startsWith('/aniversariantes')) {
+    return podeVerAniversarios(user);
+  }
+
+  if (path.startsWith('/configuracoes')) {
+    return hasPermission(user.roles, 'mensagens:manage') || isPastorOuAdmin(user);
+  }
+
   return false;
 }
 
@@ -114,4 +125,9 @@ bool canCreateUsuario(AuthUser? user) {
 bool canCreateCronograma(AuthUser? user) {
   if (user == null) return false;
   return hasPermission(user.roles, 'cronograma:create') || isPastorOuAdmin(user);
+}
+
+bool canEditMensagemAniversario(AuthUser? user) {
+  if (user == null) return false;
+  return hasPermission(user.roles, 'mensagens:manage') || isPastorOuAdmin(user);
 }
