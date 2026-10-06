@@ -522,6 +522,7 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
   final _senha = TextEditingController();
   late bool _membro;
   late bool _voluntario;
+  bool _contador = false;
 
   @override
   void initState() {
@@ -577,6 +578,13 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
               value: _voluntario,
               onChanged: (v) => setState(() => _voluntario = v ?? false),
             ),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Contador'),
+              subtitle: const Text('Lança a contagem dos cultos'),
+              value: _contador,
+              onChanged: (v) => setState(() => _contador = v ?? false),
+            ),
           ],
         ),
       ),
@@ -592,6 +600,7 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
             final papeis = <Role>[
               if (_membro) Role.membro,
               if (_voluntario) Role.voluntario,
+              if (_contador) Role.contador,
             ];
             if (papeis.isEmpty) papeis.add(Role.membro);
             Navigator.pop(context, {

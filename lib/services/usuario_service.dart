@@ -54,6 +54,7 @@ class UsuarioService {
       mockPessoas[pessoaIndex] = mockPessoas[pessoaIndex].copyWith(usuarioId: id);
       return mockDelay(created);
     }
+    if (papeis.contains(Role.contador)) await _garantirPapelContador();
     final json = await _api.post('/pessoas/$pessoaId/usuario', {
       'username': username,
       'email': email,
@@ -62,6 +63,25 @@ class UsuarioService {
       'igrejaId': igrejaId,
     }) as Map<String, dynamic>;
     return _map(json);
+  }
+
+  Future<void> _garantirPapelContador() async {
+    final papeis = await _api.get('/papeis') as List<dynamic>;
+    Map<String, dynamic>? contador;
+    for (final e in papeis) {
+      final papel = e as Map<String, dynamic>;
+      if ((papel['nome'] as String?)?.toUpperCase() == 'CONTADOR') contador = papel;
+    }
+    final body = {
+      'nome': 'CONTADOR',
+      'descricao': contador?['descricao'] ?? 'Recepção — lança a contagem do culto',
+      'podeLancarContagem': true,
+    };
+    if (contador == null) {
+      await _api.post('/papeis', body);
+    } else if (contador['podeLancarContagem'] != true) {
+      await _api.put('/papeis/${contador['id']}', body);
+    }
   }
 
   UsuarioConta _map(Map<String, dynamic> json) {

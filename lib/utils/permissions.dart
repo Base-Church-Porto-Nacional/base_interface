@@ -38,6 +38,13 @@ const _rolePermissions = <Role, List<String>>{
     'culto:view',
     'meu_servico:view',
   ],
+  Role.contador: [
+    'dashboard:view',
+    'pessoas:own',
+    'cronograma:view',
+    'culto:view',
+    'culto:contagem',
+  ],
 };
 
 bool hasPermission(List<Role> roles, String permission) {
@@ -55,6 +62,11 @@ bool hasPermission(List<Role> roles, String permission) {
 bool isPastorOuAdmin(AuthUser? user) {
   if (user == null) return false;
   return user.roles.contains(Role.admin) || user.roles.contains(Role.pastor);
+}
+
+bool podeLancarContagem(AuthUser? user) {
+  if (user == null) return false;
+  return isPastorOuAdmin(user) || hasPermission(user.roles, 'culto:contagem');
 }
 
 bool isLiderDoMinisterio(AuthUser? user, Ministerio ministerio) {

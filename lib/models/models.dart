@@ -1,4 +1,4 @@
-enum Role { admin, pastor, lider, voluntario, membro }
+enum Role { admin, pastor, lider, voluntario, membro, contador }
 
 enum PessoaStatus { ativo, inativo }
 
@@ -221,6 +221,7 @@ List<PessoaTipo> pessoaTiposDePapeis(List<Role> papeis) {
       case Role.membro:
         tipos.add(PessoaTipo.membro);
       case Role.admin:
+      case Role.contador:
         break;
     }
   }
@@ -1420,6 +1421,8 @@ Role _roleFromString(String value) {
       return Role.lider;
     case 'VOLUNTARIO':
       return Role.voluntario;
+    case 'CONTADOR':
+      return Role.contador;
     default:
       return Role.membro;
   }
@@ -1437,6 +1440,8 @@ String _roleToString(Role role) {
       return 'VOLUNTARIO';
     case Role.membro:
       return 'MEMBRO';
+    case Role.contador:
+      return 'CONTADOR';
   }
 }
 
@@ -1633,6 +1638,8 @@ String roleLabel(Role role) {
       return 'Voluntário';
     case Role.membro:
       return 'Membro';
+    case Role.contador:
+      return 'Contador';
   }
 }
 
