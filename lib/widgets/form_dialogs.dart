@@ -8,12 +8,14 @@ class PessoaFormDialog extends StatefulWidget {
     this.initialNome = '',
     this.initialTelefone = '',
     this.initialEmail = '',
+    this.initialWhatsapp = '',
     this.title = 'Nova pessoa',
   });
 
   final String initialNome;
   final String initialTelefone;
   final String initialEmail;
+  final String initialWhatsapp;
   final String title;
 
   @override
@@ -24,6 +26,7 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
   late final TextEditingController _nome;
   late final TextEditingController _telefone;
   late final TextEditingController _email;
+  late final TextEditingController _whatsapp;
 
   @override
   void initState() {
@@ -31,6 +34,7 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
     _nome = TextEditingController(text: widget.initialNome);
     _telefone = TextEditingController(text: widget.initialTelefone);
     _email = TextEditingController(text: widget.initialEmail);
+    _whatsapp = TextEditingController(text: widget.initialWhatsapp);
   }
 
   @override
@@ -38,6 +42,7 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
     _nome.dispose();
     _telefone.dispose();
     _email.dispose();
+    _whatsapp.dispose();
     super.dispose();
   }
 
@@ -66,6 +71,15 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
               decoration: const InputDecoration(labelText: 'E-mail'),
               keyboardType: TextInputType.emailAddress,
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _whatsapp,
+              decoration: const InputDecoration(
+                labelText: 'WhatsApp',
+                helperText: 'Usado para a mensagem de aniversário. Deixe vazio para não enviar.',
+              ),
+              keyboardType: TextInputType.phone,
+            ),
           ],
         ),
       ),
@@ -78,6 +92,7 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
               'nome': _nome.text.trim(),
               'telefone': _telefone.text.trim(),
               'email': _email.text.trim(),
+              'whatsapp': _whatsapp.text.trim(),
             });
           },
           child: const Text('Salvar'),

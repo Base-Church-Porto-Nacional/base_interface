@@ -109,6 +109,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
         initialNome: p.nome,
         initialTelefone: p.telefone,
         initialEmail: p.email,
+        initialWhatsapp: p.whatsapp,
       ),
     );
     if (result == null || !mounted) return;
@@ -119,6 +120,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
             nome: result['nome']!,
             telefone: result['telefone'],
             email: result['email'],
+            whatsapp: result['whatsapp'],
           );
       if (mounted) {
         setState(() => _pessoa = updated);
@@ -241,6 +243,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
       rows: [
         DetailInfoRow('Telefone', p.telefone.isNotEmpty ? p.telefone : '—'),
         DetailInfoRow('E-mail', p.email.isNotEmpty ? p.email : '—'),
+        DetailInfoRow('WhatsApp', p.temWhatsapp ? p.whatsapp : '—'),
         DetailInfoRow(
           'Status',
           StatusBadge(

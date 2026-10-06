@@ -58,9 +58,14 @@ class ApiClient {
     return _parse(response);
   }
 
-  Future<dynamic> post(String path, [Object? body, bool auth = true]) async {
+  Future<dynamic> post(
+    String path, [
+    Object? body,
+    bool auth = true,
+    Map<String, String>? query,
+  ]) async {
     final response = await http.post(
-      _uri(path),
+      _uri(path, query),
       headers: _headers(auth: auth),
       body: body == null ? null : jsonEncode(body),
     );

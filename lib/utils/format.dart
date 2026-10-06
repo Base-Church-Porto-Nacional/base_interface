@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 
 final _dateBr = DateFormat('dd/MM/yyyy');
 final _dateShort = DateFormat('dd/MM');
+final _dateTimeBr = DateFormat('dd/MM/yyyy HH:mm');
 
 const mesesPt = [
   'Janeiro',
@@ -22,6 +23,15 @@ String formatDate(String iso) {
   try {
     final date = DateTime.parse(iso);
     return _dateBr.format(date);
+  } catch (_) {
+    return iso;
+  }
+}
+
+String formatDateTime(String iso) {
+  try {
+    final date = DateTime.parse(iso).toLocal();
+    return _dateTimeBr.format(date);
   } catch (_) {
     return iso;
   }

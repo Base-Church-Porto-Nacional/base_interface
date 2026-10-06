@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/auth_provider.dart';
 import 'providers/igreja_context.dart';
 import 'router/app_router.dart';
+import 'services/aniversario_service.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
 import 'services/base_ministerial_service.dart';
@@ -63,6 +64,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
     final categoriaCultoService = CategoriaCultoService(api);
     final cultoService = CultoService(api);
     final mensagemAniversarioService = MensagemAniversarioService(api);
+    final aniversarioService = AniversarioService(api);
     final authProvider = AuthProvider(authService);
     final igrejaContext = IgrejaContext(igrejaService, prefs);
 
@@ -91,6 +93,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
           categoriaCultoService: categoriaCultoService,
           cultoService: cultoService,
           mensagemAniversarioService: mensagemAniversarioService,
+          aniversarioService: aniversarioService,
         );
         _authProvider = authProvider;
         _igrejaContext = igrejaContext;
@@ -133,6 +136,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
         Provider.value(value: services.categoriaCultoService),
         Provider.value(value: services.cultoService),
         Provider.value(value: services.mensagemAniversarioService),
+        Provider.value(value: services.aniversarioService),
       ],
       child: MaterialApp.router(
         title: 'Base Church',
@@ -162,6 +166,7 @@ class AppServices {
     required this.categoriaCultoService,
     required this.cultoService,
     required this.mensagemAniversarioService,
+    required this.aniversarioService,
   });
 
   final ApiClient api;
@@ -181,4 +186,5 @@ class AppServices {
   final CategoriaCultoService categoriaCultoService;
   final CultoService cultoService;
   final MensagemAniversarioService mensagemAniversarioService;
+  final AniversarioService aniversarioService;
 }

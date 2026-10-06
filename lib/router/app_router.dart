@@ -2,6 +2,8 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
 import '../screens/acesso/acesso_negado_screen.dart';
+import '../screens/aniversarios/aniversariantes_screen.dart';
+import '../screens/aniversarios/aniversario_envios_screen.dart';
 import '../screens/cronograma/cronograma_screen.dart';
 import '../screens/culto/categorias_culto_screen.dart';
 import '../screens/culto/conteudo_culto_screen.dart';
@@ -184,6 +186,14 @@ GoRouter createRouter(AuthProvider auth) {
           GoRoute(
             path: '/perfil/disponibilidade',
             builder: (_, _) => const DisponibilidadeScreen(),
+          ),
+          GoRoute(
+            path: '/aniversariantes/envios',
+            builder: (_, _) => const AniversarioEnviosScreen(),
+          ),
+          GoRoute(
+            path: '/aniversariantes',
+            builder: (_, _) => const AniversariantesScreen(),
           ),
           GoRoute(
             path: '/configuracoes/mensagem-aniversario',

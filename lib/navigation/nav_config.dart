@@ -27,6 +27,7 @@ const mainNav = [
       NavItem(label: 'Pessoas', path: '/membros/pessoas', permission: 'pessoas:view'),
     ],
   ),
+  NavItem(label: 'Aniversariantes', path: '/aniversariantes'),
   NavItem(
     label: 'Pequenos grupos',
     path: '/pequenos-grupos',

@@ -198,3 +198,11 @@ bool podeGerenciarSmallGroup(AuthUser? user, SmallGroup group) {
 
 bool podeReportarSmallGroup(AuthUser? user, SmallGroup group) =>
     podeGerenciarSmallGroup(user, group);
+
+/// GET /aniversarios/aniversariantes é leitura e fica aberto a qualquer papel
+/// logado. POST /aniversarios/enviar e GET /aniversarios/envios usam
+/// assertPastorOuAdmin no back-end, então o front esconde o botão e o histórico
+/// para quem não é pastor nem admin.
+bool podeVerAniversarios(AuthUser? user) => user != null;
+
+bool podeEnviarAniversarios(AuthUser? user) => isPastorOuAdmin(user);

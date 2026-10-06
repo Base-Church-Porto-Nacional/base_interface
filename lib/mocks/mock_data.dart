@@ -135,6 +135,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Ana Costa',
     telefone: '(11) 98888-1001',
     email: 'ana.costa@base.church',
+    nascimento: '1986-03-12',
+    whatsapp: '(11) 98888-1001',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.lider, PessoaTipo.pastor],
     ministerios: ['Pastoral', 'Recepção'],
@@ -150,6 +152,8 @@ final mockPessoas = <Pessoa>[
     nome: 'João da Silva',
     telefone: '(11) 97777-2002',
     email: 'joao.silva@email.com',
+    nascimento: '1990-07-04',
+    whatsapp: '(11) 97777-2002',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario, PessoaTipo.lider],
     ministerios: ['Louvor'],
@@ -165,6 +169,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Maria Oliveira',
     telefone: '(11) 96666-3003',
     email: 'maria.oliveira@email.com',
+    nascimento: '1992-10-05',
+    whatsapp: '(11) 96666-3003',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario],
     ministerios: ['Louvor', 'Infantil'],
@@ -180,6 +186,7 @@ final mockPessoas = <Pessoa>[
     nome: 'Bruno Santos',
     telefone: '(11) 95555-4004',
     email: 'bruno.santos@email.com',
+    nascimento: '1988-01-22',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario],
     ministerios: ['Mídia'],
@@ -191,6 +198,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Fernanda Dias',
     telefone: '(11) 94444-5005',
     email: 'fernanda.dias@email.com',
+    nascimento: '1995-09-18',
+    whatsapp: '(11) 94444-5005',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario],
     ministerios: ['Infantil'],
@@ -203,6 +212,7 @@ final mockPessoas = <Pessoa>[
     nome: 'Carla Mendes',
     telefone: '(11) 93333-6006',
     email: 'carla.mendes@email.com',
+    nascimento: '1999-12-01',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.visitante],
     ministerios: [],
@@ -214,6 +224,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Carlos Lima',
     telefone: '(11) 92222-7007',
     email: 'carlos.lima@email.com',
+    nascimento: '1985-05-30',
+    whatsapp: '(11) 92222-7007',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario, PessoaTipo.lider],
     ministerios: ['Mídia'],
@@ -229,6 +241,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Pedro Alves',
     telefone: '(11) 91111-8008',
     email: 'pedro.alves@base.church',
+    nascimento: '1979-02-14',
+    whatsapp: '(11) 91111-8008',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.pastor],
     ministerios: ['Pastoral'],
@@ -244,6 +258,7 @@ final mockPessoas = <Pessoa>[
     nome: 'Luciana Rocha',
     telefone: '(11) 90000-9009',
     email: 'luciana.rocha@base.church',
+    nascimento: '1993-06-09',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro],
     ministerios: [],
@@ -256,6 +271,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Rafael Souza',
     telefone: '(11) 98877-1010',
     email: 'rafael.souza@email.com',
+    nascimento: '1991-11-25',
+    whatsapp: '(11) 98877-1010',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario],
     ministerios: ['Louvor Zona Sul'],
@@ -1245,10 +1262,52 @@ final mockMensagensAniversario = <String, MensagemAniversario>{
   'i2': const MensagemAniversario(
     id: 'ma2',
     igrejaId: 'i2',
-    mensagem: 'Feliz aniversário, [Nome]! Que o Senhor abençoe abundantly o seu '
+    mensagem: 'Feliz aniversário, [Nome]! Que o Senhor abençoe abundantemente o seu '
         'novo ano de vida. 🎉',
   ),
 };
+
+/// Histórico de envios do módulo de aniversários. O back-end é a fonte da
+/// verdade do status; no mock a lista é mutável para simular reenvios.
+final mockAniversarioEnvios = <AniversarioEnvio>[
+  AniversarioEnvio(
+    id: 'ae1',
+    pessoaId: 'p3',
+    igrejaId: 'i1',
+    dataAniversario: '2026-09-12',
+    dataProcessamento: '2026-09-12T12:00:01Z',
+    mensagem: 'Feliz aniversário, Maria! 🎉',
+    status: AniversarioEnvioStatus.enviado,
+  ),
+  AniversarioEnvio(
+    id: 'ae2',
+    pessoaId: 'p5',
+    igrejaId: 'i1',
+    dataAniversario: '2026-09-18',
+    dataProcessamento: '2026-09-18T12:00:03Z',
+    mensagem: 'Feliz aniversário, Fernanda! 🎉',
+    status: AniversarioEnvioStatus.falha,
+    erro: 'WhatsApp do membro não informado ou inválido',
+  ),
+  AniversarioEnvio(
+    id: 'ae3',
+    pessoaId: 'p7',
+    igrejaId: 'i1',
+    dataAniversario: '2026-09-30',
+    dataProcessamento: '2026-09-30T12:00:02Z',
+    mensagem: 'Feliz aniversário, Carlos! 🎉',
+    status: AniversarioEnvioStatus.enviado,
+  ),
+  AniversarioEnvio(
+    id: 'ae4',
+    pessoaId: 'p9',
+    igrejaId: 'i2',
+    dataAniversario: '2026-09-09',
+    dataProcessamento: '2026-09-09T12:00:05Z',
+    mensagem: 'Feliz aniversário, Luciana! 🎉',
+    status: AniversarioEnvioStatus.enviado,
+  ),
+];
 
 const mockDashboard = DashboardStats(
   totalPessoas: 248,
@@ -1371,6 +1430,118 @@ CategoriaCulto? categoriaCultoById(String id) {
     if (c.id == id) return c;
   }
   return null;
+}
+
+/// Aniversariantes de `data` (dd/MM/aaaa ou yyyy-MM-dd). No mock a lista vem de
+/// `Pessoa.nascimento`; na API quem monta isso é o back-end.
+List<Aniversariante> mockAniversariantes(String igrejaId, DateTime data) {
+  final dia = data.day.toString().padLeft(2, '0');
+  final mes = data.month.toString().padLeft(2, '0');
+  final chave = '${data.year}-$mes-$dia';
+  final template =
+      mockMensagensAniversario[igrejaId]?.mensagem ?? 'Feliz aniversário, [Nome]!';
+
+  final items = <Aniversariante>[];
+  for (final p in mockPessoas) {
+    final nascimento = p.nascimento;
+    if (nascimento == null || nascimento.length < 10) continue;
+    if (nascimento.substring(5, 10) != '$mes-$dia') continue;
+    final ano = int.tryParse(nascimento.substring(0, 4));
+    final enviado = mockAniversarioEnvios.any(
+      (e) =>
+          e.pessoaId == p.id &&
+          e.dataAniversario == chave &&
+          e.status == AniversarioEnvioStatus.enviado,
+    );
+    items.add(
+      Aniversariante(
+        pessoaId: p.id,
+        nome: p.nome,
+        dataNascimento: nascimento,
+        idade: ano == null ? 0 : data.year - ano,
+        mensagem: formatarMensagemAniversario(
+          template,
+          valores: {'Nome': _primeiroNome(p.nome)},
+        ),
+        enviado: enviado,
+      ),
+    );
+  }
+  return items..sort((a, b) => a.nome.compareTo(b.nome));
+}
+
+String _primeiroNome(String nome) {
+  final partes = nome.trim().split(RegExp(r'\s+'));
+  return partes.isEmpty ? nome : partes.first;
+}
+
+/// Processa o envio do dia. Idempotente: quem já tem ENVIADO cai em ignorados,
+/// quem falhou é tentado de novo.
+EnvioAniversarioResumo mockEnviarAniversarios(String igrejaId, DateTime data) {
+  final dia = data.day.toString().padLeft(2, '0');
+  final mes = data.month.toString().padLeft(2, '0');
+  final chave = '${data.year}-$mes-$dia';
+
+  var enviados = 0;
+  var ignorados = 0;
+  var falhas = 0;
+
+  for (final a in mockAniversariantes(igrejaId, data)) {
+    final pessoa = pessoaById(a.pessoaId);
+    final jaEnviado = mockAniversarioEnvios.any(
+      (e) =>
+          e.pessoaId == a.pessoaId &&
+          e.dataAniversario == chave &&
+          e.status == AniversarioEnvioStatus.enviado,
+    );
+    if (jaEnviado) {
+      ignorados++;
+      continue;
+    }
+
+    final semWhatsapp = pessoa == null || !pessoa.temWhatsapp;
+    final status = semWhatsapp
+        ? AniversarioEnvioStatus.falha
+        : AniversarioEnvioStatus.enviado;
+    if (semWhatsapp) falhas++; else enviados++;
+
+    mockAniversarioEnvios.removeWhere(
+      (e) => e.pessoaId == a.pessoaId && e.dataAniversario == chave,
+    );
+    mockAniversarioEnvios.add(
+      AniversarioEnvio(
+        id: 'ae-${DateTime.now().microsecondsSinceEpoch}-${a.pessoaId}',
+        pessoaId: a.pessoaId,
+        igrejaId: igrejaId,
+        dataAniversario: chave,
+        dataProcessamento: DateTime.now().toUtc().toIso8601String(),
+        mensagem: a.mensagem,
+        status: status,
+        erro: semWhatsapp ? 'WhatsApp do membro não informado ou inválido' : null,
+      ),
+    );
+  }
+
+  return EnvioAniversarioResumo(
+    data: chave,
+    enviados: enviados,
+    enfileirados: 0,
+    ignorados: ignorados,
+    falhas: falhas,
+  );
+}
+
+List<AniversarioEnvio> mockAniversarioEnviosPeriodo({
+  required String igrejaId,
+  String? de,
+  String? ate,
+}) {
+  return mockAniversarioEnvios
+      .where((e) => e.igrejaId == igrejaId)
+      .where((e) => de == null || e.dataAniversario.compareTo(de) >= 0)
+      .where((e) => ate == null || e.dataAniversario.compareTo(ate) <= 0)
+      .toList()
+    ..sort((a, b) => b.dataProcessamento.compareTo(a.dataProcessamento));
 }
 
 Future<T> mockDelay<T>(T value, [int ms = 280]) =>
