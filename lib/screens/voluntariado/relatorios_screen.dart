@@ -105,7 +105,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
       final contagem = porMinisterio.putIfAbsent(chave, () => {
             for (final s in EscalaItemStatus.values) s: 0,
           });
-      for (final item in escala.itens) {
+      for (final item in escala.voluntarios) {
         contagem[item.status] = (contagem[item.status] ?? 0) + 1;
       }
     }
@@ -128,7 +128,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
                   children: [
                     for (final status in EscalaItemStatus.values)
                       StatusBadge(
-                        label: '${_statusLabel(status)}: ${entry.value[status] ?? 0}',
+                        label: '${escalaItemStatusLabel(status)}: ${entry.value[status] ?? 0}',
                         success: status == EscalaItemStatus.confirmado,
                       ),
                   ],
@@ -143,7 +143,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
   Widget _historicoServicosSection() {
     final porServico = <String, int>{};
     for (final escala in _escalas) {
-      for (final item in escala.itens) {
+      for (final item in escala.voluntarios) {
         if (item.status != EscalaItemStatus.confirmado) continue;
         final chave = item.servicoNome ?? 'Serviço';
         porServico[chave] = (porServico[chave] ?? 0) + 1;
@@ -215,19 +215,6 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
           ),
       ],
     );
-  }
-
-  String _statusLabel(EscalaItemStatus status) {
-    switch (status) {
-      case EscalaItemStatus.pendente:
-        return 'Pendente';
-      case EscalaItemStatus.confirmado:
-        return 'Confirmado';
-      case EscalaItemStatus.recusado:
-        return 'Recusado';
-      case EscalaItemStatus.substituido:
-        return 'Substituído';
-    }
   }
 }
 

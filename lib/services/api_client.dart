@@ -58,9 +58,14 @@ class ApiClient {
     return _parse(response);
   }
 
-  Future<dynamic> post(String path, [Object? body, bool auth = true]) async {
+  Future<dynamic> post(
+    String path, [
+    Object? body,
+    bool auth = true,
+    Map<String, String>? query,
+  ]) async {
     final response = await http.post(
-      _uri(path),
+      _uri(path, query),
       headers: _headers(auth: auth),
       body: body == null ? null : jsonEncode(body),
     );
@@ -88,7 +93,11 @@ class ApiClient {
     }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
-      return jsonDecode(response.body);
+      try {
+        return jsonDecode(response.body);
+      } catch (_) {
+        return response.body;
+      }
     }
     try {
       final body = jsonDecode(response.body) as Map<String, dynamic>;

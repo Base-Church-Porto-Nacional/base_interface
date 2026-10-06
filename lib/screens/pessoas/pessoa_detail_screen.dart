@@ -109,6 +109,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
         initialNome: p.nome,
         initialTelefone: p.telefone,
         initialEmail: p.email,
+        initialWhatsapp: p.whatsapp,
       ),
     );
     if (result == null || !mounted) return;
@@ -119,6 +120,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
             nome: result['nome']!,
             telefone: result['telefone'],
             email: result['email'],
+            whatsapp: result['whatsapp'],
           );
       if (mounted) {
         setState(() => _pessoa = updated);
@@ -166,7 +168,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
   }
 
   Widget _buildHero(Pessoa p) {
-    final tipos = p.tipos.map((t) => t.name.toUpperCase()).join(' · ');
+    final papeis = p.papeisExibiveis.map(roleLabel).join(' · ');
     final user = context.watch<AuthProvider>().user;
     final podeEditar = canMutatePessoas(user);
     final podeCriarConta = canCreateUsuario(user) && !p.temUsuario;
@@ -182,7 +184,8 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
             children: [
               Text(p.nome, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 6),
-              Text(tipos, style: Theme.of(context).textTheme.bodySmall),
+              if (papeis.isNotEmpty)
+                Text(papeis, style: Theme.of(context).textTheme.bodySmall),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 6,
@@ -240,6 +243,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
       rows: [
         DetailInfoRow('Telefone', p.telefone.isNotEmpty ? p.telefone : '—'),
         DetailInfoRow('E-mail', p.email.isNotEmpty ? p.email : '—'),
+        DetailInfoRow('WhatsApp', p.temWhatsapp ? p.whatsapp : '—'),
         DetailInfoRow(
           'Status',
           StatusBadge(

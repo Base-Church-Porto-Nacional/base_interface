@@ -29,11 +29,17 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
   String? _ministerioId;
   String? _supervisorId;
   String? _pregadorId;
+  String? _eventoId;
+  late final TextEditingController _descricao;
+  late final TextEditingController _dataEvento;
+  late final TextEditingController _horaInicio;
+  late final TextEditingController _horaFim;
+  final Map<String, int> _quantidades = {};
   List<Pessoa> _pessoas = [];
   List<Ministerio> _ministerios = [];
   List<Escala> _escalas = [];
   List<CultoEvento> _eventos = [];
-  final Map<String, String?> _alocacoes = {};
+  List<_ServicoOption> _servicosDisponiveis = [];
   bool _loading = true;
   bool _saving = false;
   String? _error;
@@ -43,11 +49,24 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
   @override
   void initState() {
     super.initState();
+    _descricao = TextEditingController();
+    _dataEvento = TextEditingController();
+    _horaInicio = TextEditingController(text: '18:00:00');
+    _horaFim = TextEditingController(text: '20:00:00');
     final raw = widget.competencia ?? competenciaFrom(DateTime(2026, 8));
     final parts = raw.split('-');
     _year = int.tryParse(parts[0]) ?? 2026;
     _month = int.tryParse(parts.length > 1 ? parts[1] : '8') ?? 8;
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _descricao.dispose();
+    _dataEvento.dispose();
+    _horaInicio.dispose();
+    _horaFim.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -70,17 +89,31 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
       final eventos = (results[3] as List<CultoEvento>)
           .where((e) => e.data.startsWith(_competencia))
           .toList();
+      final servicos = <String, _ServicoOption>{};
+      for (final m in ministerios) {
+        for (final s in m.servicos) {
+          if (s.ficcao) continue;
+          servicos[s.id] = _ServicoOption(
+            servicoId: s.id,
+            nome: '${m.nome} · ${s.nome}',
+            servicoNome: s.nome,
+          );
+        }
+      }
       final igreja = context.read<IgrejaContext>().selected;
       setState(() {
         _pessoas = pessoas;
         _ministerios = ministerios;
         _escalas = escalas;
         _eventos = eventos;
-        _supervisorId ??= igreja?.pastorPessoaId;
-        _pregadorId ??= igreja?.pastorPessoaId;
+        _servicosDisponiveis = servicos.values.toList()
+          ..sort((a, b) => a.nome.compareTo(b.nome));
+        _supervisorId = _coercePessoa(_supervisorId ?? igreja?.pastorPessoaId);
+        _pregadorId = _coercePessoa(_pregadorId ?? igreja?.pastorPessoaId);
+        _ministerioId = _coerceId(_ministerioId, ministerios);
+        _eventoId = _coerceId(_eventoId, eventos);
         _loading = false;
       });
-      _seedDatas();
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -89,24 +122,6 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
         });
       }
     }
-  }
-
-  void _seedDatas() {
-    _alocacoes.clear();
-    final datas = _datasDoMes();
-    for (final d in datas) {
-      _alocacoes[d] ??= _supervisorId;
-    }
-    setState(() {});
-  }
-
-  List<String> _datasDoMes() {
-    final cultos = _eventos.where((e) => e.tipo == TipoEvento.culto).map((e) => e.data).toSet();
-    if (cultos.isNotEmpty) {
-      final list = cultos.toList()..sort();
-      return list;
-    }
-    return sundaysInMonth(_year, _month).map(isoDate).toList();
   }
 
   List<EscalaTipo> get _tiposPermitidos {
@@ -126,6 +141,16 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
         .toList();
   }
 
+  String? _coercePessoa(String? id) {
+    if (id != null && _pessoas.any((p) => p.id == id)) return id;
+    return _pessoas.isNotEmpty ? _pessoas.first.id : null;
+  }
+
+  String? _coerceId(String? id, List<dynamic> items) {
+    if (id != null && items.any((i) => (i as dynamic).id == id)) return id;
+    return items.isEmpty ? null : (items.first as dynamic).id as String?;
+  }
+
   List<Ministerio> get _ministeriosPermitidos {
     final user = context.read<AuthProvider>().user;
     if (isPastorOuAdmin(user) ||
@@ -138,6 +163,20 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
       return _ministerios;
     }
     return _ministerios.where((m) => podeGerenciarMinisterio(user, m)).toList();
+  }
+
+  void _aplicarEvento(CultoEvento? evento) {
+    if (evento == null) return;
+    setState(() {
+      _eventoId = evento.id;
+      _dataEvento.text = evento.data;
+      _horaInicio.text = evento.horaInicio.length == 5
+          ? '${evento.horaInicio}:00'
+          : evento.horaInicio;
+      _horaFim.text = evento.horaFim != null
+          ? (evento.horaFim!.length == 5 ? '${evento.horaFim}:00' : evento.horaFim!)
+          : _horaFim.text;
+    });
   }
 
   Future<void> _save() async {
@@ -179,27 +218,28 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
       return;
     }
 
+    final servicos = <EscalaServico>[];
+    for (final sel in _servicosDisponiveis) {
+      final quantidade = _quantidades[sel.servicoId] ?? 0;
+      if (quantidade <= 0) continue;
+      servicos.add(
+        EscalaServico(
+          id: 'new-${sel.servicoId}',
+          servicoId: sel.servicoId,
+          servicoNome: sel.servicoNome,
+          quantidadeNecessaria: quantidade,
+        ),
+      );
+    }
+    if (servicos.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione ao menos um serviço com quantidade.')),
+      );
+      return;
+    }
+
     setState(() => _saving = true);
     try {
-      final itens = <EscalaItem>[];
-      var i = 0;
-      _alocacoes.forEach((data, pessoaId) {
-        Pessoa? pessoa;
-        for (final p in _pessoas) {
-          if (p.id == pessoaId) pessoa = p;
-        }
-        itens.add(
-          EscalaItem(
-            id: 'new$i',
-            data: data,
-            pessoaId: pessoaId,
-            pessoaNome: pessoa?.nome,
-            horario: '18:00',
-          ),
-        );
-        i++;
-      });
-
       final titulo = switch (_tipo) {
         EscalaTipo.supervisor => 'Supervisores — ${formatCompetencia(_competencia)}',
         EscalaTipo.pregador => 'Pregadores — ${formatCompetencia(_competencia)}',
@@ -212,6 +252,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
             Escala(
               id: '',
               titulo: titulo,
+              descricao: _descricao.text.trim().isEmpty ? null : _descricao.text.trim(),
               competencia: _competencia,
               tipo: _tipo,
               igrejaId: igreja.id,
@@ -219,10 +260,20 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
               ministerioNome: min?.nome,
               supervisorPessoaId: supervisor?.id ?? igreja.pastorPessoaId,
               supervisorNome: supervisor?.nome ?? igreja.pastorNome,
-              pregadorPessoaId: pregador?.id ?? igreja.pastorPessoaId,
-              pregadorNome: pregador?.nome ?? igreja.pastorNome,
+              pregadorPessoaId:
+                  _tipo == EscalaTipo.culto || _tipo == EscalaTipo.pregador
+                      ? (pregador?.id ?? igreja.pastorPessoaId)
+                      : null,
+              pregadorNome: _tipo == EscalaTipo.culto || _tipo == EscalaTipo.pregador
+                  ? (pregador?.nome ?? igreja.pastorNome)
+                  : null,
+              status: EscalaStatus.editando,
+              dataEvento: _dataEvento.text.trim().isEmpty ? null : _dataEvento.text.trim(),
+              horaInicio: _horaInicio.text.trim().isEmpty ? null : _horaInicio.text.trim(),
+              horaFim: _horaFim.text.trim().isEmpty ? null : _horaFim.text.trim(),
+              eventoId: _eventoId,
               ativo: true,
-              itens: itens,
+              servicos: servicos,
             ),
           );
       if (mounted) context.pop();
@@ -259,7 +310,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
       children: [
         PageHeader(
           title: 'Nova escala',
-          description: 'A escala é mensal. Escolha a competência antes de continuar.',
+          description: 'Aberta a partir do dia 20 do mês anterior ao da competência.',
           actions: [
             OutlinedButton(onPressed: () => context.pop(), child: const Text('Cancelar')),
             FilledButton(
@@ -285,7 +336,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        value: _month,
+                        initialValue: _month,
                         decoration: const InputDecoration(labelText: 'Mês'),
                         items: [
                           for (var i = 1; i <= 12; i++)
@@ -300,7 +351,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        value: _year,
+                        initialValue: _year,
                         decoration: const InputDecoration(labelText: 'Ano'),
                         items: [
                           for (var y = 2025; y <= 2028; y++)
@@ -325,7 +376,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
             child: Column(
               children: [
                 DropdownButtonFormField<EscalaTipo>(
-                  value: tipoAtual,
+                  initialValue: tipoAtual,
                   decoration: const InputDecoration(labelText: 'Tipo de escala'),
                   items: [
                     for (final t in tipos)
@@ -336,7 +387,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
                 if (_tipo == EscalaTipo.ministerio) ...[
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _ministerioId,
+                    initialValue: _ministerioId,
                     decoration: const InputDecoration(labelText: 'Ministério *'),
                     items: [
                       for (final m in ministerios)
@@ -347,7 +398,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
                 ],
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _supervisorId,
+                  initialValue: _supervisorId,
                   decoration: const InputDecoration(
                     labelText: 'Supervisor',
                     helperText: 'Padrão: pastor da igreja',
@@ -361,7 +412,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
                 if (_tipo == EscalaTipo.culto || _tipo == EscalaTipo.pregador) ...[
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _pregadorId,
+                    initialValue: _pregadorId,
                     decoration: const InputDecoration(
                       labelText: 'Pregador',
                       helperText: 'Padrão: pastor da igreja',
@@ -373,32 +424,154 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
                     onChanged: (v) => setState(() => _pregadorId = v),
                   ),
                 ],
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descricao,
+                  decoration: const InputDecoration(labelText: 'Descrição'),
+                  maxLines: 2,
+                ),
               ],
             ),
           ),
         ),
         const SizedBox(height: 12),
-        Text('Dias do mês', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        for (final data in _datasDoMes())
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: DropdownButtonFormField<String>(
-                  value: _alocacoes[data],
-                  decoration: InputDecoration(labelText: formatDate(data)),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Evento (opcional)', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  initialValue: _eventoId,
+                  decoration: const InputDecoration(
+                    labelText: 'Evento do mês',
+                    helperText: 'Preenche data e horário automaticamente.',
+                  ),
                   items: [
-                    for (final p in _pessoas)
-                      DropdownMenuItem(value: p.id, child: Text(p.nome)),
+                    for (final evento in _eventos)
+                      DropdownMenuItem(
+                        value: evento.id,
+                        child: Text('${formatDate(evento.data)} · ${evento.titulo}'),
+                      ),
                   ],
-                  onChanged: (v) => setState(() => _alocacoes[data] = v),
+                  onChanged: (v) {
+                    for (final e in _eventos) {
+                      if (e.id == v) {
+                        _aplicarEvento(e);
+                        break;
+                      }
+                    }
+                  },
                 ),
-              ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _dataEvento,
+                  decoration: const InputDecoration(
+                    labelText: 'Data do evento',
+                    hintText: 'AAAA-MM-DD',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _horaInicio,
+                        decoration: const InputDecoration(labelText: 'Início'),
+                        keyboardType: TextInputType.datetime,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: _horaFim,
+                        decoration: const InputDecoration(labelText: 'Fim'),
+                        keyboardType: TextInputType.datetime,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
+        ),
+        const SizedBox(height: 12),
+        Text('Serviços necessários', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        if (_servicosDisponiveis.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(child: Text('Nenhum serviço disponível.')),
+          )
+        else
+          for (final sel in _servicosDisponiveis)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _ServicoPickerRow(
+                servico: sel,
+                quantidade: _quantidades[sel.servicoId] ?? 0,
+                onChanged: (q) => setState(() => _quantidades[sel.servicoId] = q),
+              ),
+            ),
       ],
+    );
+  }
+}
+
+class _ServicoOption {
+  const _ServicoOption({
+    required this.servicoId,
+    required this.servicoNome,
+    required this.nome,
+  });
+
+  final String servicoId;
+  final String servicoNome;
+  final String nome;
+}
+
+class _ServicoPickerRow extends StatelessWidget {
+  const _ServicoPickerRow({
+    required this.servico,
+    required this.quantidade,
+    required this.onChanged,
+  });
+
+  final _ServicoOption servico;
+  final int quantidade;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        child: Row(
+          children: [
+            Expanded(child: Text(servico.nome)),
+            IconButton(
+              onPressed: quantidade > 0 ? () => onChanged(quantidade - 1) : null,
+              icon: const Icon(Icons.remove_circle_outline),
+              visualDensity: VisualDensity.compact,
+            ),
+            SizedBox(
+              width: 24,
+              child: Text(
+                '$quantidade',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            IconButton(
+              onPressed: quantidade < 9 ? () => onChanged(quantidade + 1) : null,
+              icon: const Icon(Icons.add_circle_outline),
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

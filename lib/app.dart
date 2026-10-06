@@ -6,17 +6,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/auth_provider.dart';
 import 'providers/igreja_context.dart';
 import 'router/app_router.dart';
+import 'services/aniversario_service.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
 import 'services/base_ministerial_service.dart';
 import 'services/small_group_service.dart';
+import 'services/categoria_culto_service.dart';
 import 'services/conteudo_culto_service.dart';
 import 'services/cronograma_service.dart';
+import 'services/culto_service.dart';
 import 'services/dashboard_service.dart';
 import 'services/disponibilidade_service.dart';
 import 'services/escala_service.dart';
 import 'services/export_service.dart';
 import 'services/igreja_service.dart';
+import 'services/mensagem_aniversario_service.dart';
 import 'services/ministerio_service.dart';
 import 'services/pessoa_service.dart';
 import 'services/usuario_service.dart';
@@ -57,6 +61,10 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
     final cronogramaService = CronogramaService(api);
     final disponibilidadeService = DisponibilidadeService(api);
     final conteudoCultoService = ConteudoCultoService(api);
+    final categoriaCultoService = CategoriaCultoService(api);
+    final cultoService = CultoService(api);
+    final mensagemAniversarioService = MensagemAniversarioService(api);
+    final aniversarioService = AniversarioService(api);
     final authProvider = AuthProvider(authService);
     final igrejaContext = IgrejaContext(igrejaService, prefs);
 
@@ -82,6 +90,10 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
           cronogramaService: cronogramaService,
           disponibilidadeService: disponibilidadeService,
           conteudoCultoService: conteudoCultoService,
+          categoriaCultoService: categoriaCultoService,
+          cultoService: cultoService,
+          mensagemAniversarioService: mensagemAniversarioService,
+          aniversarioService: aniversarioService,
         );
         _authProvider = authProvider;
         _igrejaContext = igrejaContext;
@@ -121,6 +133,10 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
         Provider.value(value: services.cronogramaService),
         Provider.value(value: services.disponibilidadeService),
         Provider.value(value: services.conteudoCultoService),
+        Provider.value(value: services.categoriaCultoService),
+        Provider.value(value: services.cultoService),
+        Provider.value(value: services.mensagemAniversarioService),
+        Provider.value(value: services.aniversarioService),
       ],
       child: MaterialApp.router(
         title: 'Base Church',
@@ -147,6 +163,10 @@ class AppServices {
     required this.cronogramaService,
     required this.disponibilidadeService,
     required this.conteudoCultoService,
+    required this.categoriaCultoService,
+    required this.cultoService,
+    required this.mensagemAniversarioService,
+    required this.aniversarioService,
   });
 
   final ApiClient api;
@@ -163,4 +183,8 @@ class AppServices {
   final CronogramaService cronogramaService;
   final DisponibilidadeService disponibilidadeService;
   final ConteudoCultoService conteudoCultoService;
+  final CategoriaCultoService categoriaCultoService;
+  final CultoService cultoService;
+  final MensagemAniversarioService mensagemAniversarioService;
+  final AniversarioService aniversarioService;
 }

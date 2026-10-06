@@ -84,6 +84,7 @@ class MobileListTile extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.actions,
+    this.badges,
   });
 
   final String title;
@@ -91,6 +92,7 @@ class MobileListTile extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
   final List<Widget>? actions;
+  final List<String>? badges;
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +118,12 @@ class MobileListTile extends StatelessWidget {
                     if (subtitle != null) ...[
                       const SizedBox(height: 4),
                       Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
+                    ],
+                    if (badges != null && badges!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Wrap(spacing: 4, runSpacing: 4, children: [
+                        for (final b in badges!) StatusBadge(label: b),
+                      ]),
                     ],
                     if (actions != null && actions!.isNotEmpty) ...[
                       const SizedBox(height: 8),

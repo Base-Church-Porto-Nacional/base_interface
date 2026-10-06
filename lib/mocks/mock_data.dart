@@ -1,4 +1,5 @@
 import '../models/models.dart';
+import '../utils/format.dart';
 
 const mockIgrejaMatriz = Igreja(
   id: 'i1',
@@ -97,6 +98,18 @@ const mockUserMembro = AuthUser(
   igrejasVisiveis: [mockIgrejaMatriz],
 );
 
+const mockUserContador = AuthUser(
+  id: 'u8',
+  nome: 'Bruno Santos',
+  email: 'bruno.santos@email.com',
+  roles: [Role.contador, Role.voluntario, Role.membro],
+  pessoaId: 'p4',
+  igrejaId: 'i1',
+  igrejaTipo: IgrejaTipo.matriz,
+  igrejaNome: 'Base Church',
+  igrejasVisiveis: [mockIgrejaMatriz],
+);
+
 const mockUserPastorFilial = AuthUser(
   id: 'u7',
   nome: 'Pedro Alves',
@@ -123,6 +136,8 @@ AuthUser mockUserByLogin(String username) {
       return mockUserMembro;
     case 'pedro':
       return mockUserPastorFilial;
+    case 'contador':
+      return mockUserContador;
     default:
       return mockUser;
   }
@@ -134,6 +149,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Ana Costa',
     telefone: '(11) 98888-1001',
     email: 'ana.costa@base.church',
+    nascimento: '1986-03-12',
+    whatsapp: '(11) 98888-1001',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.lider, PessoaTipo.pastor],
     ministerios: ['Pastoral', 'Recepção'],
@@ -149,6 +166,8 @@ final mockPessoas = <Pessoa>[
     nome: 'João da Silva',
     telefone: '(11) 97777-2002',
     email: 'joao.silva@email.com',
+    nascimento: '1990-07-04',
+    whatsapp: '(11) 97777-2002',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario, PessoaTipo.lider],
     ministerios: ['Louvor'],
@@ -164,6 +183,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Maria Oliveira',
     telefone: '(11) 96666-3003',
     email: 'maria.oliveira@email.com',
+    nascimento: '1992-10-05',
+    whatsapp: '(11) 96666-3003',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario],
     ministerios: ['Louvor', 'Infantil'],
@@ -179,6 +200,7 @@ final mockPessoas = <Pessoa>[
     nome: 'Bruno Santos',
     telefone: '(11) 95555-4004',
     email: 'bruno.santos@email.com',
+    nascimento: '1988-01-22',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario],
     ministerios: ['Mídia'],
@@ -190,6 +212,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Fernanda Dias',
     telefone: '(11) 94444-5005',
     email: 'fernanda.dias@email.com',
+    nascimento: '1995-09-18',
+    whatsapp: '(11) 94444-5005',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario],
     ministerios: ['Infantil'],
@@ -202,6 +226,7 @@ final mockPessoas = <Pessoa>[
     nome: 'Carla Mendes',
     telefone: '(11) 93333-6006',
     email: 'carla.mendes@email.com',
+    nascimento: '1999-12-01',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.visitante],
     ministerios: [],
@@ -213,6 +238,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Carlos Lima',
     telefone: '(11) 92222-7007',
     email: 'carlos.lima@email.com',
+    nascimento: '1985-05-30',
+    whatsapp: '(11) 92222-7007',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario, PessoaTipo.lider],
     ministerios: ['Mídia'],
@@ -228,6 +255,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Pedro Alves',
     telefone: '(11) 91111-8008',
     email: 'pedro.alves@base.church',
+    nascimento: '1979-02-14',
+    whatsapp: '(11) 91111-8008',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.pastor],
     ministerios: ['Pastoral'],
@@ -243,6 +272,7 @@ final mockPessoas = <Pessoa>[
     nome: 'Luciana Rocha',
     telefone: '(11) 90000-9009',
     email: 'luciana.rocha@base.church',
+    nascimento: '1993-06-09',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro],
     ministerios: [],
@@ -255,6 +285,8 @@ final mockPessoas = <Pessoa>[
     nome: 'Rafael Souza',
     telefone: '(11) 98877-1010',
     email: 'rafael.souza@email.com',
+    nascimento: '1991-11-25',
+    whatsapp: '(11) 98877-1010',
     status: PessoaStatus.ativo,
     tipos: [PessoaTipo.membro, PessoaTipo.voluntario],
     ministerios: ['Louvor Zona Sul'],
@@ -562,6 +594,17 @@ final mockUsuarios = <UsuarioConta>[
     papeis: [Role.pastor],
     ativo: true,
   ),
+  const UsuarioConta(
+    id: 'u8',
+    username: 'contador',
+    email: 'bruno.santos@email.com',
+    pessoaId: 'p4',
+    pessoaNome: 'Bruno Santos',
+    igrejaId: 'i1',
+    igrejaNome: 'Base Church',
+    papeis: [Role.contador, Role.voluntario, Role.membro],
+    ativo: true,
+  ),
 ];
 
 final mockEventos = <CultoEvento>[
@@ -661,6 +704,294 @@ final mockConteudosCulto = <ConteudoCulto>[
   ),
 ];
 
+final mockCategoriasCulto = <CategoriaCulto>[
+  const CategoriaCulto(
+    id: 'cat1',
+    igrejaId: 'i1',
+    titulo: 'Domingo inesquecível',
+    descricao: 'Culto oficial de domingo.',
+    diaSemana: DiaSemana.domingo,
+    horaInicio: '20:00:00',
+    duracaoMinutos: 90,
+    pregadorPadraoId: 'p1',
+    pregadorPadraoNome: 'Ana Costa',
+    ativo: true,
+  ),
+  const CategoriaCulto(
+    id: 'cat2',
+    igrejaId: 'i1',
+    titulo: 'Sábado jovem',
+    descricao: 'Culto voltado aos jovens.',
+    diaSemana: DiaSemana.sabado,
+    horaInicio: '19:30:00',
+    duracaoMinutos: 120,
+    pregadorPadraoId: 'p2',
+    pregadorPadraoNome: 'João da Silva',
+    ativo: true,
+  ),
+  const CategoriaCulto(
+    id: 'cat3',
+    igrejaId: 'i2',
+    titulo: 'Domingo Zona Sul',
+    descricao: null,
+    diaSemana: DiaSemana.domingo,
+    horaInicio: '18:00:00',
+    duracaoMinutos: 90,
+    pregadorPadraoId: 'p8',
+    pregadorPadraoNome: 'Pedro Alves',
+    ativo: true,
+  ),
+];
+
+final mockCultos = <Culto>[
+  Culto(
+    id: 'culto-1',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat1',
+    categoriaCultoTitulo: 'Domingo inesquecível',
+    titulo: 'Culto de domingo',
+    tema: 'Destravados: Conforto',
+    data: '2026-09-06',
+    horaInicio: '20:00:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p1',
+    pregadorNome: 'Ana Costa',
+    status: CultoStatus.realizado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: true,
+  ),
+  Culto(
+    id: 'culto-2',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat1',
+    categoriaCultoTitulo: 'Domingo inesquecível',
+    titulo: 'Culto de domingo',
+    tema: 'Vinde a mim',
+    data: '2026-09-13',
+    horaInicio: '20:00:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p1',
+    pregadorNome: 'Ana Costa',
+    status: CultoStatus.aberto,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-3',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat1',
+    categoriaCultoTitulo: 'Domingo inesquecível',
+    titulo: 'Culto de domingo',
+    tema: null,
+    data: '2026-09-20',
+    horaInicio: '20:00:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p1',
+    pregadorNome: 'Ana Costa',
+    status: CultoStatus.agendado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-4',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat1',
+    categoriaCultoTitulo: 'Domingo inesquecível',
+    titulo: 'Culto de domingo',
+    tema: null,
+    data: '2026-09-27',
+    horaInicio: '20:00:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p8',
+    pregadorNome: 'Pedro Alves',
+    status: CultoStatus.agendado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: false,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-5',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat2',
+    categoriaCultoTitulo: 'Sábado jovem',
+    titulo: 'Culto jovem',
+    tema: 'Identidade',
+    data: '2026-09-05',
+    horaInicio: '19:30:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p2',
+    pregadorNome: 'João da Silva',
+    status: CultoStatus.realizado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: true,
+  ),
+  Culto(
+    id: 'culto-6',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat2',
+    categoriaCultoTitulo: 'Sábado jovem',
+    titulo: 'Culto jovem',
+    tema: null,
+    data: '2026-09-12',
+    horaInicio: '19:30:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p2',
+    pregadorNome: 'João da Silva',
+    status: CultoStatus.aberto,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-7',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat2',
+    categoriaCultoTitulo: 'Sábado jovem',
+    titulo: 'Culto jovem',
+    tema: null,
+    data: '2026-09-19',
+    horaInicio: '19:30:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p2',
+    pregadorNome: 'João da Silva',
+    status: CultoStatus.agendado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-8',
+    igrejaId: 'i1',
+    categoriaCultoId: 'cat2',
+    categoriaCultoTitulo: 'Sábado jovem',
+    titulo: 'Culto jovem',
+    tema: null,
+    data: '2026-09-26',
+    horaInicio: '19:30:00',
+    horaFim: '21:30:00',
+    pregadorId: 'p3',
+    pregadorNome: 'Maria Oliveira',
+    status: CultoStatus.agendado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: false,
+    temRelatorio: false,
+  ),
+  Culto(
+    id: 'culto-9',
+    igrejaId: 'i2',
+    categoriaCultoId: 'cat3',
+    categoriaCultoTitulo: 'Domingo Zona Sul',
+    titulo: 'Culto de domingo',
+    tema: 'Renascer',
+    data: '2026-09-06',
+    horaInicio: '18:00:00',
+    horaFim: '19:30:00',
+    pregadorId: 'p8',
+    pregadorNome: 'Pedro Alves',
+    status: CultoStatus.realizado,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: true,
+  ),
+  Culto(
+    id: 'culto-10',
+    igrejaId: 'i2',
+    categoriaCultoId: 'cat3',
+    categoriaCultoTitulo: 'Domingo Zona Sul',
+    titulo: 'Culto de domingo',
+    tema: null,
+    data: '2026-09-13',
+    horaInicio: '18:00:00',
+    horaFim: '19:30:00',
+    pregadorId: 'p8',
+    pregadorNome: 'Pedro Alves',
+    status: CultoStatus.aberto,
+    competencia: '2026-09',
+    ativo: true,
+    janelaConfiguracaoAberta: true,
+    temRelatorio: false,
+  ),
+];
+
+final mockCultosConteudos = <CultoConteudo>[
+  const CultoConteudo(
+    cultoId: 'culto-1',
+    textoPregacao: 'Isaías 61 — Conforto aos destravados.',
+    louvor: '1. Bondade de Deus\n2. Teu Santo Nome\n3. Ao único',
+    tema: 'Destravados: Conforto',
+    pregadorId: 'p1',
+    pregadorNome: 'Ana Costa',
+  ),
+  const CultoConteudo(
+    cultoId: 'culto-2',
+    textoPregacao: 'Mateus 11:28 — Vinde a mim.',
+    louvor: '1. Vem, esta é a hora\n2. Gratidão',
+    tema: 'Vinde a mim',
+    pregadorId: 'p1',
+    pregadorNome: 'Ana Costa',
+  ),
+  const CultoConteudo(
+    cultoId: 'culto-5',
+    textoPregacao: 'Gênesis 1 — Somos imagem de Deus.',
+    louvor: '1. Me Ama\n2. A alegria do Senhor',
+    tema: 'Identidade',
+    pregadorId: 'p2',
+    pregadorNome: 'João da Silva',
+  ),
+];
+
+final mockCultosRelatorios = <CultoRelatorio>[
+  const CultoRelatorio(
+    cultoId: 'culto-1',
+    adultos: 19,
+    criancas: 2,
+    conversoes: 2,
+    reconciliacoes: 1,
+    aliancas: 3,
+    carros: 7,
+    motos: 4,
+    bicicletas: 0,
+    observacoes: 'Culto de celebração com batismos.',
+  ),
+  const CultoRelatorio(
+    cultoId: 'culto-5',
+    adultos: 25,
+    criancas: 5,
+    conversoes: 1,
+    reconciliacoes: 0,
+    aliancas: 0,
+    carros: 5,
+    motos: 2,
+    bicicletas: 1,
+    observacoes: 'Culto jovem.',
+  ),
+  const CultoRelatorio(
+    cultoId: 'culto-9',
+    adultos: 12,
+    criancas: 1,
+    conversoes: 0,
+    reconciliacoes: 0,
+    aliancas: 1,
+    carros: 4,
+    motos: 1,
+    bicicletas: 0,
+    observacoes: null,
+  ),
+];
+
 final mockEscalas = <Escala>[
   Escala(
     id: 'e-sup',
@@ -672,12 +1003,12 @@ final mockEscalas = <Escala>[
     supervisorNome: 'Ana Costa',
     pregadorPessoaId: 'p1',
     pregadorNome: 'Ana Costa',
+    status: EscalaStatus.emAndamento,
+    dataLancamento: '2026-08-01T10:00:00',
     ativo: true,
-    itens: const [
-      EscalaItem(id: 'es1', data: '2026-08-02', eventoId: 'c1', pessoaId: 'p1', pessoaNome: 'Ana Costa', horario: '18:00', status: EscalaItemStatus.confirmado),
-      EscalaItem(id: 'es2', data: '2026-08-09', eventoId: 'c2', pessoaId: 'p1', pessoaNome: 'Ana Costa', horario: '18:00', status: EscalaItemStatus.confirmado),
-      EscalaItem(id: 'es3', data: '2026-08-16', eventoId: 'c3', pessoaId: 'p7', pessoaNome: 'Carlos Lima', horario: '18:00', status: EscalaItemStatus.pendente),
-      EscalaItem(id: 'es4', data: '2026-08-23', eventoId: 'c4', pessoaId: 'p1', pessoaNome: 'Ana Costa', horario: '18:00', status: EscalaItemStatus.pendente),
+    voluntarios: const [
+      EscalaVoluntario(id: 'vs1', pessoaId: 'p1', pessoaNome: 'Ana Costa', servicoNome: 'Supervisão', data: '2026-08-02', status: EscalaItemStatus.confirmado),
+      EscalaVoluntario(id: 'vs2', pessoaId: 'p7', pessoaNome: 'Carlos Lima', servicoNome: 'Supervisão', data: '2026-08-16', status: EscalaItemStatus.pendente),
     ],
   ),
   Escala(
@@ -690,12 +1021,13 @@ final mockEscalas = <Escala>[
     supervisorNome: 'Ana Costa',
     pregadorPessoaId: 'p1',
     pregadorNome: 'Ana Costa',
+    status: EscalaStatus.emAndamento,
+    dataLancamento: '2026-08-01T10:05:00',
     ativo: true,
-    itens: const [
-      EscalaItem(id: 'ep1', data: '2026-08-02', eventoId: 'c1', pessoaId: 'p1', pessoaNome: 'Ana Costa', horario: '18:00', status: EscalaItemStatus.confirmado),
-      EscalaItem(id: 'ep2', data: '2026-08-09', eventoId: 'c2', pessoaId: 'p1', pessoaNome: 'Ana Costa', horario: '18:00', status: EscalaItemStatus.confirmado),
-      EscalaItem(id: 'ep3', data: '2026-08-16', eventoId: 'c3', pessoaId: 'p1', pessoaNome: 'Ana Costa', horario: '18:00', status: EscalaItemStatus.pendente),
-      EscalaItem(id: 'ep4', data: '2026-08-23', eventoId: 'c4', pessoaId: 'p8', pessoaNome: 'Pedro Alves', horario: '18:00', status: EscalaItemStatus.pendente),
+    voluntarios: const [
+      EscalaVoluntario(id: 'vp1', pessoaId: 'p1', pessoaNome: 'Ana Costa', servicoNome: 'Pregação', data: '2026-08-02', status: EscalaItemStatus.confirmado),
+      EscalaVoluntario(id: 'vp2', pessoaId: 'p1', pessoaNome: 'Ana Costa', servicoNome: 'Pregação', data: '2026-08-09', status: EscalaItemStatus.confirmado),
+      EscalaVoluntario(id: 'vp3', pessoaId: 'p8', pessoaNome: 'Pedro Alves', servicoNome: 'Pregação', data: '2026-08-23', status: EscalaItemStatus.pendente),
     ],
   ),
   Escala(
@@ -708,10 +1040,22 @@ final mockEscalas = <Escala>[
     supervisorNome: 'Ana Costa',
     pregadorPessoaId: 'p1',
     pregadorNome: 'Ana Costa',
+    status: EscalaStatus.finalizada,
+    dataLancamento: '2026-08-01T10:10:00',
+    dataFinalizacao: '2026-08-05T18:00:00',
+    dataEvento: '2026-08-09',
+    horaInicio: '18:00:00',
+    horaFim: '20:00:00',
     ativo: true,
-    itens: const [
-      EscalaItem(id: 'ec1', data: '2026-08-09', eventoId: 'c2', pessoaId: 'p2', pessoaNome: 'João da Silva', servicoNome: 'Vocal', horario: '18:00', status: EscalaItemStatus.confirmado),
-      EscalaItem(id: 'ec2', data: '2026-08-09', eventoId: 'c2', pessoaId: 'p7', pessoaNome: 'Carlos Lima', servicoNome: 'Projeção', horario: '18:00', status: EscalaItemStatus.pendente),
+    servicos: const [
+      EscalaServico(id: 'sv1', servicoId: 's1b', servicoNome: 'Violão', quantidadeNecessaria: 1),
+      EscalaServico(id: 'sv2', servicoId: 's2a', servicoNome: 'Projeção', quantidadeNecessaria: 1),
+      EscalaServico(id: 'sv3', servicoId: 's2b', servicoNome: 'Som', quantidadeNecessaria: 1),
+    ],
+    voluntarios: const [
+      EscalaVoluntario(id: 'vc1', pessoaId: 'p2', pessoaNome: 'João da Silva', servicoId: 's1b', servicoNome: 'Violão', data: '2026-08-09', status: EscalaItemStatus.confirmado),
+      EscalaVoluntario(id: 'vc2', pessoaId: 'p7', pessoaNome: 'Carlos Lima', servicoId: 's2a', servicoNome: 'Projeção', data: '2026-08-09', status: EscalaItemStatus.confirmado),
+      EscalaVoluntario(id: 'vc3', pessoaId: 'p3', pessoaNome: 'Maria Oliveira', servicoId: 's2b', servicoNome: 'Som', data: '2026-08-09', status: EscalaItemStatus.confirmado),
     ],
   ),
   Escala(
@@ -724,13 +1068,110 @@ final mockEscalas = <Escala>[
     ministerioNome: 'Louvor',
     supervisorPessoaId: 'p1',
     supervisorNome: 'Ana Costa',
-    pregadorPessoaId: 'p1',
-    pregadorNome: 'Ana Costa',
+    status: EscalaStatus.editando,
+    dataEvento: '2026-08-09',
+    horaInicio: '18:00:00',
+    horaFim: '20:00:00',
     ativo: true,
-    itens: const [
-      EscalaItem(id: 'el1', data: '2026-08-09', eventoId: 'c2', pessoaId: 'p2', pessoaNome: 'João da Silva', servicoNome: 'Vocal', horario: '18:00', status: EscalaItemStatus.confirmado),
-      EscalaItem(id: 'el2', data: '2026-08-09', eventoId: 'c2', pessoaId: 'p3', pessoaNome: 'Maria Oliveira', servicoNome: 'Violão', horario: '18:00', status: EscalaItemStatus.pendente),
-      EscalaItem(id: 'el3', data: '2026-08-16', eventoId: 'c3', pessoaId: 'p2', pessoaNome: 'João da Silva', servicoNome: 'Vocal', horario: '18:00', status: EscalaItemStatus.pendente),
+    servicos: const [
+      EscalaServico(id: 'sl1', servicoId: 's1a', servicoNome: 'Vocal', quantidadeNecessaria: 2),
+      EscalaServico(id: 'sl2', servicoId: 's1b', servicoNome: 'Violão', quantidadeNecessaria: 1),
+    ],
+    voluntarios: const [
+      EscalaVoluntario(id: 'vl1', pessoaId: 'p3', pessoaNome: 'Maria Oliveira', servicoId: 's1a', servicoNome: 'Vocal', data: '2026-08-09', status: EscalaItemStatus.pendente),
+      EscalaVoluntario(id: 'vl2', pessoaId: 'p2', pessoaNome: 'João da Silva', servicoId: 's1b', servicoNome: 'Violão', data: '2026-08-09', status: EscalaItemStatus.confirmado, confirmadoPeloVoluntario: true),
+    ],
+  ),
+  Escala(
+    id: 'e-culto-set-lancado',
+    titulo: 'Escala de culto — setembro (lançada)',
+    competencia: '2026-09',
+    tipo: EscalaTipo.culto,
+    igrejaId: 'i1',
+    supervisorPessoaId: 'p1',
+    supervisorNome: 'Ana Costa',
+    status: EscalaStatus.emAndamento,
+    dataLancamento: '2026-09-01T10:10:00',
+    dataEvento: '2026-09-13',
+    horaInicio: '18:00:00',
+    horaFim: '20:00:00',
+    ativo: true,
+    servicos: const [
+      EscalaServico(id: 'sla1', servicoId: 's1b', servicoNome: 'Violão', quantidadeNecessaria: 1),
+      EscalaServico(id: 'sla2', servicoId: 's2b', servicoNome: 'Som', quantidadeNecessaria: 1),
+    ],
+    voluntarios: const [
+      EscalaVoluntario(id: 'sla-v1', pessoaId: 'p3', pessoaNome: 'Maria Oliveira', servicoId: 's1b', servicoNome: 'Violão', data: '2026-09-13', status: EscalaItemStatus.pendente),
+      EscalaVoluntario(id: 'sla-v2', pessoaId: 'p7', pessoaNome: 'Carlos Lima', servicoId: 's2b', servicoNome: 'Som', data: '2026-09-13', status: EscalaItemStatus.pendente),
+    ],
+  ),
+  Escala(
+    id: 'e-culto-set',
+    titulo: 'Escala de culto — setembro',
+    competencia: '2026-09',
+    tipo: EscalaTipo.culto,
+    igrejaId: 'i1',
+    supervisorPessoaId: 'p1',
+    supervisorNome: 'Ana Costa',
+    status: EscalaStatus.sugerida,
+    dataEvento: '2026-09-06',
+    horaInicio: '18:00:00',
+    horaFim: '20:00:00',
+    ativo: true,
+    servicos: const [
+      EscalaServico(id: 'ss1', servicoId: 's1a', servicoNome: 'Vocal', quantidadeNecessaria: 2),
+      EscalaServico(id: 'ss2', servicoId: 's1b', servicoNome: 'Violão', quantidadeNecessaria: 1),
+      EscalaServico(id: 'ss3', servicoId: 's2a', servicoNome: 'Projeção', quantidadeNecessaria: 1),
+      EscalaServico(id: 'ss4', servicoId: 's2b', servicoNome: 'Som', quantidadeNecessaria: 1),
+    ],
+    voluntarios: const [
+      EscalaVoluntario(id: 'se1', pessoaId: 'p2', pessoaNome: 'João da Silva', servicoId: 's1a', servicoNome: 'Vocal', data: '2026-09-06', status: EscalaItemStatus.pendente),
+      EscalaVoluntario(id: 'se2', pessoaId: 'p7', pessoaNome: 'Carlos Lima', servicoId: 's2a', servicoNome: 'Projeção', data: '2026-09-06', status: EscalaItemStatus.pendente),
+    ],
+  ),
+  Escala(
+    id: 'e-louvor-set',
+    titulo: 'Louvor — setembro',
+    competencia: '2026-09',
+    tipo: EscalaTipo.ministerio,
+    igrejaId: 'i1',
+    ministerioId: 'm1',
+    ministerioNome: 'Louvor',
+    supervisorPessoaId: 'p1',
+    supervisorNome: 'Ana Costa',
+    status: EscalaStatus.sugerida,
+    dataEvento: '2026-09-06',
+    horaInicio: '18:00:00',
+    horaFim: '20:00:00',
+    ativo: true,
+    servicos: const [
+      EscalaServico(id: 'sl1s', servicoId: 's1a', servicoNome: 'Vocal', quantidadeNecessaria: 2),
+      EscalaServico(id: 'sl2s', servicoId: 's1b', servicoNome: 'Violão', quantidadeNecessaria: 1),
+    ],
+    voluntarios: const [
+      EscalaVoluntario(id: 'sl1s-v', pessoaId: 'p3', pessoaNome: 'Maria Oliveira', servicoId: 's1a', servicoNome: 'Vocal', data: '2026-09-06', status: EscalaItemStatus.pendente),
+    ],
+  ),
+  Escala(
+    id: 'e-zs',
+    titulo: 'Escala de culto — agosto',
+    competencia: '2026-08',
+    tipo: EscalaTipo.culto,
+    igrejaId: 'i2',
+    supervisorPessoaId: 'p8',
+    supervisorNome: 'Pedro Alves',
+    pregadorPessoaId: 'p8',
+    pregadorNome: 'Pedro Alves',
+    status: EscalaStatus.editando,
+    dataEvento: '2026-08-02',
+    horaInicio: '18:00:00',
+    horaFim: '20:00:00',
+    ativo: true,
+    servicos: const [
+      EscalaServico(id: 'sz1', servicoId: 's5a', servicoNome: 'Vocal', quantidadeNecessaria: 2),
+    ],
+    voluntarios: const [
+      EscalaVoluntario(id: 'vz1', pessoaId: 'p10', pessoaNome: 'Rafael Souza', servicoId: 's5a', servicoNome: 'Vocal', data: '2026-08-02', status: EscalaItemStatus.pendente),
     ],
   ),
 ];
@@ -835,6 +1276,64 @@ final mockDisponibilidades = <String, DisponibilidadePessoa>{
   ),
 };
 
+final mockMensagensAniversario = <String, MensagemAniversario>{
+  'i1': const MensagemAniversario(
+    id: 'ma1',
+    igrejaId: 'i1',
+    mensagem: 'Feliz aniversário, [Nome]! 🎉\n'
+        'Desejamos um dia muito especial e que Deus continue abençoando sua vida, '
+        'sua família e sua caminhada. 🙏🎂',
+  ),
+  'i2': const MensagemAniversario(
+    id: 'ma2',
+    igrejaId: 'i2',
+    mensagem: 'Feliz aniversário, [Nome]! Que o Senhor abençoe abundantemente o seu '
+        'novo ano de vida. 🎉',
+  ),
+};
+
+/// Histórico de envios do módulo de aniversários. O back-end é a fonte da
+/// verdade do status; no mock a lista é mutável para simular reenvios.
+final mockAniversarioEnvios = <AniversarioEnvio>[
+  AniversarioEnvio(
+    id: 'ae1',
+    pessoaId: 'p3',
+    igrejaId: 'i1',
+    dataAniversario: '2026-09-12',
+    dataProcessamento: '2026-09-12T12:00:01Z',
+    mensagem: 'Feliz aniversário, Maria! 🎉',
+    status: AniversarioEnvioStatus.enviado,
+  ),
+  AniversarioEnvio(
+    id: 'ae2',
+    pessoaId: 'p5',
+    igrejaId: 'i1',
+    dataAniversario: '2026-09-18',
+    dataProcessamento: '2026-09-18T12:00:03Z',
+    mensagem: 'Feliz aniversário, Fernanda! 🎉',
+    status: AniversarioEnvioStatus.falha,
+    erro: 'WhatsApp do membro não informado ou inválido',
+  ),
+  AniversarioEnvio(
+    id: 'ae3',
+    pessoaId: 'p7',
+    igrejaId: 'i1',
+    dataAniversario: '2026-09-30',
+    dataProcessamento: '2026-09-30T12:00:02Z',
+    mensagem: 'Feliz aniversário, Carlos! 🎉',
+    status: AniversarioEnvioStatus.enviado,
+  ),
+  AniversarioEnvio(
+    id: 'ae4',
+    pessoaId: 'p9',
+    igrejaId: 'i2',
+    dataAniversario: '2026-09-09',
+    dataProcessamento: '2026-09-09T12:00:05Z',
+    mensagem: 'Feliz aniversário, Luciana! 🎉',
+    status: AniversarioEnvioStatus.enviado,
+  ),
+];
+
 const mockDashboard = DashboardStats(
   totalPessoas: 248,
   totalMembros: 183,
@@ -861,6 +1360,214 @@ const mockDashboard = DashboardStats(
     novosMembros: 5,
   ),
 );
+
+int _weekdayNumber(DiaSemana dia) {
+  switch (dia) {
+    case DiaSemana.domingo:
+      return 7;
+    case DiaSemana.segunda:
+      return 1;
+    case DiaSemana.terca:
+      return 2;
+    case DiaSemana.quarta:
+      return 3;
+    case DiaSemana.quinta:
+      return 4;
+    case DiaSemana.sexta:
+      return 5;
+    case DiaSemana.sabado:
+      return 6;
+  }
+}
+
+String _somaDuracao(String hora, int duracao) {
+  final parts = hora.split(':');
+  if (parts.length < 2) return hora;
+  final h = int.tryParse(parts[0]) ?? 0;
+  final m = int.tryParse(parts[1]) ?? 0;
+  final total = h * 60 + m + duracao;
+  final hh = ((total ~/ 60) % 24).toString().padLeft(2, '0');
+  final mm = (total % 60).toString().padLeft(2, '0');
+  return '$hh:$mm:00';
+}
+
+bool janelaConfiguracaoAbertaMock(String dataIso) {
+  final hoje = DateTime.now();
+  final data = DateTime.tryParse(dataIso);
+  if (data == null) return false;
+  final hojeInicio = DateTime(hoje.year, hoje.month, hoje.day);
+  return !data.isAfter(hojeInicio.add(const Duration(days: 8)));
+}
+
+String competenciaProximoMes() {
+  final hoje = DateTime.now();
+  return '${hoje.year}-${(hoje.month + 1).toString().padLeft(2, '0')}';
+}
+
+List<String> datasDaCompetencia(DiaSemana dia, String competencia) {
+  final parts = competencia.split('-');
+  if (parts.length != 2) return [];
+  final year = int.tryParse(parts[0]) ?? DateTime.now().year;
+  final month = int.tryParse(parts[1]) ?? DateTime.now().month;
+  final target = _weekdayNumber(dia);
+  final daysInMonth = DateTime(year, month + 1, 0).day;
+  final dates = <String>[];
+  for (var day = 1; day <= daysInMonth; day++) {
+    final date = DateTime(year, month, day);
+    if (date.weekday == target) dates.add(isoDate(date));
+  }
+  return dates;
+}
+
+List<Culto> gerarCultosCategoriaMock(CategoriaCulto categoria, String competencia) {
+  final dates = datasDaCompetencia(categoria.diaSemana, competencia);
+  final created = <Culto>[];
+  for (final dataIso in dates) {
+    final exists = mockCultos.any(
+      (c) => c.categoriaCultoId == categoria.id && c.data == dataIso,
+    );
+    if (exists) continue;
+    final culto = Culto(
+      id: 'culto-ger-${DateTime.now().millisecondsSinceEpoch}-$dataIso',
+      igrejaId: categoria.igrejaId,
+      categoriaCultoId: categoria.id,
+      categoriaCultoTitulo: categoria.titulo,
+      titulo: categoria.titulo,
+      data: dataIso,
+      horaInicio: categoria.horaInicio,
+      horaFim: _somaDuracao(categoria.horaInicio, categoria.duracaoMinutos),
+      pregadorId: categoria.pregadorPadraoId,
+      pregadorNome: categoria.pregadorPadraoNome,
+      status: CultoStatus.agendado,
+      competencia: competencia,
+      ativo: true,
+      janelaConfiguracaoAberta: janelaConfiguracaoAbertaMock(dataIso),
+      temRelatorio: false,
+    );
+    mockCultos.add(culto);
+    created.add(culto);
+  }
+  return created;
+}
+
+CategoriaCulto? categoriaCultoById(String id) {
+  for (final c in mockCategoriasCulto) {
+    if (c.id == id) return c;
+  }
+  return null;
+}
+
+/// Aniversariantes de `data` (dd/MM/aaaa ou yyyy-MM-dd). No mock a lista vem de
+/// `Pessoa.nascimento`; na API quem monta isso é o back-end.
+List<Aniversariante> mockAniversariantes(String igrejaId, DateTime data) {
+  final dia = data.day.toString().padLeft(2, '0');
+  final mes = data.month.toString().padLeft(2, '0');
+  final chave = '${data.year}-$mes-$dia';
+  final template =
+      mockMensagensAniversario[igrejaId]?.mensagem ?? 'Feliz aniversário, [Nome]!';
+
+  final items = <Aniversariante>[];
+  for (final p in mockPessoas) {
+    final nascimento = p.nascimento;
+    if (nascimento == null || nascimento.length < 10) continue;
+    if (nascimento.substring(5, 10) != '$mes-$dia') continue;
+    final ano = int.tryParse(nascimento.substring(0, 4));
+    final enviado = mockAniversarioEnvios.any(
+      (e) =>
+          e.pessoaId == p.id &&
+          e.dataAniversario == chave &&
+          e.status == AniversarioEnvioStatus.enviado,
+    );
+    items.add(
+      Aniversariante(
+        pessoaId: p.id,
+        nome: p.nome,
+        dataNascimento: nascimento,
+        idade: ano == null ? 0 : data.year - ano,
+        mensagem: formatarMensagemAniversario(
+          template,
+          valores: {'Nome': _primeiroNome(p.nome)},
+        ),
+        enviado: enviado,
+      ),
+    );
+  }
+  return items..sort((a, b) => a.nome.compareTo(b.nome));
+}
+
+String _primeiroNome(String nome) {
+  final partes = nome.trim().split(RegExp(r'\s+'));
+  return partes.isEmpty ? nome : partes.first;
+}
+
+/// Processa o envio do dia. Idempotente: quem já tem ENVIADO cai em ignorados,
+/// quem falhou é tentado de novo.
+EnvioAniversarioResumo mockEnviarAniversarios(String igrejaId, DateTime data) {
+  final dia = data.day.toString().padLeft(2, '0');
+  final mes = data.month.toString().padLeft(2, '0');
+  final chave = '${data.year}-$mes-$dia';
+
+  var enviados = 0;
+  var ignorados = 0;
+  var falhas = 0;
+
+  for (final a in mockAniversariantes(igrejaId, data)) {
+    final pessoa = pessoaById(a.pessoaId);
+    final jaEnviado = mockAniversarioEnvios.any(
+      (e) =>
+          e.pessoaId == a.pessoaId &&
+          e.dataAniversario == chave &&
+          e.status == AniversarioEnvioStatus.enviado,
+    );
+    if (jaEnviado) {
+      ignorados++;
+      continue;
+    }
+
+    final semWhatsapp = pessoa == null || !pessoa.temWhatsapp;
+    final status = semWhatsapp
+        ? AniversarioEnvioStatus.falha
+        : AniversarioEnvioStatus.enviado;
+    if (semWhatsapp) falhas++; else enviados++;
+
+    mockAniversarioEnvios.removeWhere(
+      (e) => e.pessoaId == a.pessoaId && e.dataAniversario == chave,
+    );
+    mockAniversarioEnvios.add(
+      AniversarioEnvio(
+        id: 'ae-${DateTime.now().microsecondsSinceEpoch}-${a.pessoaId}',
+        pessoaId: a.pessoaId,
+        igrejaId: igrejaId,
+        dataAniversario: chave,
+        dataProcessamento: DateTime.now().toUtc().toIso8601String(),
+        mensagem: a.mensagem,
+        status: status,
+        erro: semWhatsapp ? 'WhatsApp do membro não informado ou inválido' : null,
+      ),
+    );
+  }
+
+  return EnvioAniversarioResumo(
+    data: chave,
+    enviados: enviados,
+    enfileirados: 0,
+    ignorados: ignorados,
+    falhas: falhas,
+  );
+}
+
+List<AniversarioEnvio> mockAniversarioEnviosPeriodo({
+  required String igrejaId,
+  String? de,
+  String? ate,
+}) {
+  return mockAniversarioEnvios
+      .where((e) => e.igrejaId == igrejaId)
+      .where((e) => de == null || e.dataAniversario.compareTo(de) >= 0)
+      .where((e) => ate == null || e.dataAniversario.compareTo(ate) <= 0)
+      .toList()
+    ..sort((a, b) => b.dataProcessamento.compareTo(a.dataProcessamento));
+}
 
 Future<T> mockDelay<T>(T value, [int ms = 280]) =>
     Future.delayed(Duration(milliseconds: ms), () => value);
@@ -904,3 +1611,264 @@ List<Ministerio> ministeriosDaIgreja(String? igrejaId) {
 List<BaseMinisterial> basesMinisteriaisDaIgreja(String? igrejaId) {
   return List.of(mockBasesMinisteriais);
 }
+
+List<EscalaCandidato> mockCandidatos(
+  String? igrejaId, {
+  String? servicoNome,
+  String? data,
+}) {
+  final ministerios = ministeriosDaIgreja(igrejaId);
+  final pessoas = mockPessoas.where(
+    (p) =>
+        p.igrejaId == igrejaId &&
+        p.status == PessoaStatus.ativo &&
+        p.tipos.contains(PessoaTipo.voluntario),
+  );
+  final result = <EscalaCandidato>[];
+  for (final p in pessoas) {
+    final servicosQueServe = <String>[];
+    for (final m in ministerios) {
+      if (!p.ministerios.contains(m.nome)) continue;
+      for (final s in m.servicos) {
+        if (!s.ficcao) servicosQueServe.add(s.nome);
+      }
+    }
+    if (servicosQueServe.isEmpty) continue;
+    if (servicoNome != null && !servicosQueServe.contains(servicoNome)) continue;
+    result.add(
+      EscalaCandidato(
+        pessoaId: p.id,
+        pessoaNome: p.nome,
+        servicoNome: servicosQueServe.first,
+        servicosQueServe: servicosQueServe,
+        diasDisponiveis: const [
+          DiaDisponivel(diaSemana: DiaSemana.domingo, horaInicio: '18:00:00', horaFim: '21:00:00', disponivel: true),
+        ],
+        analiseDia: data == null ? null : _analiseDiaCandidato(p, igrejaId, data),
+      ),
+    );
+  }
+  return result;
+}
+
+AnaliseDiaCandidato _analiseDiaCandidato(Pessoa p, String? igrejaId, String data) {
+  final motivos = <String>[];
+  final conflitos = <ConflitoEscala>[];
+  for (final e in mockEscalas) {
+    if (e.igrejaId != igrejaId) continue;
+    for (final v in e.voluntarios) {
+      if (v.pessoaId == p.id && v.data == data) {
+        conflitos.add(
+          ConflitoEscala(
+            escalaId: e.id,
+            escalaTitulo: e.titulo,
+            ministerioNome: e.ministerioNome,
+            servicoNome: v.servicoNome,
+            data: v.data,
+            horario: '18:00:00',
+          ),
+        );
+      }
+    }
+  }
+  if (conflitos.isNotEmpty) {
+    motivos.add('Conflito com outra escala no mesmo dia/horário');
+  }
+  final disp = mockDisponibilidades[p.id];
+  if (disp != null) {
+    for (final d in disp.datas) {
+      if (d.data == data) {
+        motivos.add(d.motivo ?? 'Indisponibilidade pontual');
+      }
+    }
+    final weekday = DateTime.tryParse(data)?.weekday;
+    if (weekday != null) {
+      final dia = switch (weekday) {
+        1 => DiaSemana.segunda,
+        2 => DiaSemana.terca,
+        3 => DiaSemana.quarta,
+        4 => DiaSemana.quinta,
+        5 => DiaSemana.sexta,
+        6 => DiaSemana.sabado,
+        _ => DiaSemana.domingo,
+      };
+      for (final semanal in disp.semanal) {
+        if (semanal.dia == dia && semanal.marcado) {
+          motivos.add('Indisponibilidade semanal');
+        }
+      }
+    }
+  }
+  return AnaliseDiaCandidato(
+    data: data,
+    disponivel: motivos.isEmpty,
+    motivosIndisponibilidade: motivos,
+    conflitos: conflitos,
+  );
+}
+
+List<VisaoMensalEscala> mockVisaoMensal({
+  String? igrejaId,
+  String? competencia,
+  String? ministerioId,
+  String? pessoaId,
+  bool administrador = false,
+}) {
+  if (igrejaId == null || igrejaId.isEmpty) return [];
+  final mes = competencia == null || competencia.isEmpty
+      ? competenciaFrom(DateTime.now())
+      : competencia;
+
+  final visiveis = ministeriosDaIgreja(igrejaId).where((m) {
+    if (administrador) return true;
+    return m.liderPessoaId == pessoaId || m.coordenadorPessoaId == pessoaId;
+  }).toList();
+  if (ministerioId != null && ministerioId.isNotEmpty) {
+    final alvo = visiveis.where((m) => m.id == ministerioId).toList();
+    if (alvo.isEmpty) return [];
+    visiveis
+      ..clear()
+      ..addAll(alvo);
+  }
+  if (visiveis.isEmpty) return [];
+
+  final cultos = mockCultos
+      .where((c) => c.igrejaId == igrejaId && c.ativo && _mesDaData(c.data) == mes)
+      .toList();
+  final eventos = mockEventos
+      .where(
+        (e) => e.igrejaId == igrejaId && e.ativo && _mesDaData(e.data) == mes,
+      )
+      .toList();
+
+  final resultado = <VisaoMensalEscala>[];
+  for (final m in visiveis) {
+    Escala? mensal;
+    for (final e in mockEscalas) {
+      if (e.igrejaId == igrejaId &&
+          e.competencia == mes &&
+          e.ativo &&
+          e.tipo == EscalaTipo.ministerio &&
+          e.ministerioId == m.id &&
+          e.eventoId == null) {
+        mensal = e;
+        break;
+      }
+    }
+    final designacoes = mensal?.voluntarios ?? const <EscalaVoluntario>[];
+
+    final itens = <ItemVisaoMensal>[
+      for (final culto in cultos)
+        ItemVisaoMensal(
+          origem: 'CULTO',
+          id: culto.id,
+          titulo: culto.titulo,
+          data: culto.data,
+          horaInicio: culto.horaInicio,
+          horaFim: culto.horaFim,
+          localEvento: null,
+          servicos: _montarServicosVisao(
+            mensal,
+            designacoes.where((v) => v.data == culto.data).toList(),
+          ),
+        ),
+      for (final evento in eventos)
+        ItemVisaoMensal(
+          origem: 'EVENTO',
+          id: evento.id,
+          titulo: evento.titulo,
+          data: evento.data,
+          horaInicio: evento.horaInicio,
+          horaFim: evento.horaFim,
+          localEvento: evento.localEvento,
+          servicos: _montarServicosVisao(
+            mensal,
+            designacoes.where((v) => v.eventoId == evento.id).toList(),
+          ),
+        ),
+    ];
+    itens.sort((a, b) {
+      final byData = a.data.compareTo(b.data);
+      if (byData != 0) return byData;
+      final byHora = (a.horaInicio ?? '').compareTo(b.horaInicio ?? '');
+      if (byHora != 0) return byHora;
+      return a.origem.compareTo(b.origem);
+    });
+
+    resultado.add(
+      VisaoMensalEscala(
+        competencia: mes,
+        igrejaId: igrejaId,
+        ministerioId: m.id,
+        ministerioNome: m.nome,
+        escalaId: mensal?.id,
+        escalaTitulo: mensal?.titulo,
+        escalaStatus: mensal?.status,
+        itens: itens,
+      ),
+    );
+  }
+  return resultado;
+}
+
+List<ServicoVisaoMensal> _montarServicosVisao(
+  Escala? mensal,
+  List<EscalaVoluntario> designacoes,
+) {
+  final necessidades = <String, int>{};
+  if (mensal != null) {
+    for (final s in mensal.servicos) {
+      if (s.servicoId != null) {
+        necessidades[s.servicoId!] = s.quantidadeNecessaria;
+      }
+    }
+  }
+  final nomes = <String, String>{
+    for (final s in mensal?.servicos ?? const <EscalaServico>[])
+      if (s.servicoId != null) s.servicoId!: s.servicoNome ?? s.servicoId!,
+  };
+
+  final agrupadas = <String, List<EscalaVoluntario>>{};
+  for (final d in designacoes) {
+    if (d.servicoId == null) continue;
+    agrupadas.putIfAbsent(d.servicoId!, () => []).add(d);
+    if (!nomes.containsKey(d.servicoId)) {
+      nomes[d.servicoId!] = d.servicoNome ?? d.servicoId!;
+    }
+  }
+
+  final servicoIds = <String>{...necessidades.keys, ...agrupadas.keys};
+  final servicos = <ServicoVisaoMensal>[];
+  for (final servicoId in servicoIds.toList()
+    ..sort((a, b) => nomes[a]!.compareTo(nomes[b]!))) {
+    final unicos = <String, EscalaVoluntario>{};
+    for (final d in agrupadas[servicoId] ?? const <EscalaVoluntario>[]) {
+      unicos.putIfAbsent(d.pessoaId ?? '', () => d);
+    }
+    final designados = unicos.values.toList()
+      ..sort((a, b) => (a.pessoaNome ?? '').compareTo(b.pessoaNome ?? ''));
+    final qtd = necessidades[servicoId];
+    servicos.add(
+      ServicoVisaoMensal(
+        servicoId: servicoId,
+        servicoNome: nomes[servicoId] ?? servicoId,
+        quantidadeNecessaria: qtd ?? designados.length,
+        designados: designados
+            .map(
+              (v) => DesignadoVisao(
+                designacaoId: v.id,
+                pessoaId: v.pessoaId,
+                pessoaNome: v.pessoaNome ?? '—',
+                status: v.status,
+                confirmadoPeloVoluntario: v.confirmadoPeloVoluntario,
+                observacoes: v.observacoes,
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+  return servicos;
+}
+
+String _mesDaData(String data) => data.length >= 7 ? data.substring(0, 7) : '';

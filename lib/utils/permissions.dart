@@ -38,6 +38,13 @@ const _rolePermissions = <Role, List<String>>{
     'culto:view',
     'meu_servico:view',
   ],
+  Role.contador: [
+    'dashboard:view',
+    'pessoas:own',
+    'cronograma:view',
+    'culto:view',
+    'culto:contagem',
+  ],
 };
 
 bool hasPermission(List<Role> roles, String permission) {
@@ -55,6 +62,11 @@ bool hasPermission(List<Role> roles, String permission) {
 bool isPastorOuAdmin(AuthUser? user) {
   if (user == null) return false;
   return user.roles.contains(Role.admin) || user.roles.contains(Role.pastor);
+}
+
+bool podeLancarContagem(AuthUser? user) {
+  if (user == null) return false;
+  return isPastorOuAdmin(user) || hasPermission(user.roles, 'culto:contagem');
 }
 
 bool isLiderDoMinisterio(AuthUser? user, Ministerio ministerio) {
@@ -120,7 +132,8 @@ bool isSupervisorNoMes({
         e.tipo == EscalaTipo.supervisor &&
         e.competencia == competencia &&
         e.igrejaId == igrejaId &&
-        e.itens.any((i) => i.pessoaId == user!.pessoaId),
+        (e.supervisorPessoaId == user!.pessoaId ||
+            e.voluntarios.any((v) => v.pessoaId == user.pessoaId)),
   );
 }
 
@@ -197,3 +210,11 @@ bool podeGerenciarSmallGroup(AuthUser? user, SmallGroup group) {
 
 bool podeReportarSmallGroup(AuthUser? user, SmallGroup group) =>
     podeGerenciarSmallGroup(user, group);
+
+/// GET /aniversarios/aniversariantes é leitura e fica aberto a qualquer papel
+/// logado. POST /aniversarios/enviar e GET /aniversarios/envios usam
+/// assertPastorOuAdmin no back-end, então o front esconde o botão e o histórico
+/// para quem não é pastor nem admin.
+bool podeVerAniversarios(AuthUser? user) => user != null;
+
+bool podeEnviarAniversarios(AuthUser? user) => isPastorOuAdmin(user);

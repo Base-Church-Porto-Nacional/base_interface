@@ -27,6 +27,7 @@ const mainNav = [
       NavItem(label: 'Pessoas', path: '/membros/pessoas', permission: 'pessoas:view'),
     ],
   ),
+  NavItem(label: 'Aniversariantes', path: '/aniversariantes'),
   NavItem(
     label: 'Pequenos grupos',
     path: '/pequenos-grupos',
@@ -53,20 +54,26 @@ const mainNav = [
   ),
   NavItem(
     label: 'Cultos',
-    path: '/cultos',
+    path: '/cultos/mes',
     permission: 'cronograma:view',
     children: [
-      NavItem(label: 'Agenda', path: '/cultos'),
-      NavItem(label: 'Gestão de culto', path: '/cultos/conteudo', permission: 'culto:view'),
+      NavItem(label: 'Mês', path: '/cultos/mes'),
+      NavItem(label: 'Categorias', path: '/cultos/categorias'),
     ],
   ),
   NavItem(label: 'Usuários', path: '/usuarios', permission: 'usuarios:view'),
+  NavItem(
+    label: 'Configurações',
+    path: '/configuracoes/mensagem-aniversario',
+    permission: 'mensagens:manage',
+  ),
   NavItem(
     label: 'Meu serviço',
     path: '/meu-servico',
     permission: 'meu_servico:view',
     children: [
       NavItem(label: 'Visão geral', path: '/meu-servico'),
+      NavItem(label: 'Responder escalas', path: '/meu-servico/responder'),
       NavItem(label: 'Disponibilidade', path: '/perfil/disponibilidade'),
     ],
   ),
