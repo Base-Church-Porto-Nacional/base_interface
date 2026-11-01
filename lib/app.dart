@@ -52,7 +52,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
     final pessoaService = PessoaService(api);
     final ministerioService = MinisterioService(api);
     final baseMinisterialService = BaseMinisterialService(api);
-    final dashboardService = DashboardService();
+    final dashboardService = DashboardService(api, pessoaService);
     final exportService = ExportService(pessoaService, dashboardService);
     final igrejaService = IgrejaService(api);
     final usuarioService = UsuarioService(api);

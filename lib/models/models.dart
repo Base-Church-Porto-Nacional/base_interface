@@ -1343,20 +1343,20 @@ class DashboardStats {
     required this.totalMembros,
     required this.totalVoluntarios,
     required this.totalLideres,
-    required this.escalasPendentes,
-    required this.visitantesRecentes,
-    required this.proximasEscalas,
-    required this.jornada,
+    this.escalasPendentes,
+    this.visitantesRecentes,
+    this.proximasEscalas,
+    this.jornada,
   });
 
   final int totalPessoas;
   final int totalMembros;
   final int totalVoluntarios;
   final int totalLideres;
-  final int escalasPendentes;
-  final int visitantesRecentes;
-  final List<EscalaResumo> proximasEscalas;
-  final JornadaIndicadores jornada;
+  final int? escalasPendentes;
+  final int? visitantesRecentes;
+  final List<EscalaResumo>? proximasEscalas;
+  final JornadaIndicadores? jornada;
 }
 
 class EscalaResumo {
