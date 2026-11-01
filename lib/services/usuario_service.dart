@@ -22,7 +22,7 @@ class UsuarioService {
     required String igrejaNome,
     String? pessoaNome,
   }) async {
-    if (papeis.contains(Role.contador)) await _garantirPapelContador();
+    if (papeis.contains(Role.contador)) await _garantirPapelContador(igrejaId);
     final json = await _api.post('/pessoas/$pessoaId/usuario', {
       'username': username,
       'email': email,
@@ -33,8 +33,8 @@ class UsuarioService {
     return _map(json);
   }
 
-  Future<void> _garantirPapelContador() async {
-    final papeis = await _api.get('/papeis') as List<dynamic>;
+  Future<void> _garantirPapelContador(String igrejaId) async {
+    final papeis = await _api.get('/papeis', query: {'igrejaId': igrejaId}) as List<dynamic>;
     Map<String, dynamic>? contador;
     for (final e in papeis) {
       final papel = e as Map<String, dynamic>;
@@ -44,6 +44,7 @@ class UsuarioService {
       'nome': 'CONTADOR',
       'descricao': contador?['descricao'] ?? 'Recepção — lança a contagem do culto',
       'podeLancarContagem': true,
+      'igrejaId': igrejaId,
     };
     if (contador == null) {
       await _api.post('/papeis', body);

@@ -3,6 +3,7 @@ import 'package:base_church/services/auth_service.dart';
 import 'package:base_church/services/dashboard_service.dart';
 import 'package:base_church/services/disponibilidade_service.dart';
 import 'package:base_church/services/pessoa_service.dart';
+import 'package:base_church/services/usuario_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -223,6 +224,78 @@ void main() {
       );
 
       expect(stats, isNull);
+    });
+  });
+
+  group('UsuarioService.createFromPessoa com CONTADOR', () {
+    Future<void> criar(FakeApi fake) async {
+      final api = await apiClientDeTeste();
+      await fake.run(
+        () => UsuarioService(api).createFromPessoa(
+          pessoaId: 'p9',
+          username: 'recepcao',
+          email: 'r@base.church',
+          senha: 's',
+          papeis: const [Role.contador],
+          igrejaId: 'filial',
+          igrejaNome: 'Zona Sul',
+        ),
+      );
+    }
+
+    final usuarioCriado = {
+      'id': 'u9',
+      'username': 'recepcao',
+      'igrejaId': 'filial',
+      'papeis': ['CONTADOR'],
+    };
+
+    test('cria o papel na igreja da pessoa antes do usuário', () async {
+      final fake = FakeApi({
+        'GET /papeis': (r) {
+          expect(r.url.queryParameters['igrejaId'], 'filial');
+          return (
+            200,
+            [
+              {'id': 'sys', 'nome': 'MEMBRO'},
+            ],
+          );
+        },
+        'POST /papeis': (_) => (201, {'id': 'pc'}),
+        'POST /pessoas/p9/usuario': (_) => (201, usuarioCriado),
+      });
+
+      await criar(fake);
+
+      expect(fake.log, [
+        'GET /papeis',
+        'POST /papeis',
+        'POST /pessoas/p9/usuario',
+      ]);
+      expect(fake.corpo(1), {
+        'nome': 'CONTADOR',
+        'descricao': 'Recepção — lança a contagem do culto',
+        'podeLancarContagem': true,
+        'igrejaId': 'filial',
+      });
+      expect((fake.corpo(2) as Map)['papeis'], ['CONTADOR']);
+      expect((fake.corpo(2) as Map)['igrejaId'], 'filial');
+    });
+
+    test('reaproveita o papel que já existe na igreja', () async {
+      final fake = FakeApi({
+        'GET /papeis': (_) => (
+          200,
+          [
+            {'id': 'pc', 'nome': 'CONTADOR', 'podeLancarContagem': true},
+          ],
+        ),
+        'POST /pessoas/p9/usuario': (_) => (201, usuarioCriado),
+      });
+
+      await criar(fake);
+
+      expect(fake.log, ['GET /papeis', 'POST /pessoas/p9/usuario']);
     });
   });
 }
