@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
+import '../../services/api_client.dart';
 import '../../services/culto_service.dart';
 import '../../services/ministerio_service.dart';
 import '../../services/pessoa_service.dart';
@@ -25,6 +26,7 @@ class CultoDetailScreen extends StatefulWidget {
 class _CultoDetailScreenState extends State<CultoDetailScreen> {
   Culto? _culto;
   CultoConteudo _conteudo = const CultoConteudo(cultoId: '');
+  bool _conteudoVisivel = true;
   CultoRelatorio _relatorio = const CultoRelatorio(cultoId: '');
   List<Ministerio> _ministerios = [];
   List<Pessoa> _pessoas = [];
@@ -91,20 +93,26 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
     try {
       final results = await Future.wait([
         context.read<CultoService>().getById(widget.cultoId),
-        context.read<CultoService>().getConteudo(widget.cultoId),
+        context.read<CultoService>().getConteudo(widget.cultoId).then<CultoConteudo?>(
+              (c) => c,
+              onError: (Object e) =>
+                  e is ApiException && e.status == 403 ? null : throw e,
+            ),
         context.read<CultoService>().getRelatorio(widget.cultoId),
         context.read<MinisterioService>().list(igrejaId: _igrejaId()),
         context.read<PessoaService>().list(size: 100, igrejaId: _igrejaId()),
       ]);
       if (!mounted) return;
       final culto = results[0] as Culto;
-      final conteudo = results[1] as CultoConteudo;
+      final conteudoOuNulo = results[1] as CultoConteudo?;
+      final conteudo = conteudoOuNulo ?? CultoConteudo(cultoId: widget.cultoId);
       final relatorio = results[2] as CultoRelatorio;
       final ministerios = results[3] as List<Ministerio>;
       final pessoas = (results[4] as PageResponse<Pessoa>).content;
       setState(() {
         _culto = culto;
         _conteudo = conteudo;
+        _conteudoVisivel = conteudoOuNulo != null;
         _relatorio = relatorio;
         _ministerios = ministerios;
         _pessoas = pessoas;
@@ -430,8 +438,10 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
               const SizedBox(height: 12),
               _acoesStatus(culto.status, _savingStatus),
             ],
-            const SizedBox(height: 16),
-            _cardConteudo(canTexto, canLouvor, canManage),
+            if (_conteudoVisivel) ...[
+              const SizedBox(height: 16),
+              _cardConteudo(canTexto, canLouvor, canManage),
+            ],
             const SizedBox(height: 16),
             _cardRelatorio(podeLancarContagem(user)),
           ],
