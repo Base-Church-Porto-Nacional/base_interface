@@ -91,17 +91,9 @@ class _MensagemAniversarioScreenState extends State<MensagemAniversarioScreen> {
           .save(config.copyWith(mensagem: _controller.text));
       _carregada = saved;
       _controller.text = saved.mensagem;
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mensagem padrão salva.')),
-        );
-      }
+      if (mounted) showSnack(context, 'Mensagem padrão salva.');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e'.replaceFirst('Exception: ', ''))),
-        );
-      }
+      if (mounted) showSnack(context, '$e'.replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -117,15 +109,15 @@ class _MensagemAniversarioScreenState extends State<MensagemAniversarioScreen> {
             ('/configuracoes/mensagem-aniversario', 'Mensagem de aniversário'),
           ],
         ),
-        Expanded(
-          child: _loading
-              ? const LoadingView()
-              : _error != null
-                  ? ErrorView(message: _error!, onRetry: _load)
-                  : _corpo(),
-        ),
+        Expanded(child: _body()),
       ],
     );
+  }
+
+  Widget _body() {
+    if (_loading) return const LoadingView();
+    if (_error != null) return ErrorView(message: _error!, onRetry: _load);
+    return _corpo();
   }
 
   Widget _corpo() {

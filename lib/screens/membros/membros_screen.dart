@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/export_service.dart';
@@ -27,23 +26,11 @@ class _MembrosScreenState extends State<MembrosScreen> {
   String _search = '';
   bool _loading = true;
   String? _error;
-  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _load();
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    super.dispose();
-  }
-
-  void _scheduleLoad() {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 250), _load);
   }
 
   Future<void> _load() async {
@@ -102,9 +89,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
         _load();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -113,12 +98,9 @@ class _MembrosScreenState extends State<MembrosScreen> {
     final podeMutar = canMutatePessoas(context.watch<AuthProvider>().user);
     return Column(
       children: [
-        SectionTabs(
+        const SectionTabs(
           currentPath: '/membros',
-          tabs: const [
-            ('/membros', 'Membros'),
-            ('/membros/pessoas', 'Pessoas'),
-          ],
+          tabs: membrosTabs,
         ),
         Expanded(
           child: ListView(
@@ -137,7 +119,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
                 hint: 'Buscar membro',
                 onChanged: (v) {
                   _search = v;
-                  _scheduleLoad();
+                  _load();
                 },
               ),
               const SizedBox(height: 16),
@@ -146,10 +128,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
               else if (_error != null)
                 ErrorView(message: _error!, onRetry: _load)
               else if (_items.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: Text('Nenhum membro encontrado.')),
-                )
+                const EmptyView(message: 'Nenhum membro encontrado.')
               else
                 ..._items.map(
                   (p) => Padding(
@@ -159,7 +138,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
                       subtitle: p.ministerios.isNotEmpty
                           ? p.ministerios.join(', ')
                           : pessoaStatusLabel(p.status),
-                      badges: p.papeisExibiveis.map(roleLabel).toList(),
+                      badges: p.papeis.map(roleLabel).toList(),
                       trailing: StatusBadge(
                         label: pessoaStatusLabel(p.status),
                         success: p.status == PessoaStatus.ativo,

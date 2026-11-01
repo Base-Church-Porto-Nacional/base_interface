@@ -150,26 +150,12 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
   Future<void> _mudarStatus(CultoStatus novo) async {
     final culto = _culto;
     if (culto == null) return;
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Alterar situação'),
-        content: Text(
-          'Mudar o status para "${cultoStatusLabel(novo)}"?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
+    final confirmado = await confirmDialog(
+      context,
+      title: 'Alterar situação',
+      message: 'Mudar o status para "${cultoStatusLabel(novo)}"?',
     );
-    if (confirmado != true || !mounted) return;
+    if (!confirmado || !mounted) return;
     setState(() => _savingStatus = true);
     try {
       final updated = await context
@@ -177,9 +163,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
           .update(culto.copyWith(status: novo));
       if (mounted) setState(() => _culto = updated);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _savingStatus = false);
     }
@@ -219,8 +203,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
     }
 
     if (!mudou) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Nada para salvar.')));
+      showSnack(context, 'Nada para salvar.');
       return;
     }
 
@@ -244,12 +227,9 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
           );
         }
       });
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Conteúdo salvo.')));
+      showSnack(context, 'Conteúdo salvo.');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _savingConteudo = false);
     }
@@ -273,40 +253,23 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
     for (final e in numeros.entries) {
       final v = int.tryParse(e.value.trim());
       if (v == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('"${e.key}" deve ser um número inteiro.')),
-        );
+        showSnack(context, '"${e.key}" deve ser um número inteiro.');
         return;
       }
       if (v < 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('"${e.key}" não pode ser negativo.')),
-        );
+        showSnack(context, '"${e.key}" não pode ser negativo.');
         return;
       }
       valores[e.key] = v;
     }
 
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Salvar relatório'),
-        content: const Text(
-          'Salvar o relatório marca o culto como Realizado e encerra a configuração. Continuar?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Salvar'),
-          ),
-        ],
-      ),
+    final confirmado = await confirmDialog(
+      context,
+      title: 'Salvar relatório',
+      message: 'Salvar o relatório marca o culto como Realizado e encerra a configuração. Continuar?',
+      confirmLabel: 'Salvar',
     );
-    if (confirmado != true || !mounted) return;
+    if (!confirmado || !mounted) return;
 
     setState(() => _savingRelatorio = true);
     final relatorio = CultoRelatorio(
@@ -331,13 +294,10 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
             temRelatorio: true,
           );
         });
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Relatório salvo.')));
+        showSnack(context, 'Relatório salvo.');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _savingRelatorio = false);
     }
@@ -354,31 +314,18 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
       );
       return;
     }
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Excluir culto'),
-        content: Text('Excluir "${culto.titulo}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
+    final confirmado = await confirmDialog(
+      context,
+      title: 'Excluir culto',
+      message: 'Excluir "${culto.titulo}"?',
+      confirmLabel: 'Excluir',
     );
-    if (confirmado != true || !mounted) return;
+    if (!confirmado || !mounted) return;
     try {
       await context.read<CultoService>().delete(culto.id);
       if (mounted) context.pop();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/base_ministerial_service.dart';
@@ -92,32 +93,26 @@ class _MinisteriosScreenState extends State<MinisteriosScreen> {
           igrejaId: igrejaId ?? '',
           tipo: result['tipo'] as MinisterioTipo,
           liderPessoaId: result['liderPessoaId'] as String?,
-          liderNome: result['liderNome'] as String?,
           coordenadorPessoaId: result['coordenadorPessoaId'] as String?,
-          coordenadorNome: result['coordenadorNome'] as String?,
           baseMinisterialId: result['baseMinisterialId'] as String?,
-          baseMinisterialNome: result['baseMinisterialNome'] as String?,
         );
       } else {
         await service.update(
           editing.id,
+          anotacoes: editing.anotacoes,
+          ordem: editing.ordem,
           nome: result['nome'] as String,
           descricao: result['descricao'] as String?,
           ativo: result['ativo'] as bool,
           tipo: result['tipo'] as MinisterioTipo,
           liderPessoaId: result['liderPessoaId'] as String?,
-          liderNome: result['liderNome'] as String?,
           coordenadorPessoaId: result['coordenadorPessoaId'] as String?,
-          coordenadorNome: result['coordenadorNome'] as String?,
           baseMinisterialId: result['baseMinisterialId'] as String?,
-          baseMinisterialNome: result['baseMinisterialNome'] as String?,
         );
       }
       _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -150,9 +145,7 @@ class _MinisteriosScreenState extends State<MinisteriosScreen> {
           descricao: result['descricao'] as String?,
           igrejaId: igrejaId ?? '',
           liderPessoaId: result['liderPessoaId'] as String?,
-          liderNome: result['liderNome'] as String?,
           coordenadorPessoaId: result['coordenadorPessoaId'] as String?,
-          coordenadorNome: result['coordenadorNome'] as String?,
         );
       } else {
         await service.update(
@@ -161,16 +154,12 @@ class _MinisteriosScreenState extends State<MinisteriosScreen> {
           descricao: result['descricao'] as String?,
           ativo: result['ativo'] as bool,
           liderPessoaId: result['liderPessoaId'] as String?,
-          liderNome: result['liderNome'] as String?,
           coordenadorPessoaId: result['coordenadorPessoaId'] as String?,
-          coordenadorNome: result['coordenadorNome'] as String?,
         );
       }
       _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -192,12 +181,7 @@ class _MinisteriosScreenState extends State<MinisteriosScreen> {
       children: [
         const SectionTabs(
           currentPath: '/voluntariado/ministerios',
-          tabs: [
-            ('/voluntariado/voluntarios', 'Voluntários'),
-            ('/voluntariado/escalas', 'Escalas'),
-            ('/voluntariado/ministerios', 'Ministérios'),
-            ('/voluntariado/relatorios', 'Relatórios'),
-          ],
+          tabs: voluntariadoTabs,
         ),
         Expanded(
           child: ListView(
@@ -232,10 +216,7 @@ class _MinisteriosScreenState extends State<MinisteriosScreen> {
               else if (_error != null)
                 ErrorView(message: _error!, onRetry: _load)
               else if (items.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: Text('Nenhum ministério encontrado.')),
-                )
+                const EmptyView(message: 'Nenhum ministério encontrado.')
               else
                 ..._buildGroups(items, user, podeCriarMinisterio),
             ],

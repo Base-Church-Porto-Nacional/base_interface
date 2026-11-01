@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/culto_service.dart';
@@ -80,14 +81,10 @@ class _CultosMesScreenState extends State<CultosMesScreen> {
             _competencia,
             igrejaId: igrejaId,
           );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-      }
+      if (mounted) showSnack(context, msg);
       await _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _generating = false);
     }
@@ -117,10 +114,7 @@ class _CultosMesScreenState extends State<CultosMesScreen> {
       children: [
         const SectionTabs(
           currentPath: '/cultos/mes',
-          tabs: [
-            ('/cultos/mes', 'Mês'),
-            ('/cultos/categorias', 'Categorias'),
-          ],
+          tabs: cultosMesTabs,
         ),
         Expanded(
           child: ListView(
@@ -176,10 +170,7 @@ class _CultosMesScreenState extends State<CultosMesScreen> {
               else if (_error != null)
                 ErrorView(message: _error!, onRetry: _load)
               else if (_cultos.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: Text('Nenhum culto neste mês.')),
-                )
+                const EmptyView(message: 'Nenhum culto neste mês.')
               else
                 ...dates.map(
                   (data) => Padding(

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/conteudo_culto_service.dart';
@@ -102,14 +103,10 @@ class _ConteudoCultoScreenState extends State<ConteudoCultoScreen> {
           );
       if (mounted) {
         setState(() => _conteudo = saved);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Conteúdo salvo.')),
-        );
+        showSnack(context, 'Conteúdo salvo.');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -118,11 +115,7 @@ class _ConteudoCultoScreenState extends State<ConteudoCultoScreen> {
   Future<void> _copy(String label, String value) async {
     if (value.trim().isEmpty) return;
     await Clipboard.setData(ClipboardData(text: value));
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$label copiado.')),
-      );
-    }
+    if (mounted) showSnack(context, '$label copiado.');
   }
 
   @override
@@ -143,10 +136,7 @@ class _ConteudoCultoScreenState extends State<ConteudoCultoScreen> {
       children: [
         const SectionTabs(
           currentPath: '/cultos/conteudo',
-          tabs: [
-            ('/cultos', 'Agenda'),
-            ('/cultos/conteudo', 'Gestão de culto'),
-          ],
+          tabs: cultosAgendaTabs,
         ),
         Expanded(
           child: _loading
@@ -163,10 +153,7 @@ class _ConteudoCultoScreenState extends State<ConteudoCultoScreen> {
                               : 'Pastor/pregador informa o texto. Música informa o louvor.',
                         ),
                         if (_cultos.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(24),
-                            child: Center(child: Text('Nenhum culto para gerenciar.')),
-                          )
+                          const EmptyView(message: 'Nenhum culto para gerenciar.')
                         else ...[
                           DropdownButtonFormField<String>(
                             value: _eventoId,

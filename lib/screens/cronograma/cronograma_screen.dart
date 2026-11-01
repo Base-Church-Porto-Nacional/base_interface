@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/cronograma_service.dart';
 import '../../services/pessoa_service.dart';
@@ -50,7 +51,8 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
 
     final titulo = TextEditingController(text: 'Culto de domingo');
     var tipo = TipoEvento.culto;
-    var data = DateTime(2026, 8, 30);
+    final hoje = DateTime.now();
+    var data = DateTime(hoje.year, hoje.month, hoje.day);
     final hora = TextEditingController(text: '18:00');
     final local = TextEditingController();
     var supervisorId = igreja.pastorPessoaId;
@@ -89,8 +91,8 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
                         final picked = await showDatePicker(
                           context: context,
                           initialDate: data,
-                          firstDate: DateTime(2025),
-                          lastDate: DateTime(2029),
+                          firstDate: DateTime(hoje.year - 1),
+                          lastDate: DateTime(hoje.year + 3),
                         );
                         if (picked != null) setLocal(() => data = picked);
                       },
@@ -152,9 +154,7 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
           );
       _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -173,10 +173,7 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
       children: [
         const SectionTabs(
           currentPath: '/cultos',
-          tabs: [
-            ('/cultos', 'Agenda'),
-            ('/cultos/conteudo', 'Gestão de culto'),
-          ],
+          tabs: cultosAgendaTabs,
         ),
         Expanded(
           child: ListView(
@@ -195,10 +192,7 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
               else if (_error != null)
                 ErrorView(message: _error!, onRetry: _load)
               else if (_items.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: Text('Nenhum culto ou evento.')),
-                )
+                const EmptyView(message: 'Nenhum culto ou evento.')
               else
                 ..._items.map(
                   (e) => Padding(

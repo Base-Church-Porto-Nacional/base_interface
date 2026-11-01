@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 
 import '../models/models.dart';
 import '../services/auth_service.dart';
-import '../utils/permissions.dart';
 
 class AuthProvider extends ChangeNotifier {
   AuthProvider(this._authService) {
@@ -16,10 +15,6 @@ class AuthProvider extends ChangeNotifier {
   String? error;
 
   bool get isAuthenticated => user != null && _authService.isAuthenticated;
-
-  bool can(String permission) => hasPermission(user?.roles ?? [], permission);
-
-  bool hasRole(Role role) => user?.roles.contains(role) ?? false;
 
   Future<bool> login(String username, String password) async {
     isLoading = true;

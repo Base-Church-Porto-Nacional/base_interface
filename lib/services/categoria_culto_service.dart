@@ -24,7 +24,7 @@ class CategoriaCultoService {
   }
 
   Future<CategoriaCulto> create(CategoriaCulto categoria) async {
-    final json = await _api.post('/categorias-culto', {
+    final json = await _api.post('/categorias-culto', body: {
       'titulo': categoria.titulo.trim(),
       'descricao': categoria.descricao,
       'diaSemana': diaSemanaApiToString(categoria.diaSemana),
@@ -54,8 +54,10 @@ class CategoriaCultoService {
   }
 
   Future<String> gerarCultos(String id, {String? competencia}) async {
-    final query = competencia == null ? '' : '?competencia=$competencia';
-    final text = await _api.post('/categorias-culto/$id/gerar-cultos$query');
+    final text = await _api.post(
+      '/categorias-culto/$id/gerar-cultos',
+      query: {'competencia': ?competencia},
+    );
     return text?.toString() ?? '';
   }
 

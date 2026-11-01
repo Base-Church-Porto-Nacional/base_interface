@@ -46,6 +46,32 @@ class Igreja {
   final bool ativo;
 
   bool get isMatriz => tipo == IgrejaTipo.matriz;
+
+  factory Igreja.fromJson(Map<String, dynamic> json) {
+    return Igreja(
+      id: json['id'] as String,
+      nome: json['nome'] as String,
+      tipo: igrejaTipoFromString(json['tipo'] as String?),
+      pastorPessoaId: json['pastorPessoaId'] as String? ?? '',
+      pastorNome: json['pastorNome'] as String? ?? '',
+      adminUsuarioId: json['adminUsuarioId'] as String? ?? '',
+      adminNome: json['adminNome'] as String? ?? '',
+      ativo: json['ativo'] as bool? ?? true,
+      igrejaMatrizId: json['igrejaMatrizId'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'nome': nome,
+        'tipo': _enumToApi(tipo),
+        'pastorPessoaId': pastorPessoaId,
+        'pastorNome': pastorNome,
+        'adminUsuarioId': adminUsuarioId,
+        'adminNome': adminNome,
+        'ativo': ativo,
+        'igrejaMatrizId': igrejaMatrizId,
+      };
 }
 
 class AuthUser {
@@ -79,14 +105,14 @@ class AuthUser {
       nome: json['nome'] as String,
       email: json['email'] as String,
       roles: (json['roles'] as List<dynamic>)
-          .map((r) => _roleFromString(r as String))
+          .map((r) => roleFromString(r as String))
           .toList(),
       pessoaId: json['pessoaId'] as String?,
       igrejaId: json['igrejaId'] as String? ?? '',
-      igrejaTipo: _igrejaTipoFromString(json['igrejaTipo'] as String? ?? 'FILIAL'),
+      igrejaTipo: igrejaTipoFromString(json['igrejaTipo'] as String?),
       igrejaNome: json['igrejaNome'] as String? ?? '',
       igrejasVisiveis: (json['igrejasVisiveis'] as List<dynamic>? ?? [])
-          .map((e) => _igrejaFromJson(e as Map<String, dynamic>))
+          .map((e) => Igreja.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -95,12 +121,12 @@ class AuthUser {
         'id': id,
         'nome': nome,
         'email': email,
-        'roles': roles.map(_roleToString).toList(),
+        'roles': roles.map(roleToString).toList(),
         'pessoaId': pessoaId,
         'igrejaId': igrejaId,
-        'igrejaTipo': _igrejaTipoToString(igrejaTipo),
+        'igrejaTipo': _enumToApi(igrejaTipo),
         'igrejaNome': igrejaNome,
-        'igrejasVisiveis': igrejasVisiveis.map(_igrejaToJson).toList(),
+        'igrejasVisiveis': igrejasVisiveis.map((i) => i.toJson()).toList(),
       };
 }
 
@@ -129,9 +155,10 @@ class Pessoa {
     required this.ministerios,
     required this.dataCadastro,
     required this.igrejaId,
-    this.nascimento,
     this.whatsapp = '',
-    this.jornada = const [],
+    this.aceitouJesus = false,
+    this.batizado = false,
+    this.concluiuTrilhaBase = false,
     this.usuarioId,
     this.papeis = const [],
   });
@@ -144,12 +171,13 @@ class Pessoa {
   final List<PessoaTipo> tipos;
   final List<String> ministerios;
   final String dataCadastro;
-  final String? nascimento;
 
   /// Guardado exatamente como o usuário digitou, com máscara. Vazio significa
   /// que a pessoa não recebe mensagem de aniversário.
   final String whatsapp;
-  final List<JornadaEtapa> jornada;
+  final bool aceitouJesus;
+  final bool batizado;
+  final bool concluiuTrilhaBase;
   final String igrejaId;
   final String? usuarioId;
   final List<Role> papeis;
@@ -157,55 +185,6 @@ class Pessoa {
   bool get temUsuario => usuarioId != null && usuarioId!.isNotEmpty;
 
   bool get temWhatsapp => whatsapp.trim().isNotEmpty;
-
-  List<Role> get papeisExibiveis => papeis.isNotEmpty ? papeis : _papeisDeTipos(tipos);
-
-  Pessoa copyWith({
-    String? nome,
-    String? telefone,
-    String? email,
-    String? whatsapp,
-    PessoaStatus? status,
-    String? usuarioId,
-    List<String>? ministerios,
-    List<PessoaTipo>? tipos,
-  }) {
-    return Pessoa(
-      id: id,
-      nome: nome ?? this.nome,
-      telefone: telefone ?? this.telefone,
-      email: email ?? this.email,
-      whatsapp: whatsapp ?? this.whatsapp,
-      status: status ?? this.status,
-      tipos: tipos ?? this.tipos,
-      ministerios: ministerios ?? this.ministerios,
-      dataCadastro: dataCadastro,
-      nascimento: nascimento,
-      jornada: jornada,
-      igrejaId: igrejaId,
-      usuarioId: usuarioId ?? this.usuarioId,
-      papeis: papeis,
-    );
-  }
-}
-
-List<Role> _papeisDeTipos(List<PessoaTipo> tipos) {
-  final papeis = <Role>[];
-  for (final t in tipos) {
-    switch (t) {
-      case PessoaTipo.membro:
-        papeis.add(Role.membro);
-      case PessoaTipo.voluntario:
-        papeis.add(Role.voluntario);
-      case PessoaTipo.lider:
-        papeis.add(Role.lider);
-      case PessoaTipo.pastor:
-        papeis.add(Role.pastor);
-      case PessoaTipo.visitante:
-        break;
-    }
-  }
-  return papeis;
 }
 
 List<PessoaTipo> pessoaTiposDePapeis(List<Role> papeis) {
@@ -288,30 +267,6 @@ class BaseMinisterial {
   final String? coordenadorPessoaId;
   final String? coordenadorNome;
   final String? ordem;
-
-  BaseMinisterial copyWith({
-    String? nome,
-    String? descricao,
-    bool? ativo,
-    String? liderPessoaId,
-    String? liderNome,
-    String? coordenadorPessoaId,
-    String? coordenadorNome,
-    String? ordem,
-  }) {
-    return BaseMinisterial(
-      id: id,
-      nome: nome ?? this.nome,
-      liderNome: liderNome ?? this.liderNome,
-      ativo: ativo ?? this.ativo,
-      descricao: descricao ?? this.descricao,
-      igrejaId: igrejaId,
-      liderPessoaId: liderPessoaId ?? this.liderPessoaId,
-      coordenadorPessoaId: coordenadorPessoaId ?? this.coordenadorPessoaId,
-      coordenadorNome: coordenadorNome ?? this.coordenadorNome,
-      ordem: ordem ?? this.ordem,
-    );
-  }
 }
 
 class Ministerio {
@@ -352,53 +307,6 @@ class Ministerio {
   final String? baseMinisterialId;
   final String? baseMinisterialNome;
   final List<Servico> servicos;
-
-  List<Servico> get servicosReais => servicos.where((s) => !s.ficcao).toList();
-
-  Servico? get servicoCoordenador {
-    for (final s in servicos) {
-      if (s.ficcao) return s;
-    }
-    return null;
-  }
-
-  Ministerio copyWith({
-    String? nome,
-    String? descricao,
-    bool? ativo,
-    String? liderPessoaId,
-    String? liderNome,
-    String? coordenadorPessoaId,
-    String? coordenadorNome,
-    MinisterioTipo? tipo,
-    String? anotacoes,
-    String? ordem,
-    String? baseMinisterialId,
-    String? baseMinisterialNome,
-    List<Servico>? servicos,
-    int? totalVoluntarios,
-    int? totalServicos,
-  }) {
-    return Ministerio(
-      id: id,
-      nome: nome ?? this.nome,
-      liderNome: liderNome ?? this.liderNome,
-      totalVoluntarios: totalVoluntarios ?? this.totalVoluntarios,
-      totalServicos: totalServicos ?? this.totalServicos,
-      ativo: ativo ?? this.ativo,
-      descricao: descricao ?? this.descricao,
-      igrejaId: igrejaId,
-      tipo: tipo ?? this.tipo,
-      liderPessoaId: liderPessoaId ?? this.liderPessoaId,
-      coordenadorPessoaId: coordenadorPessoaId ?? this.coordenadorPessoaId,
-      coordenadorNome: coordenadorNome ?? this.coordenadorNome,
-      anotacoes: anotacoes ?? this.anotacoes,
-      ordem: ordem ?? this.ordem,
-      baseMinisterialId: baseMinisterialId ?? this.baseMinisterialId,
-      baseMinisterialNome: baseMinisterialNome ?? this.baseMinisterialNome,
-      servicos: servicos ?? this.servicos,
-    );
-  }
 }
 
 class UsuarioConta {
@@ -818,23 +726,6 @@ class SmallGroupEncontro {
   final String? anfitriaoNome;
   final List<SmallGroupParticipante> compareceram;
   final String? anotacoes;
-
-  SmallGroupEncontro copyWith({
-    String? anfitriaoPessoaId,
-    String? anfitriaoNome,
-    List<SmallGroupParticipante>? compareceram,
-    String? anotacoes,
-  }) {
-    return SmallGroupEncontro(
-      id: id,
-      smallGroupId: smallGroupId,
-      data: data,
-      anfitriaoPessoaId: anfitriaoPessoaId ?? this.anfitriaoPessoaId,
-      anfitriaoNome: anfitriaoNome ?? this.anfitriaoNome,
-      compareceram: compareceram ?? this.compareceram,
-      anotacoes: anotacoes ?? this.anotacoes,
-    );
-  }
 }
 
 class SmallGroup {
@@ -1067,23 +958,6 @@ class CultoConteudo {
   final String? tema;
   final String? pregadorId;
   final String? pregadorNome;
-
-  CultoConteudo copyWith({
-    String? textoPregacao,
-    String? louvor,
-    String? tema,
-    String? pregadorId,
-    String? pregadorNome,
-  }) {
-    return CultoConteudo(
-      cultoId: cultoId,
-      textoPregacao: textoPregacao ?? this.textoPregacao,
-      louvor: louvor ?? this.louvor,
-      tema: tema ?? this.tema,
-      pregadorId: pregadorId ?? this.pregadorId,
-      pregadorNome: pregadorNome ?? this.pregadorNome,
-    );
-  }
 }
 
 class CultoRelatorio {
@@ -1411,460 +1285,143 @@ class PageResponse<T> {
   final int size;
 }
 
-Role _roleFromString(String value) {
-  switch (value.toUpperCase()) {
-    case 'ADMIN':
-      return Role.admin;
-    case 'PASTOR':
-      return Role.pastor;
-    case 'LIDER':
-      return Role.lider;
-    case 'VOLUNTARIO':
-      return Role.voluntario;
-    case 'CONTADOR':
-      return Role.contador;
-    default:
-      return Role.membro;
-  }
+String _enumToApi(Enum value) => value.name
+    .replaceAllMapped(RegExp('[A-Z]'), (m) => '_${m[0]}')
+    .toUpperCase();
+
+T _enumFromApi<T extends Enum>(List<T> values, String? value, T fallback) {
+  final upper = value?.toUpperCase();
+  return values.firstWhere((e) => _enumToApi(e) == upper, orElse: () => fallback);
 }
 
-String _roleToString(Role role) {
-  switch (role) {
-    case Role.admin:
-      return 'ADMIN';
-    case Role.pastor:
-      return 'PASTOR';
-    case Role.lider:
-      return 'LIDER';
-    case Role.voluntario:
-      return 'VOLUNTARIO';
-    case Role.membro:
-      return 'MEMBRO';
-    case Role.contador:
-      return 'CONTADOR';
-  }
-}
-
-IgrejaTipo _igrejaTipoFromString(String value) {
-  return value.toUpperCase() == 'MATRIZ' ? IgrejaTipo.matriz : IgrejaTipo.filial;
-}
-
-String _igrejaTipoToString(IgrejaTipo tipo) {
-  return tipo == IgrejaTipo.matriz ? 'MATRIZ' : 'FILIAL';
-}
-
-Igreja _igrejaFromJson(Map<String, dynamic> json) {
-  return Igreja(
-    id: json['id'] as String,
-    nome: json['nome'] as String,
-    tipo: _igrejaTipoFromString(json['tipo'] as String? ?? 'FILIAL'),
-    pastorPessoaId: json['pastorPessoaId'] as String? ?? '',
-    pastorNome: json['pastorNome'] as String? ?? '',
-    adminUsuarioId: json['adminUsuarioId'] as String? ?? '',
-    adminNome: json['adminNome'] as String? ?? '',
-    ativo: json['ativo'] as bool? ?? true,
-    igrejaMatrizId: json['igrejaMatrizId'] as String?,
-  );
-}
-
-Map<String, dynamic> _igrejaToJson(Igreja i) => {
-      'id': i.id,
-      'nome': i.nome,
-      'tipo': _igrejaTipoToString(i.tipo),
-      'pastorPessoaId': i.pastorPessoaId,
-      'pastorNome': i.pastorNome,
-      'adminUsuarioId': i.adminUsuarioId,
-      'adminNome': i.adminNome,
-      'ativo': i.ativo,
-      'igrejaMatrizId': i.igrejaMatrizId,
-    };
+IgrejaTipo igrejaTipoFromString(String? value) =>
+    _enumFromApi(IgrejaTipo.values, value, IgrejaTipo.filial);
 
 String pessoaStatusLabel(PessoaStatus status) =>
     status == PessoaStatus.ativo ? 'ATIVO' : 'INATIVO';
 
-String pessoaTipoLabel(PessoaTipo tipo) => tipo.name.toUpperCase();
+String igrejaTipoLabel(IgrejaTipo tipo) => switch (tipo) {
+      IgrejaTipo.matriz => 'Matriz',
+      IgrejaTipo.filial => 'Filial',
+    };
 
-String igrejaTipoLabel(IgrejaTipo tipo) =>
-    tipo == IgrejaTipo.matriz ? 'Matriz' : 'Filial';
+String ministerioTipoLabel(MinisterioTipo tipo) => switch (tipo) {
+      MinisterioTipo.musica => 'Música',
+      MinisterioTipo.midia => 'Mídia',
+      MinisterioTipo.geral => 'Geral',
+    };
 
-String ministerioTipoLabel(MinisterioTipo tipo) {
-  switch (tipo) {
-    case MinisterioTipo.musica:
-      return 'Música';
-    case MinisterioTipo.midia:
-      return 'Mídia';
-    case MinisterioTipo.geral:
-      return 'Geral';
-  }
-}
+String escalaTipoLabel(EscalaTipo tipo) => switch (tipo) {
+      EscalaTipo.supervisor => 'Supervisor',
+      EscalaTipo.pregador => 'Pregador',
+      EscalaTipo.culto => 'Culto',
+      EscalaTipo.ministerio => 'Ministério',
+    };
 
-String escalaTipoLabel(EscalaTipo tipo) {
-  switch (tipo) {
-    case EscalaTipo.supervisor:
-      return 'Supervisor';
-    case EscalaTipo.pregador:
-      return 'Pregador';
-    case EscalaTipo.culto:
-      return 'Culto';
-    case EscalaTipo.ministerio:
-      return 'Ministério';
-  }
-}
+String tipoEventoLabel(TipoEvento tipo) => switch (tipo) {
+      TipoEvento.culto => 'Culto',
+      TipoEvento.evento => 'Evento',
+      TipoEvento.ensaio => 'Ensaio',
+      TipoEvento.reuniao => 'Reunião',
+      TipoEvento.outro => 'Outro',
+    };
 
-String tipoEventoLabel(TipoEvento tipo) {
-  switch (tipo) {
-    case TipoEvento.culto:
-      return 'Culto';
-    case TipoEvento.evento:
-      return 'Evento';
-    case TipoEvento.ensaio:
-      return 'Ensaio';
-    case TipoEvento.reuniao:
-      return 'Reunião';
-    case TipoEvento.outro:
-      return 'Outro';
-  }
-}
+String diaSemanaLabel(DiaSemana dia) => switch (dia) {
+      DiaSemana.domingo => 'Domingo',
+      DiaSemana.segunda => 'Segunda',
+      DiaSemana.terca => 'Terça',
+      DiaSemana.quarta => 'Quarta',
+      DiaSemana.quinta => 'Quinta',
+      DiaSemana.sexta => 'Sexta',
+      DiaSemana.sabado => 'Sábado',
+    };
 
-String diaSemanaLabel(DiaSemana dia) {
-  switch (dia) {
-    case DiaSemana.domingo:
-      return 'Domingo';
-    case DiaSemana.segunda:
-      return 'Segunda';
-    case DiaSemana.terca:
-      return 'Terça';
-    case DiaSemana.quarta:
-      return 'Quarta';
-    case DiaSemana.quinta:
-      return 'Quinta';
-    case DiaSemana.sexta:
-      return 'Sexta';
-    case DiaSemana.sabado:
-      return 'Sábado';
-  }
-}
+String diaSemanaApiToString(DiaSemana dia) => _enumToApi(dia);
 
-String diaSemanaApiToString(DiaSemana dia) {
-  switch (dia) {
-    case DiaSemana.domingo:
-      return 'DOMINGO';
-    case DiaSemana.segunda:
-      return 'SEGUNDA';
-    case DiaSemana.terca:
-      return 'TERCA';
-    case DiaSemana.quarta:
-      return 'QUARTA';
-    case DiaSemana.quinta:
-      return 'QUINTA';
-    case DiaSemana.sexta:
-      return 'SEXTA';
-    case DiaSemana.sabado:
-      return 'SABADO';
-  }
-}
+DiaSemana diaSemanaFromApi(String value) =>
+    _enumFromApi(DiaSemana.values, value, DiaSemana.domingo);
 
-DiaSemana diaSemanaFromApi(String value) {
-  switch (value.toUpperCase()) {
-    case 'DOMINGO':
-      return DiaSemana.domingo;
-    case 'SEGUNDA':
-      return DiaSemana.segunda;
-    case 'TERCA':
-      return DiaSemana.terca;
-    case 'QUARTA':
-      return DiaSemana.quarta;
-    case 'QUINTA':
-      return DiaSemana.quinta;
-    case 'SEXTA':
-      return DiaSemana.sexta;
-    case 'SABADO':
-      return DiaSemana.sabado;
-    default:
-      return DiaSemana.domingo;
-  }
-}
+String cultoStatusLabel(CultoStatus status) => switch (status) {
+      CultoStatus.agendado => 'Agendado',
+      CultoStatus.aberto => 'Aberto',
+      CultoStatus.realizado => 'Realizado',
+      CultoStatus.cancelado => 'Cancelado',
+    };
 
-String cultoStatusLabel(CultoStatus status) {
-  switch (status) {
-    case CultoStatus.agendado:
-      return 'Agendado';
-    case CultoStatus.aberto:
-      return 'Aberto';
-    case CultoStatus.realizado:
-      return 'Realizado';
-    case CultoStatus.cancelado:
-      return 'Cancelado';
-  }
-}
+String cultoStatusApiToString(CultoStatus status) => _enumToApi(status);
 
-String cultoStatusApiToString(CultoStatus status) {
-  switch (status) {
-    case CultoStatus.agendado:
-      return 'AGENDADO';
-    case CultoStatus.aberto:
-      return 'ABERTO';
-    case CultoStatus.realizado:
-      return 'REALIZADO';
-    case CultoStatus.cancelado:
-      return 'CANCELADO';
-  }
-}
+CultoStatus cultoStatusFromApi(String value) =>
+    _enumFromApi(CultoStatus.values, value, CultoStatus.agendado);
 
-CultoStatus cultoStatusFromApi(String value) {
-  switch (value.toUpperCase()) {
-    case 'AGENDADO':
-      return CultoStatus.agendado;
-    case 'ABERTO':
-      return CultoStatus.aberto;
-    case 'REALIZADO':
-      return CultoStatus.realizado;
-    case 'CANCELADO':
-      return CultoStatus.cancelado;
-    default:
-      return CultoStatus.agendado;
-  }
-}
+String roleLabel(Role role) => switch (role) {
+      Role.admin => 'Admin',
+      Role.pastor => 'Pastor',
+      Role.lider => 'Líder',
+      Role.voluntario => 'Voluntário',
+      Role.membro => 'Membro',
+      Role.contador => 'Contador',
+    };
 
-String roleLabel(Role role) {
-  switch (role) {
-    case Role.admin:
-      return 'Admin';
-    case Role.pastor:
-      return 'Pastor';
-    case Role.lider:
-      return 'Líder';
-    case Role.voluntario:
-      return 'Voluntário';
-    case Role.membro:
-      return 'Membro';
-    case Role.contador:
-      return 'Contador';
-  }
-}
+Role roleFromString(String value) => _enumFromApi(Role.values, value, Role.membro);
 
-Role roleFromString(String value) => _roleFromString(value);
+String roleToString(Role role) => _enumToApi(role);
 
-String roleToString(Role role) => _roleToString(role);
+MinisterioTipo ministerioTipoFromString(String value) =>
+    _enumFromApi(MinisterioTipo.values, value, MinisterioTipo.geral);
 
-MinisterioTipo ministerioTipoFromString(String value) {
-  switch (value.toUpperCase()) {
-    case 'MUSICA':
-      return MinisterioTipo.musica;
-    case 'MIDIA':
-      return MinisterioTipo.midia;
-    default:
-      return MinisterioTipo.geral;
-  }
-}
+String ministerioTipoToString(MinisterioTipo tipo) => _enumToApi(tipo);
 
-String ministerioTipoToString(MinisterioTipo tipo) {
-  switch (tipo) {
-    case MinisterioTipo.musica:
-      return 'MUSICA';
-    case MinisterioTipo.midia:
-      return 'MIDIA';
-    case MinisterioTipo.geral:
-      return 'GERAL';
-  }
-}
+EscalaTipo escalaTipoFromString(String value) =>
+    _enumFromApi(EscalaTipo.values, value, EscalaTipo.ministerio);
 
-EscalaTipo escalaTipoFromString(String value) {
-  switch (value.toUpperCase()) {
-    case 'SUPERVISOR':
-      return EscalaTipo.supervisor;
-    case 'PREGADOR':
-      return EscalaTipo.pregador;
-    case 'CULTO':
-      return EscalaTipo.culto;
-    default:
-      return EscalaTipo.ministerio;
-  }
-}
+String escalaTipoToString(EscalaTipo tipo) => _enumToApi(tipo);
 
-String escalaTipoToString(EscalaTipo tipo) {
-  switch (tipo) {
-    case EscalaTipo.supervisor:
-      return 'SUPERVISOR';
-    case EscalaTipo.pregador:
-      return 'PREGADOR';
-    case EscalaTipo.culto:
-      return 'CULTO';
-    case EscalaTipo.ministerio:
-      return 'MINISTERIO';
-  }
-}
+String escalaStatusLabel(EscalaStatus status) => switch (status) {
+      EscalaStatus.sugerida => 'Sugerida',
+      EscalaStatus.editando => 'Editando',
+      EscalaStatus.emAndamento => 'Em andamento',
+      EscalaStatus.finalizada => 'Finalizada',
+    };
 
-String escalaStatusLabel(EscalaStatus status) {
-  switch (status) {
-    case EscalaStatus.sugerida:
-      return 'Sugerida';
-    case EscalaStatus.editando:
-      return 'Editando';
-    case EscalaStatus.emAndamento:
-      return 'Em andamento';
-    case EscalaStatus.finalizada:
-      return 'Finalizada';
-  }
-}
+EscalaStatus escalaStatusFromString(String value) =>
+    _enumFromApi(EscalaStatus.values, value, EscalaStatus.editando);
 
-EscalaStatus escalaStatusFromString(String value) {
-  switch (value.toUpperCase()) {
-    case 'SUGERIDA':
-      return EscalaStatus.sugerida;
-    case 'EDITANDO':
-      return EscalaStatus.editando;
-    case 'EM_ANDAMENTO':
-      return EscalaStatus.emAndamento;
-    case 'FINALIZADA':
-      return EscalaStatus.finalizada;
-    default:
-      return EscalaStatus.editando;
-  }
-}
+String escalaStatusToString(EscalaStatus status) => _enumToApi(status);
 
-String escalaStatusToString(EscalaStatus status) {
-  switch (status) {
-    case EscalaStatus.sugerida:
-      return 'SUGERIDA';
-    case EscalaStatus.editando:
-      return 'EDITANDO';
-    case EscalaStatus.emAndamento:
-      return 'EM_ANDAMENTO';
-    case EscalaStatus.finalizada:
-      return 'FINALIZADA';
-  }
-}
+bool podeTransicionarEscalaStatus(EscalaStatus de, EscalaStatus para) => switch (de) {
+      EscalaStatus.sugerida =>
+        para == EscalaStatus.editando || para == EscalaStatus.emAndamento,
+      EscalaStatus.editando =>
+        para == EscalaStatus.sugerida || para == EscalaStatus.emAndamento,
+      EscalaStatus.emAndamento =>
+        para == EscalaStatus.editando || para == EscalaStatus.finalizada,
+      EscalaStatus.finalizada => para == EscalaStatus.emAndamento,
+    };
 
-bool podeTransicionarEscalaStatus(EscalaStatus de, EscalaStatus para) {
-  switch (de) {
-    case EscalaStatus.sugerida:
-      return para == EscalaStatus.editando || para == EscalaStatus.emAndamento;
-    case EscalaStatus.editando:
-      return para == EscalaStatus.sugerida || para == EscalaStatus.emAndamento;
-    case EscalaStatus.emAndamento:
-      return para == EscalaStatus.editando || para == EscalaStatus.finalizada;
-    case EscalaStatus.finalizada:
-      return para == EscalaStatus.emAndamento;
-  }
-}
-
-String escalaItemStatusLabel(EscalaItemStatus status) {
-  switch (status) {
-    case EscalaItemStatus.pendente:
-      return 'Pendente';
-    case EscalaItemStatus.confirmado:
-      return 'Confirmado';
-    case EscalaItemStatus.recusado:
-      return 'Recusado';
-    case EscalaItemStatus.substituido:
-      return 'Substituído';
-  }
-}
+String escalaItemStatusLabel(EscalaItemStatus status) => switch (status) {
+      EscalaItemStatus.pendente => 'Pendente',
+      EscalaItemStatus.confirmado => 'Confirmado',
+      EscalaItemStatus.recusado => 'Recusado',
+      EscalaItemStatus.substituido => 'Substituído',
+    };
 
 EscalaItemStatus escalaItemStatusFromString(String value) {
-  switch (value.toUpperCase()) {
-    case 'CONFIRMADO':
-      return EscalaItemStatus.confirmado;
-    case 'RECUSADO':
-      return EscalaItemStatus.recusado;
-    case 'SUBSTITUIDO':
-    case 'SUBSTITUÍDO':
-      return EscalaItemStatus.substituido;
-    default:
-      return EscalaItemStatus.pendente;
-  }
+  if (value.toUpperCase() == 'SUBSTITUÍDO') return EscalaItemStatus.substituido;
+  return _enumFromApi(EscalaItemStatus.values, value, EscalaItemStatus.pendente);
 }
 
-String escalaItemStatusToString(EscalaItemStatus status) {
-  switch (status) {
-    case EscalaItemStatus.pendente:
-      return 'PENDENTE';
-    case EscalaItemStatus.confirmado:
-      return 'CONFIRMADO';
-    case EscalaItemStatus.recusado:
-      return 'RECUSADO';
-    case EscalaItemStatus.substituido:
-      return 'SUBSTITUIDO';
-  }
-}
+String escalaItemStatusToString(EscalaItemStatus status) => _enumToApi(status);
 
-DiaSemana diaSemanaFromString(String value) {
-  switch (value.toUpperCase()) {
-    case 'SEGUNDA':
-      return DiaSemana.segunda;
-    case 'TERCA':
-      return DiaSemana.terca;
-    case 'QUARTA':
-      return DiaSemana.quarta;
-    case 'QUINTA':
-      return DiaSemana.quinta;
-    case 'SEXTA':
-      return DiaSemana.sexta;
-    case 'SABADO':
-      return DiaSemana.sabado;
-    default:
-      return DiaSemana.domingo;
-  }
-}
+AniversarioEnvioStatus aniversarioEnvioStatusFromString(String value) =>
+    _enumFromApi(AniversarioEnvioStatus.values, value, AniversarioEnvioStatus.pendente);
 
-AniversarioEnvioStatus aniversarioEnvioStatusFromString(String value) {
-  switch (value.toUpperCase()) {
-    case 'ENVIADO':
-      return AniversarioEnvioStatus.enviado;
-    case 'FALHA':
-      return AniversarioEnvioStatus.falha;
-    case 'PENDENTE':
-      return AniversarioEnvioStatus.pendente;
-    default:
-      return AniversarioEnvioStatus.pendente;
-  }
-}
-
-String aniversarioEnvioStatusLabel(AniversarioEnvioStatus status) {
-  switch (status) {
-    case AniversarioEnvioStatus.pendente:
-      return 'PENDENTE';
-    case AniversarioEnvioStatus.enviado:
-      return 'ENVIADO';
-    case AniversarioEnvioStatus.falha:
-      return 'FALHA';
-  }
-}
-
-String aniversarioEnvioStatusToString(AniversarioEnvioStatus status) =>
-    switch (status) {
+String aniversarioEnvioStatusLabel(AniversarioEnvioStatus status) => switch (status) {
       AniversarioEnvioStatus.pendente => 'PENDENTE',
       AniversarioEnvioStatus.enviado => 'ENVIADO',
       AniversarioEnvioStatus.falha => 'FALHA',
     };
 
-TipoEvento tipoEventoFromString(String value) {
-  switch (value.toUpperCase()) {
-    case 'CULTO':
-      return TipoEvento.culto;
-    case 'EVENTO':
-      return TipoEvento.evento;
-    case 'ENSAIO':
-      return TipoEvento.ensaio;
-    case 'REUNIAO':
-      return TipoEvento.reuniao;
-    default:
-      return TipoEvento.outro;
-  }
-}
+TipoEvento tipoEventoFromString(String value) =>
+    _enumFromApi(TipoEvento.values, value, TipoEvento.outro);
 
-String tipoEventoToString(TipoEvento tipo) {
-  switch (tipo) {
-    case TipoEvento.culto:
-      return 'CULTO';
-    case TipoEvento.evento:
-      return 'EVENTO';
-    case TipoEvento.ensaio:
-      return 'ENSAIO';
-    case TipoEvento.reuniao:
-      return 'REUNIAO';
-    case TipoEvento.outro:
-      return 'OUTRO';
-  }
-}
+String tipoEventoToString(TipoEvento tipo) => _enumToApi(tipo);

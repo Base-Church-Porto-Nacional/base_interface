@@ -238,7 +238,6 @@ void main() {
           senha: 's',
           papeis: const [Role.contador],
           igrejaId: 'filial',
-          igrejaNome: 'Zona Sul',
         ),
       );
     }

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/igreja_context.dart';
 import '../../services/pessoa_service.dart';
 import '../../services/usuario_service.dart';
 import '../../theme/app_colors.dart';
@@ -25,6 +24,7 @@ class PessoaDetailScreen extends StatefulWidget {
 class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
   Pessoa? _pessoa;
   List<PessoaHistorico> _historico = [];
+  List<JornadaEtapa> _jornada = [];
   bool _loading = true;
   String? _error;
   int _tab = 0;
@@ -45,11 +45,13 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
       final results = await Future.wait([
         service.getById(widget.pessoaId),
         service.listHistorico(widget.pessoaId),
+        service.jornada(widget.pessoaId).catchError((_) => <JornadaEtapa>[]),
       ]);
       if (mounted) {
         setState(() {
           _pessoa = results[0] as Pessoa;
           _historico = results[1] as List<PessoaHistorico>;
+          _jornada = results[2] as List<JornadaEtapa>;
         });
       }
     } catch (e) {
@@ -63,7 +65,6 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
     final p = _pessoa;
     if (p == null || p.temUsuario) return;
     if (!canCreateUsuario(context.read<AuthProvider>().user)) return;
-    final igreja = context.read<IgrejaContext>().selected;
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (_) => UsuarioFormDialog(
@@ -81,19 +82,13 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
             senha: result['senha'] as String,
             papeis: (result['papeis'] as List<Role>),
             igrejaId: p.igrejaId,
-            igrejaNome: igreja?.nome ?? '',
-            pessoaNome: p.nome,
           );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuário criado. A pessoa já pode acompanhar escalas e eventos.')),
-        );
+        showSnack(context, 'Usuário criado. A pessoa já pode acompanhar escalas e eventos.');
         _load();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -124,14 +119,10 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
           );
       if (mounted) {
         setState(() => _pessoa = updated);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pessoa atualizada.')),
-        );
+        showSnack(context, 'Pessoa atualizada.');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -159,7 +150,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
           duration: const Duration(milliseconds: 200),
           child: switch (_tab) {
             0 => _buildPerfil(p),
-            1 => _buildJornada(p),
+            1 => _buildJornada(),
             _ => _buildHistorico(),
           },
         ),
@@ -168,7 +159,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
   }
 
   Widget _buildHero(Pessoa p) {
-    final papeis = p.papeisExibiveis.map(roleLabel).join(' · ');
+    final papeis = p.papeis.map(roleLabel).join(' · ');
     final user = context.watch<AuthProvider>().user;
     final podeEditar = canMutatePessoas(user);
     final podeCriarConta = canCreateUsuario(user) && !p.temUsuario;
@@ -259,8 +250,8 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
     );
   }
 
-  Widget _buildJornada(Pessoa p) {
-    if (p.jornada.isEmpty) {
+  Widget _buildJornada() {
+    if (_jornada.isEmpty) {
       return const EmptyStateCard(
         key: ValueKey('jornada-empty'),
         message: 'Nenhuma etapa registrada na jornada.',
@@ -274,10 +265,10 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
         child: Column(
           children: [
-            for (var i = 0; i < p.jornada.length; i++)
+            for (var i = 0; i < _jornada.length; i++)
               _JornadaStep(
-                etapa: p.jornada[i],
-                isLast: i == p.jornada.length - 1,
+                etapa: _jornada[i],
+                isLast: i == _jornada.length - 1,
               ),
           ],
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/base_ministerial_service.dart';
 import '../../services/escala_service.dart';
@@ -65,12 +66,7 @@ class _RelatoriosScreenState extends State<RelatoriosScreen> {
       children: [
         const SectionTabs(
           currentPath: '/voluntariado/relatorios',
-          tabs: [
-            ('/voluntariado/voluntarios', 'Voluntários'),
-            ('/voluntariado/escalas', 'Escalas'),
-            ('/voluntariado/ministerios', 'Ministérios'),
-            ('/voluntariado/relatorios', 'Relatórios'),
-          ],
+          tabs: voluntariadoTabs,
         ),
         Expanded(
           child: ListView(

@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
+import '../../widgets/escala_status_badge.dart';
 
 class EscalaDetailScreen extends StatefulWidget {
   const EscalaDetailScreen({super.key, required this.escalaId});
@@ -46,35 +47,20 @@ class _EscalaDetailScreenState extends State<EscalaDetailScreen> {
     }
   }
 
-  bool _podeEditar(AuthUser? user) {
-    final e = _escala;
-    if (e == null || e.status == EscalaStatus.finalizada) return false;
-    return isPastorOuAdmin(user) ||
-        hasPermission(user?.roles ?? [], 'escalas:manage_own');
-  }
-
   Future<void> _confirmarTransicao(EscalaStatus para, String titulo, String corpo) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(titulo),
-        content: Text(corpo),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirmar')),
-        ],
-      ),
+    final ok = await confirmDialog(
+      context,
+      title: titulo,
+      message: corpo,
     );
-    if (ok != true) return;
+    if (!ok) return;
     if (!mounted) return;
     setState(() => _actionLoading = true);
     try {
       await context.read<EscalaService>().updateStatus(widget.escalaId, para);
       await _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _actionLoading = false);
     }
@@ -135,38 +121,28 @@ class _EscalaDetailScreenState extends State<EscalaDetailScreen> {
         ),
       );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _actionLoading = false);
     }
   }
 
   Future<void> _excluir() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Excluir escala'),
-        content: const Text('Deseja excluir esta escala? Esta ação não pode ser desfeita.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
+    final ok = await confirmDialog(
+      context,
+      title: 'Excluir escala',
+      message: 'Deseja excluir esta escala? Esta ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      destructive: true,
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
     setState(() => _actionLoading = true);
     try {
       await context.read<EscalaService>().delete(widget.escalaId);
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        showSnack(context, e);
         setState(() => _actionLoading = false);
       }
     }
@@ -180,7 +156,7 @@ class _EscalaDetailScreenState extends State<EscalaDetailScreen> {
     }
     final e = _escala!;
     final user = context.watch<AuthProvider>().user;
-    final podeEditar = _podeEditar(user);
+    final podeEditar = podeEditarEscala(user, _escala);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -319,22 +295,9 @@ class _EscalaDetailScreenState extends State<EscalaDetailScreen> {
                   if (v.servicoNome != null) v.servicoNome!,
                   if (v.data != null) formatDate(v.data!),
                 ].join(' · '),
-                trailing: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    StatusBadge(
-                      label: escalaItemStatusLabel(v.status).toUpperCase(),
-                      success: v.status == EscalaItemStatus.confirmado,
-                    ),
-                    if (v.aprovadoPeloVoluntario) ...[
-                      const SizedBox(height: 4),
-                      const StatusBadge(
-                        label: 'APROVADO PELO VOLUNTÁRIO',
-                        success: true,
-                      ),
-                    ],
-                  ],
+                trailing: EscalaItemStatusBadge(
+                  status: v.status,
+                  aprovadoPeloVoluntario: v.aprovadoPeloVoluntario,
                 ),
               ),
             ),

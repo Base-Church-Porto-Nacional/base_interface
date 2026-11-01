@@ -24,7 +24,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
   bool _enviando = false;
   bool _podeEnviar = false;
   String? _error;
-  DateTime _data = DateTime.now();
+  final DateTime _data = DateTime.now();
 
   @override
   void initState() {
@@ -46,7 +46,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
       );
       if (mounted) setState(() => _items = items);
     } catch (e) {
-      if (mounted) setState(() => _error = '$e'.replaceFirst('Exception: ', ''));
+      if (mounted) setState(() => _error = '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -65,20 +65,14 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
         final texto = concluded
             ? 'Envios processados: ${resumo.resumo}'
             : 'Mensagens enfileiradas. Consulte o histórico para acompanhar.';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
+        showSnack(context, texto);
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(resumo.resumo)),
-        );
+        showSnack(context, resumo.resumo);
       }
       await _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e'.replaceFirst('Exception: ', ''))),
-        );
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _enviando = false);
     }
@@ -107,15 +101,15 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
             if (_podeEnviar) ('/aniversariantes/envios', 'Envios'),
           ],
         ),
-        Expanded(
-          child: _loading
-              ? const LoadingView()
-              : _error != null
-                  ? ErrorView(message: _error!, onRetry: _load)
-                  : _corpo(),
-        ),
+        Expanded(child: _body()),
       ],
     );
+  }
+
+  Widget _body() {
+    if (_loading) return const LoadingView();
+    if (_error != null) return ErrorView(message: _error!, onRetry: _load);
+    return _corpo();
   }
 
   Widget _corpo() {
@@ -147,12 +141,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
             ),
           ),
         if (_items.isEmpty)
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(child: Text('Nenhum aniversário para hoje.')),
-            ),
-          ),
+          const Card(child: EmptyView(message: 'Nenhum aniversário para hoje.')),
         for (final a in _items) ...[
           Card(
             child: ListTile(

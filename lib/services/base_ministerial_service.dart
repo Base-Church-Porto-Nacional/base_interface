@@ -23,9 +23,7 @@ class BaseMinisterialService {
     String? descricao,
     required bool ativo,
     String? liderPessoaId,
-    String? liderNome,
     String? coordenadorPessoaId,
-    String? coordenadorNome,
     String? ordem,
   }) async {
     final json = await _api.put('/bases-ministeriais/$id', {
@@ -45,11 +43,9 @@ class BaseMinisterialService {
     String? descricao,
     bool ativo = true,
     String? liderPessoaId,
-    String? liderNome,
     String? coordenadorPessoaId,
-    String? coordenadorNome,
   }) async {
-    final json = await _api.post('/bases-ministeriais', {
+    final json = await _api.post('/bases-ministeriais', body: {
       'nome': nome,
       'descricao': descricao,
       'ativo': ativo,

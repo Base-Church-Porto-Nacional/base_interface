@@ -44,9 +44,9 @@ void main() {
       expect(diaSemanaFromApi('QUARTA'), DiaSemana.quarta);
       expect(diaSemanaFromApi('quarta'), DiaSemana.quarta);
       expect(diaSemanaFromApi('sábado'), DiaSemana.domingo);
-      expect(diaSemanaFromString('SABADO'), DiaSemana.sabado);
-      expect(diaSemanaFromString('terca'), DiaSemana.terca);
-      expect(diaSemanaFromString('xyz'), DiaSemana.domingo);
+      expect(diaSemanaFromApi('SABADO'), DiaSemana.sabado);
+      expect(diaSemanaFromApi('terca'), DiaSemana.terca);
+      expect(diaSemanaFromApi('xyz'), DiaSemana.domingo);
     });
   });
 
