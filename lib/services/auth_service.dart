@@ -2,8 +2,6 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../config/app_config.dart';
-import '../mocks/mock_data.dart';
 import '../models/models.dart';
 import 'api_client.dart';
 
@@ -30,24 +28,6 @@ class AuthService {
       throw Exception('Informe usuário e senha.');
     }
 
-    if (AppConfig.useMock) {
-      await mockDelay(null);
-      final template = mockUserByLogin(username);
-      final user = AuthUser(
-        id: template.id,
-        nome: template.nome,
-        email: template.email,
-        roles: template.roles,
-        pessoaId: template.pessoaId,
-        igrejaId: template.igrejaId,
-        igrejaTipo: template.igrejaTipo,
-        igrejaNome: template.igrejaNome,
-        igrejasVisiveis: template.igrejasVisiveis,
-      );
-      await _api.setToken('mock-jwt-token');
-      await _prefs.setString(_userKey, jsonEncode(user.toJson()));
-      return user;
-    }
 
     final login = await _api.post(
       '/auth/login',

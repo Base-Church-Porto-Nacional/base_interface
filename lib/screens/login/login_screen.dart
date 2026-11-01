@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../config/app_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
 
@@ -13,8 +12,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _userController = TextEditingController(text: 'admin');
-  final _passController = TextEditingController(text: 'admin123');
+  final _userController = TextEditingController();
+  final _passController = TextEditingController();
   bool _obscure = true;
 
   @override
@@ -25,7 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
       final message = auth.error;
       if (!mounted || message == null) return;
       auth.error = null;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
     });
   }
 
@@ -40,7 +40,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.read<AuthProvider>();
     final ok = await auth.login(_userController.text, _passController.text);
     if (!ok && mounted && auth.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(auth.error!)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(auth.error!)));
     }
   }
 
@@ -84,19 +85,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: InputDecoration(
                           labelText: 'Senha',
                           suffixIcon: IconButton(
-                            icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-                            onPressed: () => setState(() => _obscure = !_obscure),
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
                           ),
                         ),
                         obscureText: _obscure,
                         onSubmitted: (_) => _submit(),
                       ),
-                      if (AppConfig.useMock)
-                        Text(
-                          'Mock: admin, filial, joao, maria, midia, membro, pedro / admin123',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      if (AppConfig.useMock) const SizedBox(height: 8),
                       const SizedBox(height: 20),
                       FilledButton(
                         onPressed: auth.isLoading ? null : _submit,
@@ -104,7 +104,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('Entrar'),
                       ),

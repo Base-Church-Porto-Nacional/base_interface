@@ -1,4 +1,5 @@
-import 'package:base_church/mocks/mock_data.dart';
+import '../helpers/fixtures.dart';
+
 import 'package:base_church/models/models.dart';
 import 'package:base_church/utils/permissions.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -85,18 +86,57 @@ void main() {
 
   group('pertenceAoMinisterioTipo', () {
     test('reconhece o líder e o coordenador do ministério do tipo', () {
-      expect(pertenceAoMinisterioTipo(mockUserLider, ministerios, MinisterioTipo.musica), isTrue);
       expect(
-        pertenceAoMinisterioTipo(mockUserCoordenador, ministerios, MinisterioTipo.musica),
+        pertenceAoMinisterioTipo(
+          mockUserLider,
+          ministerios,
+          MinisterioTipo.musica,
+        ),
         isTrue,
       );
-      expect(pertenceAoMinisterioTipo(mockUserMidia, ministerios, MinisterioTipo.midia), isTrue);
+      expect(
+        pertenceAoMinisterioTipo(
+          mockUserCoordenador,
+          ministerios,
+          MinisterioTipo.musica,
+        ),
+        isTrue,
+      );
+      expect(
+        pertenceAoMinisterioTipo(
+          mockUserMidia,
+          ministerios,
+          MinisterioTipo.midia,
+        ),
+        isTrue,
+      );
     });
 
     test('nega para quem não é do tipo', () {
-      expect(pertenceAoMinisterioTipo(mockUserMidia, ministerios, MinisterioTipo.musica), isFalse);
-      expect(pertenceAoMinisterioTipo(mockUserLider, ministerios, MinisterioTipo.midia), isFalse);
-      expect(pertenceAoMinisterioTipo(mockUserMembro, ministerios, MinisterioTipo.musica), isFalse);
+      expect(
+        pertenceAoMinisterioTipo(
+          mockUserMidia,
+          ministerios,
+          MinisterioTipo.musica,
+        ),
+        isFalse,
+      );
+      expect(
+        pertenceAoMinisterioTipo(
+          mockUserLider,
+          ministerios,
+          MinisterioTipo.midia,
+        ),
+        isFalse,
+      );
+      expect(
+        pertenceAoMinisterioTipo(
+          mockUserMembro,
+          ministerios,
+          MinisterioTipo.musica,
+        ),
+        isFalse,
+      );
     });
 
     test('nega para usuário sem pessoa associada', () {
@@ -110,8 +150,14 @@ void main() {
         igrejaNome: 'Base Church',
       );
 
-      expect(pertenceAoMinisterioTipo(semPessoa, ministerios, MinisterioTipo.musica), isFalse);
-      expect(pertenceAoMinisterioTipo(null, ministerios, MinisterioTipo.musica), isFalse);
+      expect(
+        pertenceAoMinisterioTipo(semPessoa, ministerios, MinisterioTipo.musica),
+        isFalse,
+      );
+      expect(
+        pertenceAoMinisterioTipo(null, ministerios, MinisterioTipo.musica),
+        isFalse,
+      );
     });
   });
 
@@ -275,7 +321,11 @@ void main() {
       supervisorNome: 'Ana Costa',
       ativo: true,
       voluntarios: const [
-        EscalaVoluntario(id: 'v1', pessoaId: 'p3', pessoaNome: 'Maria Oliveira'),
+        EscalaVoluntario(
+          id: 'v1',
+          pessoaId: 'p3',
+          pessoaNome: 'Maria Oliveira',
+        ),
       ],
     );
 
@@ -357,11 +407,17 @@ void main() {
     });
 
     test('o pregador designado pode editar o próprio texto', () {
-      expect(podeEditarTextoCulto(mockUserLider, pregadorPessoaId: 'p2'), isTrue);
+      expect(
+        podeEditarTextoCulto(mockUserLider, pregadorPessoaId: 'p2'),
+        isTrue,
+      );
     });
 
     test('outro líder não pode editar o texto alheio', () {
-      expect(podeEditarTextoCulto(mockUserLider, pregadorPessoaId: 'p3'), isFalse);
+      expect(
+        podeEditarTextoCulto(mockUserLider, pregadorPessoaId: 'p3'),
+        isFalse,
+      );
       expect(podeEditarTextoCulto(mockUserLider), isFalse);
     });
 
@@ -439,12 +495,18 @@ void main() {
     test('cai para a base ministerial quando não lidera o ministério', () {
       // Maria (p3) é coordenadora do Louvor e da base Adoração, mas não do ministryo de mídia.
       expect(podeGerenciarMinisterio(mockUserCoordenador, midia), isFalse);
-      expect(podeGerenciarMinisterio(mockUserCoordenador, midia, base: ada), isTrue);
+      expect(
+        podeGerenciarMinisterio(mockUserCoordenador, midia, base: ada),
+        isTrue,
+      );
     });
 
     test('base ministerial de outra base não autoriza', () {
       // Fernanda (p5) coordena a base Serviço (b2), não a Adoração (b1).
-      expect(podeGerenciarMinisterio(mockUserMembro, midia, base: ada), isFalse);
+      expect(
+        podeGerenciarMinisterio(mockUserMembro, midia, base: ada),
+        isFalse,
+      );
     });
 
     test('usuário nulo não administra', () {

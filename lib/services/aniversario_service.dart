@@ -1,5 +1,3 @@
-import '../config/app_config.dart';
-import '../mocks/mock_data.dart';
 import '../models/models.dart';
 import '../utils/format.dart';
 import 'api_client.dart';
@@ -17,10 +15,6 @@ class AniversarioService {
     required String igrejaId,
     DateTime? data,
   }) async {
-    if (AppConfig.useMock) {
-      final alvo = DateTime.now();
-      return mockDelay(mockAniversariantes(igrejaId, data ?? alvo));
-    }
     final query = <String, String>{'igrejaId': igrejaId};
     if (data != null) query['data'] = isoDate(data);
     final list = await _api.get('$_base/aniversariantes', query: query) as List<dynamic>;
@@ -32,9 +26,6 @@ class AniversarioService {
   }
 
   Future<EnvioAniversarioResumo> enviarHoje({required String igrejaId}) async {
-    if (AppConfig.useMock) {
-      return mockDelay(mockEnviarAniversarios(igrejaId, DateTime.now()));
-    }
     final json =
         await _api.post('$_base/enviar', null, true, {'igrejaId': igrejaId})
             as Map<String, dynamic>;
@@ -46,9 +37,6 @@ class AniversarioService {
     String? de,
     String? ate,
   }) async {
-    if (AppConfig.useMock) {
-      return mockDelay(mockAniversarioEnviosPeriodo(igrejaId: igrejaId, de: de, ate: ate));
-    }
     final query = <String, String>{'igrejaId': igrejaId};
     if (de != null) query['de'] = de;
     if (ate != null) query['ate'] = ate;

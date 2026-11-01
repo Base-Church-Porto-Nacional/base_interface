@@ -1,6 +1,5 @@
-import '../config/app_config.dart';
-import '../mocks/mock_data.dart';
 import '../models/models.dart';
+import '../utils/paginacao.dart';
 import '../utils/pessoa_filtro.dart';
 import 'api_client.dart';
 
@@ -16,24 +15,6 @@ class PessoaService {
     String filtro = 'TODOS',
     String? igrejaId,
   }) async {
-    if (AppConfig.useMock) {
-      var items = pessoasDaIgreja(igrejaId);
-      final q = search.trim().toLowerCase();
-      if (q.isNotEmpty) {
-        items = items
-            .where(
-              (p) =>
-                  p.nome.toLowerCase().contains(q) ||
-                  p.email.toLowerCase().contains(q) ||
-                  p.telefone.contains(q),
-            )
-            .toList();
-      }
-      if (filtro != 'TODOS') {
-        items = items.where((p) => pessoaMatchesFiltro(p, filtro)).toList();
-      }
-      return mockDelay(paginate(items, page: page, size: size));
-    }
 
     final query = igrejaId == null ? null : {'igrejaId': igrejaId};
     final list = await _api.get('/pessoas', query: query) as List<dynamic>;
@@ -57,13 +38,6 @@ class PessoaService {
   }
 
   Future<Pessoa> getById(String id) async {
-    if (AppConfig.useMock) {
-      final pessoa = mockPessoas.firstWhere(
-        (p) => p.id == id,
-        orElse: () => throw Exception('Pessoa não encontrada.'),
-      );
-      return mockDelay(pessoa);
-    }
     final json = await _api.get('/pessoas/$id') as Map<String, dynamic>;
     return _mapPessoa(json);
   }
@@ -76,22 +50,6 @@ class PessoaService {
     String? igrejaId,
   }) async {
     final wa = _whatsappNormalizado(whatsapp);
-    if (AppConfig.useMock) {
-      final created = Pessoa(
-        id: 'p${DateTime.now().millisecondsSinceEpoch}',
-        nome: nome,
-        telefone: telefone ?? '',
-        email: email ?? '',
-        whatsapp: wa ?? '',
-        status: PessoaStatus.ativo,
-        tipos: [PessoaTipo.visitante],
-        ministerios: [],
-        dataCadastro: DateTime.now().toIso8601String().substring(0, 10),
-        igrejaId: igrejaId ?? 'i1',
-      );
-      mockPessoas.insert(0, created);
-      return mockDelay(created);
-    }
     final json = await _api.post('/pessoas', {
       'nome': nome,
       if (telefone != null && telefone.isNotEmpty) 'telefone': telefone,
@@ -110,17 +68,6 @@ class PessoaService {
     String? whatsapp,
   }) async {
     final wa = _whatsappNormalizado(whatsapp);
-    if (AppConfig.useMock) {
-      final index = mockPessoas.indexWhere((p) => p.id == id);
-      if (index < 0) throw Exception('Pessoa não encontrada.');
-      mockPessoas[index] = mockPessoas[index].copyWith(
-        nome: nome,
-        telefone: telefone ?? '',
-        email: email ?? '',
-        whatsapp: wa ?? '',
-      );
-      return mockDelay(mockPessoas[index]);
-    }
     final json = await _api.put('/pessoas/$id', {
       'nome': nome,
       'telefone': telefone,
@@ -138,11 +85,6 @@ class PessoaService {
   }
 
   Future<List<PessoaHistorico>> listHistorico(String pessoaId) async {
-    if (AppConfig.useMock) {
-      return mockDelay(
-        mockHistoricos.where((h) => h.pessoaId == pessoaId).toList(),
-      );
-    }
     final list = await _api.get('/pessoas/$pessoaId/historico') as List<dynamic>;
     return list
         .map(

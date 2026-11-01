@@ -1,5 +1,3 @@
-import '../config/app_config.dart';
-import '../mocks/mock_data.dart';
 import '../models/models.dart';
 import 'api_client.dart';
 import 'pessoa_service.dart';
@@ -11,8 +9,6 @@ class DashboardService {
   final PessoaService _pessoaService;
 
   Future<DashboardStats?> getStats() async {
-    if (AppConfig.useMock) return mockDelay(mockDashboard);
-
     final Map<String, dynamic> json;
     try {
       json = await _api.get('/dashboard') as Map<String, dynamic>;

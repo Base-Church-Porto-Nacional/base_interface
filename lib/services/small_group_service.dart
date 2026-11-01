@@ -1,5 +1,3 @@
-import '../config/app_config.dart';
-import '../mocks/mock_data.dart';
 import '../models/models.dart';
 import 'api_client.dart';
 
@@ -9,24 +7,12 @@ class SmallGroupService {
   final ApiClient _api;
 
   Future<List<SmallGroup>> list({String? igrejaId}) async {
-    if (AppConfig.useMock) {
-      if (igrejaId == null || igrejaId.isEmpty) return mockDelay(<SmallGroup>[]);
-      return mockDelay(mockSmallGroups.where((c) => c.igrejaId == igrejaId).toList());
-    }
     final query = igrejaId == null ? null : {'igrejaId': igrejaId};
     final list = await _api.get('/small-groups', query: query) as List<dynamic>;
     return list.map((e) => _map(e as Map<String, dynamic>)).toList();
   }
 
   Future<SmallGroup> getById(String id) async {
-    if (AppConfig.useMock) {
-      return mockDelay(
-        mockSmallGroups.firstWhere(
-          (c) => c.id == id,
-          orElse: () => throw Exception('Pequeno grupo não encontrado.'),
-        ),
-      );
-    }
     final json = await _api.get('/small-groups/$id') as Map<String, dynamic>;
     return _map(json);
   }
@@ -41,22 +27,6 @@ class SmallGroupService {
     required int nota,
     bool ativo = true,
   }) async {
-    if (AppConfig.useMock) {
-      final id = 'cl${DateTime.now().millisecondsSinceEpoch}';
-      final created = SmallGroup(
-        id: id,
-        nome: nome,
-        igrejaId: igrejaId,
-        diaSemana: diaSemana,
-        horario: horario,
-        liderPessoaId: liderPessoaId,
-        liderNome: liderNome ?? '—',
-        ativo: ativo,
-        nota: nota,
-      );
-      mockSmallGroups.insert(0, created);
-      return mockDelay(created);
-    }
     final json = await _api.post('/small-groups', {
       'nome': nome,
       'igrejaId': igrejaId,
@@ -79,25 +49,6 @@ class SmallGroupService {
     required int nota,
     bool ativo = true,
   }) async {
-    if (AppConfig.useMock) {
-      final index = mockSmallGroups.indexWhere((c) => c.id == id);
-      if (index < 0) throw Exception('Pequeno grupo não encontrado.');
-      final current = mockSmallGroups[index];
-      final lider = liderNome ?? current.liderNome;
-      mockSmallGroups[index] = SmallGroup(
-        id: current.id,
-        nome: nome,
-        igrejaId: current.igrejaId,
-        diaSemana: diaSemana,
-        horario: horario,
-        liderPessoaId: liderPessoaId,
-        liderNome: lider,
-        ativo: ativo,
-        nota: nota,
-        encontros: current.encontros,
-      );
-      return mockDelay(mockSmallGroups[index]);
-    }
     final json = await _api.put('/small-groups/$id', {
       'nome': nome,
       'diaSemana': diaSemana.name.toUpperCase(),
@@ -110,47 +61,10 @@ class SmallGroupService {
   }
 
   Future<void> delete(String id) async {
-    if (AppConfig.useMock) {
-      mockSmallGroups.removeWhere((c) => c.id == id);
-      return mockDelay(null);
-    }
     await _api.delete('/small-groups/$id');
   }
 
   Future<SmallGroupEncontro> saveEncontro(SmallGroupEncontro encontro) async {
-    if (AppConfig.useMock) {
-      final index = mockSmallGroups.indexWhere((c) => c.id == encontro.smallGroupId);
-      if (index < 0) throw Exception('Pequeno grupo não encontrado.');
-      final group = mockSmallGroups[index];
-      final existe = group.encontros.any((e) => e.id == encontro.id);
-      final saved = existe
-          ? encontro
-          : SmallGroupEncontro(
-              id: 'ce${DateTime.now().millisecondsSinceEpoch}',
-              smallGroupId: encontro.smallGroupId,
-              data: encontro.data,
-              anfitriaoPessoaId: encontro.anfitriaoPessoaId,
-              anfitriaoNome: encontro.anfitriaoNome,
-              compareceram: encontro.compareceram,
-              anotacoes: encontro.anotacoes,
-            );
-      final encontros = existe
-          ? group.encontros.map((e) => e.id == encontro.id ? saved : e).toList()
-          : [...group.encontros, saved];
-      mockSmallGroups[index] = SmallGroup(
-        id: group.id,
-        nome: group.nome,
-        igrejaId: group.igrejaId,
-        diaSemana: group.diaSemana,
-        horario: group.horario,
-        liderPessoaId: group.liderPessoaId,
-        liderNome: group.liderNome,
-        ativo: group.ativo,
-        nota: group.nota,
-        encontros: encontros,
-      );
-      return mockDelay(saved);
-    }
     final payload = {
       'smallGroupId': encontro.smallGroupId,
       'data': encontro.data,

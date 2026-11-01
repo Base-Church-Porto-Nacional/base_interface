@@ -1,4 +1,5 @@
-import 'package:base_church/mocks/mock_data.dart';
+import '../helpers/fixtures.dart';
+
 import 'package:base_church/models/models.dart';
 import 'package:base_church/utils/route_access.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,12 +21,15 @@ void main() {
   );
 
   group('rotas públicas', () {
-    test('login e acesso negado ficam abertos para qualquer usuário logado', () {
-      for (final user in [admin, pastorFilial, lider, membro]) {
-        expect(canAccessPath(user, '/login'), isTrue);
-        expect(canAccessPath(user, '/acesso-negado'), isTrue);
-      }
-    });
+    test(
+      'login e acesso negado ficam abertos para qualquer usuário logado',
+      () {
+        for (final user in [admin, pastorFilial, lider, membro]) {
+          expect(canAccessPath(user, '/login'), isTrue);
+          expect(canAccessPath(user, '/acesso-negado'), isTrue);
+        }
+      },
+    );
 
     test('usuário sem sessão não acessa rota alguma', () {
       for (final path in [
@@ -90,7 +94,12 @@ void main() {
       expect(canAccessPath(pastorFilial, '/igrejas'), isTrue);
       expect(canAccessPath(pastorFilial, '/usuarios'), isTrue);
 
-      for (final path in ['/igrejas', '/igrejas/i1', '/usuarios', '/usuarios/u1']) {
+      for (final path in [
+        '/igrejas',
+        '/igrejas/i1',
+        '/usuarios',
+        '/usuarios/u1',
+      ]) {
         expect(canAccessPath(lider, path), isFalse, reason: 'líder em $path');
         expect(canAccessPath(membro, path), isFalse, reason: 'membro em $path');
       }
@@ -175,25 +184,40 @@ void main() {
   });
 
   group('cultos e cronograma', () {
-    test('todo papel com culto:view ou cronograma:view chega à raiz de cultos', () {
-      for (final user in [admin, pastorFilial, lider, membro]) {
-        expect(canAccessPath(user, '/cultos'), isTrue, reason: '${user.id} em /cultos');
-      }
-    });
+    test(
+      'todo papel com culto:view ou cronograma:view chega à raiz de cultos',
+      () {
+        for (final user in [admin, pastorFilial, lider, membro]) {
+          expect(
+            canAccessPath(user, '/cultos'),
+            isTrue,
+            reason: '${user.id} em /cultos',
+          );
+        }
+      },
+    );
 
     test('quem tem culto:view chega ao mês, às categorias e ao conteúdo', () {
-      for (final path in ['/cultos/mes/2026-09', '/cultos/categorias/cat1', '/cultos/culto/c1', '/cultos/conteudo/c1']) {
+      for (final path in [
+        '/cultos/mes/2026-09',
+        '/cultos/categorias/cat1',
+        '/cultos/culto/c1',
+        '/cultos/conteudo/c1',
+      ]) {
         expect(canAccessPath(lider, path), isTrue, reason: 'líder em $path');
         expect(canAccessPath(membro, path), isTrue, reason: 'membro em $path');
         expect(canAccessPath(admin, path), isTrue, reason: 'admin em $path');
       }
     });
 
-    test('quem não tem culto:view nem é pastor não chega às telas de culto', () {
-      expect(canAccessPath(semPapeis, '/cultos'), isFalse);
-      expect(canAccessPath(semPapeis, '/cultos/mes/2026-09'), isFalse);
-      expect(canAccessPath(semPapeis, '/cultos/conteudo/c1'), isFalse);
-    });
+    test(
+      'quem não tem culto:view nem é pastor não chega às telas de culto',
+      () {
+        expect(canAccessPath(semPapeis, '/cultos'), isFalse);
+        expect(canAccessPath(semPapeis, '/cultos/mes/2026-09'), isFalse);
+        expect(canAccessPath(semPapeis, '/cultos/conteudo/c1'), isFalse);
+      },
+    );
 
     test('criação de cronograma fica com pastor e admin', () {
       expect(canCreateCronograma(admin), isTrue);
@@ -215,18 +239,24 @@ void main() {
       expect(canAccessPath(lider, '/perfil/disponibilidade'), isTrue);
     });
 
-    test('disponibilidade exige permissão explícita ou papel com o recurso', () {
-      expect(canAccessPath(semPapeis, '/perfil/disponibilidade'), isFalse);
-      expect(canAccessPath(admin, '/perfil/disponibilidade'), isTrue);
-    });
+    test(
+      'disponibilidade exige permissão explícita ou papel com o recurso',
+      () {
+        expect(canAccessPath(semPapeis, '/perfil/disponibilidade'), isFalse);
+        expect(canAccessPath(admin, '/perfil/disponibilidade'), isTrue);
+      },
+    );
   });
 
   group('pequenos grupos', () {
-    test('pastor, admin e quem tem small_groups:view acessam pequenos grupos', () {
-      expect(canAccessPath(admin, '/pequenos-grupos'), isTrue);
-      expect(canAccessPath(pastorFilial, '/pequenos-grupos/g1'), isTrue);
-      expect(canAccessPath(lider, '/pequenos-grupos'), isTrue);
-    });
+    test(
+      'pastor, admin e quem tem small_groups:view acessam pequenos grupos',
+      () {
+        expect(canAccessPath(admin, '/pequenos-grupos'), isTrue);
+        expect(canAccessPath(pastorFilial, '/pequenos-grupos/g1'), isTrue);
+        expect(canAccessPath(lider, '/pequenos-grupos'), isTrue);
+      },
+    );
 
     test('voluntário e membro sem a permissão ficam de fora', () {
       expect(canAccessPath(membro, '/pequenos-grupos'), isFalse);
