@@ -1,5 +1,3 @@
-import '../config/app_config.dart';
-import '../mocks/mock_data.dart';
 import '../models/models.dart';
 import 'api_client.dart';
 
@@ -10,11 +8,6 @@ class MensagemAniversarioService {
 
   Future<MensagemAniversario> get({String? igrejaId}) async {
     final alvo = igrejaId ?? '';
-    if (AppConfig.useMock) {
-      final configurada = mockMensagensAniversario[alvo];
-      if (configurada != null) return mockDelay(configurada);
-      return mockDelay(MensagemAniversario(igrejaId: alvo, mensagem: ''));
-    }
     final query = <String, String>{'igrejaId': alvo};
     final json = await _api.get(
       '/mensagens/aniversario',
@@ -31,15 +24,6 @@ class MensagemAniversarioService {
       igrejaId: mensagem.igrejaId,
       mensagem: texto,
     );
-    if (AppConfig.useMock) {
-      final saved = MensagemAniversario(
-        id: mensagem.id ?? 'ma-${DateTime.now().millisecondsSinceEpoch}',
-        igrejaId: payload.igrejaId,
-        mensagem: texto,
-      );
-      mockMensagensAniversario[payload.igrejaId] = saved;
-      return mockDelay(saved);
-    }
     final json = await _api.put('/mensagens/aniversario', {
       'id': payload.id,
       'igrejaId': payload.igrejaId,

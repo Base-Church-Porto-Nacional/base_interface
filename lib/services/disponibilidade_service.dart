@@ -1,5 +1,3 @@
-import '../config/app_config.dart';
-import '../mocks/mock_data.dart';
 import '../models/models.dart';
 import '../utils/disponibilidade_janelas.dart';
 import 'api_client.dart';
@@ -10,16 +8,12 @@ class DisponibilidadeService {
   final ApiClient _api;
 
   Future<DisponibilidadePessoa> getByPessoa(String pessoaId) async {
-    if (AppConfig.useMock) {
-      return mockDelay(
-        mockDisponibilidades[pessoaId] ??
-            DisponibilidadePessoa(pessoaId: pessoaId, semanal: const [], datas: const []),
-      );
-    }
-    final semanalJson =
-        await _api.get('/disponibilidades/semanal/pessoa/$pessoaId') as List<dynamic>;
-    final datasJson =
-        await _api.get('/disponibilidades/indisponibilidades/pessoa/$pessoaId') as List<dynamic>;
+    final semanalJson = await _api.get(
+      '/disponibilidades/semanal/pessoa/$pessoaId',
+    ) as List<dynamic>;
+    final datasJson = await _api.get(
+      '/disponibilidades/indisponibilidades/pessoa/$pessoaId',
+    ) as List<dynamic>;
     return DisponibilidadePessoa(
       pessoaId: pessoaId,
       semanal: indisponibilidadesDasJanelas(_janelas(semanalJson)),
@@ -31,19 +25,9 @@ class DisponibilidadeService {
     required String pessoaId,
     required List<IndisponibilidadeSemanal> semanal,
   }) async {
-    if (AppConfig.useMock) {
-      final current = mockDisponibilidades[pessoaId] ??
-          DisponibilidadePessoa(pessoaId: pessoaId, semanal: const [], datas: const []);
-      final updated = DisponibilidadePessoa(
-        pessoaId: pessoaId,
-        semanal: semanal,
-        datas: current.datas,
-      );
-      mockDisponibilidades[pessoaId] = updated;
-      return mockDelay(updated);
-    }
-    final existentes =
-        await _api.get('/disponibilidades/semanal/pessoa/$pessoaId') as List<dynamic>;
+    final existentes = await _api.get(
+      '/disponibilidades/semanal/pessoa/$pessoaId',
+    ) as List<dynamic>;
     for (final e in existentes) {
       await _api.delete('/disponibilidades/semanal/${e['id']}');
     }
@@ -64,22 +48,6 @@ class DisponibilidadeService {
     required String data,
     String? motivo,
   }) async {
-    if (AppConfig.useMock) {
-      final item = IndisponibilidadeData(
-        id: 'd${DateTime.now().millisecondsSinceEpoch}',
-        pessoaId: pessoaId,
-        data: data,
-        motivo: motivo,
-      );
-      final current = mockDisponibilidades[pessoaId] ??
-          DisponibilidadePessoa(pessoaId: pessoaId, semanal: const [], datas: const []);
-      mockDisponibilidades[pessoaId] = DisponibilidadePessoa(
-        pessoaId: pessoaId,
-        semanal: current.semanal,
-        datas: [...current.datas, item],
-      );
-      return mockDelay(item);
-    }
     final json = await _api.post('/disponibilidades/indisponibilidades', {
       'pessoaId': pessoaId,
       'dataInicio': data,
@@ -90,16 +58,6 @@ class DisponibilidadeService {
   }
 
   Future<void> removeData(String pessoaId, String id) async {
-    if (AppConfig.useMock) {
-      final current = mockDisponibilidades[pessoaId];
-      if (current == null) return;
-      mockDisponibilidades[pessoaId] = DisponibilidadePessoa(
-        pessoaId: pessoaId,
-        semanal: current.semanal,
-        datas: current.datas.where((d) => d.id != id).toList(),
-      );
-      return mockDelay(null);
-    }
     await _api.delete('/disponibilidades/indisponibilidades/$id');
   }
 

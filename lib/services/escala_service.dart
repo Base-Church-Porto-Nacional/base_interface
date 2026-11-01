@@ -1,5 +1,3 @@
-import '../config/app_config.dart';
-import '../mocks/mock_data.dart';
 import '../models/models.dart';
 import 'api_client.dart';
 
@@ -9,25 +7,6 @@ class EscalaService {
   final ApiClient _api;
 
   Future<List<Escala>> list({String? igrejaId, String? competencia, String? pessoaId}) async {
-    if (AppConfig.useMock) {
-      if (igrejaId == null || igrejaId.isEmpty) return mockDelay(<Escala>[]);
-      var items = mockEscalas.where((e) => e.igrejaId == igrejaId).toList();
-      if (competencia != null && competencia.isNotEmpty) {
-        items = items.where((e) => e.competencia == competencia).toList();
-      }
-      if (pessoaId != null && pessoaId.isNotEmpty) {
-        items = items
-            .map(
-              (e) => e.copyWith(
-                voluntarios: e.voluntarios.where((v) => v.pessoaId == pessoaId).toList(),
-                itens: e.itens.where((i) => i.pessoaId == pessoaId).toList(),
-              ),
-            )
-            .where((e) => e.voluntarios.isNotEmpty || e.itens.isNotEmpty)
-            .toList();
-      }
-      return mockDelay(items);
-    }
     final query = <String, String>{
       if (igrejaId != null) 'igrejaId': igrejaId,
       if (competencia != null) 'competencia': competencia,
@@ -38,46 +17,11 @@ class EscalaService {
   }
 
   Future<Escala> getById(String id) async {
-    if (AppConfig.useMock) {
-      return mockDelay(
-        mockEscalas.firstWhere(
-          (e) => e.id == id,
-          orElse: () => throw Exception('Escala não encontrada.'),
-        ),
-      );
-    }
     final json = await _api.get('/escalas/$id') as Map<String, dynamic>;
     return _map(json);
   }
 
   Future<Escala> create(Escala escala) async {
-    if (AppConfig.useMock) {
-      final created = Escala(
-        id: 'e${DateTime.now().millisecondsSinceEpoch}',
-        titulo: escala.titulo,
-        descricao: escala.descricao,
-        competencia: escala.competencia,
-        tipo: escala.tipo,
-        igrejaId: escala.igrejaId,
-        ministerioId: escala.ministerioId,
-        ministerioNome: escala.ministerioNome,
-        supervisorPessoaId: escala.supervisorPessoaId,
-        supervisorNome: escala.supervisorNome,
-        pregadorPessoaId: escala.pregadorPessoaId,
-        pregadorNome: escala.pregadorNome,
-        status: EscalaStatus.editando,
-        dataEvento: escala.dataEvento,
-        horaInicio: escala.horaInicio,
-        horaFim: escala.horaFim,
-        eventoId: escala.eventoId,
-        ativo: true,
-        servicos: List.of(escala.servicos),
-        voluntarios: _gerarSugestoesPara(escala, escala.servicos, escala.voluntarios, escala.id),
-        itens: List.of(escala.itens),
-      );
-      mockEscalas.insert(0, created);
-      return mockDelay(created);
-    }
     final json = await _api.post('/escalas', {
       'titulo': escala.titulo,
       'descricao': escala.descricao,
@@ -104,37 +48,6 @@ class EscalaService {
   }
 
   Future<Escala> update(String id, Escala escala) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final updated = Escala(
-        id: id,
-        titulo: escala.titulo,
-        descricao: escala.descricao,
-        competencia: escala.competencia,
-        tipo: escala.tipo,
-        igrejaId: escala.igrejaId,
-        ministerioId: escala.ministerioId,
-        ministerioNome: escala.ministerioNome,
-        supervisorPessoaId: escala.supervisorPessoaId,
-        supervisorNome: escala.supervisorNome,
-        pregadorPessoaId: escala.pregadorPessoaId,
-        pregadorNome: escala.pregadorNome,
-        status: escala.status,
-        dataLancamento: escala.dataLancamento,
-        dataFinalizacao: escala.dataFinalizacao,
-        dataEvento: escala.dataEvento,
-        horaInicio: escala.horaInicio,
-        horaFim: escala.horaFim,
-        eventoId: escala.eventoId,
-        ativo: escala.ativo,
-        servicos: escala.servicos,
-        voluntarios: escala.voluntarios,
-        itens: escala.itens,
-      );
-      mockEscalas[idx] = updated;
-      return mockDelay(updated);
-    }
     final json = await _api.put('/escalas/$id', {
       'titulo': escala.titulo,
       'descricao': escala.descricao,
@@ -152,36 +65,10 @@ class EscalaService {
   }
 
   Future<void> delete(String id) async {
-    if (AppConfig.useMock) {
-      mockEscalas.removeWhere((e) => e.id == id);
-      return mockDelay(null);
-    }
     await _api.delete('/escalas/$id');
   }
 
   Future<Escala> updateStatus(String id, EscalaStatus status) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final atual = mockEscalas[idx];
-      if (!podeTransicionarEscalaStatus(atual.status, status)) {
-        throw Exception(
-          'Transição ${escalaStatusLabel(atual.status)} → ${escalaStatusLabel(status)} não permitida.',
-        );
-      }
-      final now = DateTime.now().toIso8601String();
-      final updated = atual.copyWith(
-        status: status,
-        dataLancamento: status == EscalaStatus.emAndamento
-            ? (atual.dataLancamento ?? now)
-            : atual.dataLancamento,
-        dataFinalizacao: status == EscalaStatus.emAndamento
-            ? null
-            : (status == EscalaStatus.finalizada ? now : atual.dataFinalizacao),
-      );
-      mockEscalas[idx] = updated;
-      return mockDelay(updated);
-    }
     final json = await _api.put('/escalas/$id/status', {
       'status': escalaStatusToString(status),
     }) as Map<String, dynamic>;
@@ -194,20 +81,6 @@ class EscalaService {
     required String servicoNome,
     int quantidadeNecessaria = 1,
   }) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final escala = mockEscalas[idx];
-      final servico = EscalaServico(
-        id: 'sv${DateTime.now().millisecondsSinceEpoch}',
-        escalaId: id,
-        servicoId: servicoId,
-        servicoNome: servicoNome,
-        quantidadeNecessaria: quantidadeNecessaria,
-      );
-      mockEscalas[idx] = escala.copyWith(servicos: [...escala.servicos, servico]);
-      return mockDelay(servico);
-    }
     final json = await _api.post('/escalas/$id/servicos', {
       'servicoId': servicoId,
       'quantidadeNecessaria': quantidadeNecessaria,
@@ -220,23 +93,6 @@ class EscalaService {
     String escalaServicoId, {
     int quantidadeNecessaria = 1,
   }) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final escala = mockEscalas[idx];
-      final servicos = escala.servicos.map((s) {
-        if (s.id != escalaServicoId) return s;
-        return EscalaServico(
-          id: s.id,
-          escalaId: s.escalaId,
-          servicoId: s.servicoId,
-          servicoNome: s.servicoNome,
-          quantidadeNecessaria: quantidadeNecessaria,
-        );
-      }).toList();
-      mockEscalas[idx] = escala.copyWith(servicos: servicos);
-      return mockDelay(servicos.firstWhere((s) => s.id == escalaServicoId));
-    }
     final json = await _api.put('/escalas/$id/servicos/$escalaServicoId', {
       'quantidadeNecessaria': quantidadeNecessaria,
     }) as Map<String, dynamic>;
@@ -244,15 +100,6 @@ class EscalaService {
   }
 
   Future<void> removeServico(String id, String escalaServicoId) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final escala = mockEscalas[idx];
-      mockEscalas[idx] = escala.copyWith(
-        servicos: escala.servicos.where((s) => s.id != escalaServicoId).toList(),
-      );
-      return mockDelay(null);
-    }
     await _api.delete('/escalas/$id/servicos/$escalaServicoId');
   }
 
@@ -266,26 +113,6 @@ class EscalaService {
     String? eventoId,
     String? horario,
   }) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final escala = mockEscalas[idx];
-      final nomeServico = servicoNome ?? _servicoNomeDo(escala, servicoId);
-      final pessoa = pessoaById(pessoaId);
-      final designacao = EscalaVoluntario(
-        id: 'v${DateTime.now().millisecondsSinceEpoch}',
-        escalaId: id,
-        pessoaId: pessoaId,
-        pessoaNome: pessoa?.nome,
-        servicoId: servicoId,
-        servicoNome: nomeServico,
-        status: EscalaItemStatus.pendente,
-        observacoes: observacoes,
-        data: data,
-      );
-      mockEscalas[idx] = escala.copyWith(voluntarios: [...escala.voluntarios, designacao]);
-      return mockDelay(designacao);
-    }
     final json = await _api.post('/escalas/$id/voluntarios', {
       'pessoaId': pessoaId,
       'servicoId': servicoId,
@@ -306,32 +133,6 @@ class EscalaService {
     String? servicoNome,
     String? observacoes,
   }) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final escala = mockEscalas[idx];
-      var atualizado = escala.voluntarios.firstWhere(
-        (v) => v.id == designacaoId,
-        orElse: () => throw Exception('Designação não encontrada.'),
-      );
-      atualizado = EscalaVoluntario(
-        id: atualizado.id,
-        escalaId: atualizado.escalaId,
-        pessoaId: pessoaId ?? atualizado.pessoaId,
-        pessoaNome: pessoaNome ?? atualizado.pessoaNome,
-        servicoId: servicoId ?? atualizado.servicoId,
-        servicoNome: servicoNome ?? atualizado.servicoNome,
-        status: atualizado.status,
-        observacoes: observacoes ?? atualizado.observacoes,
-        data: atualizado.data,
-      );
-      mockEscalas[idx] = escala.copyWith(
-        voluntarios: escala.voluntarios
-            .map((v) => v.id == designacaoId ? atualizado : v)
-            .toList(),
-      );
-      return mockDelay(atualizado);
-    }
     final body = <String, dynamic>{
       if (pessoaId != null) 'pessoaId': pessoaId,
       if (servicoId != null) 'servicoId': servicoId,
@@ -349,34 +150,6 @@ class EscalaService {
     String? observacoes,
     bool? confirmadoPeloVoluntario,
   }) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final escala = mockEscalas[idx];
-      final atualizado = escala.voluntarios.firstWhere(
-        (v) => v.id == designacaoId,
-        orElse: () => throw Exception('Designação não encontrada.'),
-      );
-      final novo = EscalaVoluntario(
-        id: atualizado.id,
-        escalaId: atualizado.escalaId,
-        pessoaId: atualizado.pessoaId,
-        pessoaNome: atualizado.pessoaNome,
-        servicoId: atualizado.servicoId,
-        servicoNome: atualizado.servicoNome,
-        status: status,
-        observacoes: observacoes ?? atualizado.observacoes,
-        data: atualizado.data,
-        confirmadoPeloVoluntario:
-            confirmadoPeloVoluntario ?? atualizado.confirmadoPeloVoluntario,
-      );
-      mockEscalas[idx] = escala.copyWith(
-        voluntarios: escala.voluntarios
-            .map((v) => v.id == designacaoId ? novo : v)
-            .toList(),
-      );
-      return mockDelay(novo);
-    }
     final json = await _api.put('/escalas/$id/voluntarios/$designacaoId/status', {
       'status': escalaItemStatusToString(status),
       'observacoes': observacoes,
@@ -392,45 +165,6 @@ class EscalaService {
     String? observacoes,
     String? pessoaId,
   }) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final escala = mockEscalas[idx];
-      if (escala.status != EscalaStatus.emAndamento) {
-        throw Exception(
-          'A escala precisa estar lançada para o voluntário responder.',
-        );
-      }
-      final atual = escala.voluntarios.firstWhere(
-        (v) => v.id == designacaoId,
-        orElse: () => throw Exception('Designação não encontrada.'),
-      );
-      if (pessoaId != null && atual.pessoaId != pessoaId) {
-        throw Exception('Você só pode responder à sua própria designação.');
-      }
-      if (status == EscalaItemStatus.recusado &&
-          (observacoes == null || observacoes.trim().isEmpty)) {
-        throw Exception('Informe o motivo da recusa.');
-      }
-      final novo = EscalaVoluntario(
-        id: atual.id,
-        escalaId: atual.escalaId,
-        pessoaId: atual.pessoaId,
-        pessoaNome: atual.pessoaNome,
-        servicoId: atual.servicoId,
-        servicoNome: atual.servicoNome,
-        status: status,
-        observacoes: observacoes ?? atual.observacoes,
-        data: atual.data,
-        confirmadoPeloVoluntario: true,
-      );
-      mockEscalas[idx] = escala.copyWith(
-        voluntarios: escala.voluntarios
-            .map((v) => v.id == designacaoId ? novo : v)
-            .toList(),
-      );
-      return mockDelay(novo);
-    }
     final json = await _api.post('/escalas/$id/voluntarios/$designacaoId/resposta', {
       'status': escalaItemStatusToString(status),
       'observacoes': observacoes,
@@ -439,15 +173,6 @@ class EscalaService {
   }
 
   Future<void> removeVoluntario(String id, String designacaoId) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final escala = mockEscalas[idx];
-      mockEscalas[idx] = escala.copyWith(
-        voluntarios: escala.voluntarios.where((v) => v.id != designacaoId).toList(),
-      );
-      return mockDelay(null);
-    }
     await _api.delete('/escalas/$id/voluntarios/$designacaoId');
   }
 
@@ -456,20 +181,6 @@ class EscalaService {
     String? servicoId,
     String? data,
   }) async {
-    if (AppConfig.useMock) {
-      final escala = mockEscalas.firstWhere(
-        (e) => e.id == id,
-        orElse: () => throw Exception('Escala não encontrada.'),
-      );
-      String? servicoNome;
-      if (servicoId != null) {
-        servicoNome = _servicoNomeDo(escala, servicoId);
-      }
-      return mockDelay(
-        mockCandidatos(escala.igrejaId, servicoNome: servicoNome, data: data),
-        data == null ? 150 : 400,
-      );
-    }
     final query = <String, String>{
       if (servicoId != null) 'servicoId': servicoId,
       if (data != null) 'data': data,
@@ -482,54 +193,11 @@ class EscalaService {
   }
 
   Future<SugestaoResultado> gerarSugestoes(String id) async {
-    if (AppConfig.useMock) {
-      final idx = mockEscalas.indexWhere((e) => e.id == id);
-      if (idx < 0) throw Exception('Escala não encontrada.');
-      final escala = mockEscalas[idx];
-      final novas = _gerarSugestoesPara(escala, escala.servicos, escala.voluntarios, id);
-      mockEscalas[idx] = escala.copyWith(voluntarios: novas);
-      final totalVagas =
-          escala.servicos.fold<int>(0, (acc, s) => acc + s.quantidadeNecessaria);
-      final preenchidas =
-          novas.where((v) => v.status != EscalaItemStatus.recusado).length;
-      final status = totalVagas == 0
-          ? 'SEM_SERVICOS'
-          : preenchidas >= totalVagas
-              ? 'COMPLETA'
-              : preenchidas == 0
-                  ? 'SEM_DISPONIVEL'
-                  : 'PARCIAL';
-      return mockDelay(
-        SugestaoResultado(
-          escalaId: id,
-          status: status,
-          message:
-              'Sugestões geradas para ${escala.titulo}: $preenchidas de $totalVagas vagas preenchidas.',
-          sugestoes: novas.map((v) {
-            return SugestaoItem(
-              servicoId: v.servicoId,
-              servicoNome: v.servicoNome,
-              pessoaId: v.pessoaId,
-              pessoaNome: v.pessoaNome,
-              data: v.data,
-              motivo: 'Disponível e de menor carga no mês',
-            );
-          }).toList(),
-        ),
-        500,
-      );
-    }
     final json = await _api.post('/escalas/$id/gerar-sugestao') as Map<String, dynamic>;
     return _mapSugestao(json);
   }
 
   Future<String> automatizarProximoMes() async {
-    if (AppConfig.useMock) {
-      return mockDelay(
-        'Escalas recomendadas geradas automaticamente: 2 criadas, 1 atualizadas.',
-        400,
-      );
-    }
     final text = await _api.post('/escalas/automacao/proximo-mes') as String;
     return text;
   }
@@ -541,15 +209,6 @@ class EscalaService {
     String? pessoaId,
     bool administrador = false,
   }) async {
-    if (AppConfig.useMock) {
-      return mockDelay(mockVisaoMensal(
-        igrejaId: igrejaId,
-        competencia: competencia,
-        ministerioId: ministerioId,
-        pessoaId: pessoaId,
-        administrador: administrador,
-      ));
-    }
     final query = <String, String>{
       'igrejaId': ?igrejaId,
       'competencia': ?competencia,
@@ -562,56 +221,7 @@ class EscalaService {
     return list.map((e) => _mapVisaoMensal(e as Map<String, dynamic>)).toList();
   }
 
-  List<EscalaVoluntario> _gerarSugestoesPara(
-    Escala escala,
-    List<EscalaServico> servicos,
-    List<EscalaVoluntario> atuais,
-    String? escalaId,
-  ) {
-    final result = List.of(atuais);
-    final data = escala.dataEvento;
-    var idx = 0;
-    for (final s in servicos) {
-      final preenchidos = result
-          .where((v) => v.servicoId == s.servicoId && v.status != EscalaItemStatus.recusado)
-          .length;
-      for (var i = preenchidos; i < s.quantidadeNecessaria; i++) {
-        final usados = result.map((v) => v.pessoaId).toSet();
-        final candidatos = mockCandidatos(
-          escala.igrejaId,
-          servicoNome: s.servicoNome,
-          data: data,
-        )
-            .where((c) => c.analiseDia?.disponivel ?? true)
-            .where((c) => !usados.contains(c.pessoaId))
-            .toList();
-        if (candidatos.isEmpty) break;
-        final c = candidatos[idx % candidatos.length];
-        idx++;
-        result.add(
-          EscalaVoluntario(
-            id: 'v${DateTime.now().millisecondsSinceEpoch}-$idx',
-            escalaId: escalaId,
-            pessoaId: c.pessoaId,
-            pessoaNome: c.pessoaNome,
-            servicoId: s.servicoId,
-            servicoNome: s.servicoNome,
-            data: data,
-            status: EscalaItemStatus.pendente,
-          ),
-        );
-      }
-    }
-    return result;
-  }
 
-  String? _servicoNomeDo(Escala escala, String servicoId) {
-    for (final s in escala.servicos) {
-      if (s.servicoId == servicoId) return s.servicoNome;
-      if (s.id == servicoId) return s.servicoNome;
-    }
-    return null;
-  }
 
   Escala _map(Map<String, dynamic> json) {
     return Escala(
