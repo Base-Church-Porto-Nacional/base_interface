@@ -18,6 +18,18 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+      final message = auth.error;
+      if (!mounted || message == null) return;
+      auth.error = null;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    });
+  }
+
+  @override
   void dispose() {
     _userController.dispose();
     _passController.dispose();

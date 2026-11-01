@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -18,6 +19,22 @@ class ApiClient {
   ApiClient(this._prefs);
 
   final SharedPreferences _prefs;
+
+  void Function()? onUnauthorized;
+
+  static const timeout = Duration(seconds: 20);
+
+  Future<http.Response> _send(Future<http.Response> request) async {
+    try {
+      return await request.timeout(timeout);
+    } on TimeoutException {
+      throw ApiException('O servidor demorou para responder. Tente novamente.');
+    } on http.ClientException {
+      throw ApiException(
+        'Sem conexão com o servidor. Verifique sua internet e tente novamente.',
+      );
+    }
+  }
 
   static const _tokenKey = 'base_access_token';
 
@@ -50,12 +67,15 @@ class ApiClient {
     return headers;
   }
 
-  Future<dynamic> get(String path, {Map<String, String>? query, bool auth = true}) async {
-    final response = await http.get(
-      _uri(path, query),
-      headers: _headers(auth: auth),
+  Future<dynamic> get(
+    String path, {
+    Map<String, String>? query,
+    bool auth = true,
+  }) async {
+    final response = await _send(
+      http.get(_uri(path, query), headers: _headers(auth: auth)),
     );
-    return _parse(response);
+    return _parse(response, auth: auth);
   }
 
   Future<dynamic> post(
@@ -64,31 +84,36 @@ class ApiClient {
     bool auth = true,
     Map<String, String>? query,
   ]) async {
-    final response = await http.post(
-      _uri(path, query),
-      headers: _headers(auth: auth),
-      body: body == null ? null : jsonEncode(body),
+    final response = await _send(
+      http.post(
+        _uri(path, query),
+        headers: _headers(auth: auth),
+        body: body == null ? null : jsonEncode(body),
+      ),
     );
-    return _parse(response);
+    return _parse(response, auth: auth);
   }
 
   Future<dynamic> put(String path, [Object? body]) async {
-    final response = await http.put(
-      _uri(path),
-      headers: _headers(),
-      body: body == null ? null : jsonEncode(body),
+    final response = await _send(
+      http.put(
+        _uri(path),
+        headers: _headers(),
+        body: body == null ? null : jsonEncode(body),
+      ),
     );
     return _parse(response);
   }
 
   Future<void> delete(String path) async {
-    final response = await http.delete(_uri(path), headers: _headers());
+    final response = await _send(http.delete(_uri(path), headers: _headers()));
     if (response.statusCode == 204) return;
     _parse(response);
   }
 
-  dynamic _parse(http.Response response) {
-    if (response.statusCode == 401) {
+  dynamic _parse(http.Response response, {bool auth = true}) {
+    if (response.statusCode == 401 && auth) {
+      onUnauthorized?.call();
       throw ApiException('Sessão expirada. Faça login novamente.', status: 401);
     }
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -99,14 +124,14 @@ class ApiClient {
         return response.body;
       }
     }
+    String? message;
     try {
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      throw ApiException(
-        body['message']?.toString() ?? 'Erro ${response.statusCode}',
-        status: response.statusCode,
-      );
-    } catch (_) {
-      throw ApiException('Erro ${response.statusCode}', status: response.statusCode);
-    }
+      final body = jsonDecode(response.body);
+      if (body is Map<String, dynamic>) message = body['message']?.toString();
+    } catch (_) {}
+    throw ApiException(
+      message ?? 'Erro ${response.statusCode}',
+      status: response.statusCode,
+    );
   }
 }

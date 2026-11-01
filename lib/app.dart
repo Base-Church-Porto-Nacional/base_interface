@@ -67,6 +67,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
     final aniversarioService = AniversarioService(api);
     final authProvider = AuthProvider(authService);
     final igrejaContext = IgrejaContext(igrejaService, prefs);
+    api.onUnauthorized = authProvider.expireSession;
 
     authProvider.addListener(() {
       igrejaContext.syncUser(authProvider.user);
