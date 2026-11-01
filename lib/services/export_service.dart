@@ -70,6 +70,7 @@ class ExportService {
 
     if (recurso == ExportRecurso.dashboard) {
       final stats = await _dashboardService.getStats();
+      if (stats == null) return 'Dashboard indisponível para o seu perfil.';
       return _exportDashboard(stats, formato);
     }
 
@@ -126,18 +127,23 @@ class ExportService {
   }
 
   String _exportDashboard(DashboardStats stats, ExportFormato formato) {
+    final jornada = stats.jornada;
     final lines = [
       'Pessoas: ${stats.totalPessoas}',
       'Membros: ${stats.totalMembros}',
       'Voluntários: ${stats.totalVoluntarios}',
       'Líderes: ${stats.totalLideres}',
-      'Escalas pendentes: ${stats.escalasPendentes}',
-      'Visitantes recentes: ${stats.visitantesRecentes}',
-      'Novos visitantes: ${stats.jornada.novosVisitantes}',
-      'Aceitaram Jesus: ${stats.jornada.aceitaramJesus}',
-      'Batizados: ${stats.jornada.batizados}',
-      'Trilha da Base: ${stats.jornada.trilhaBase}',
-      'Novos membros: ${stats.jornada.novosMembros}',
+      if (stats.escalasPendentes != null)
+        'Escalas pendentes: ${stats.escalasPendentes}',
+      if (stats.visitantesRecentes != null)
+        'Visitantes recentes: ${stats.visitantesRecentes}',
+      if (jornada != null) ...[
+        'Novos visitantes: ${jornada.novosVisitantes}',
+        'Aceitaram Jesus: ${jornada.aceitaramJesus}',
+        'Batizados: ${jornada.batizados}',
+        'Trilha da Base: ${jornada.trilhaBase}',
+        'Novos membros: ${jornada.novosMembros}',
+      ],
     ];
     if (formato == ExportFormato.md) {
       return '# Dashboard\n\n${lines.map((l) => '- $l').join('\n')}\n';
