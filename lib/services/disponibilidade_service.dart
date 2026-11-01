@@ -1,6 +1,7 @@
 import '../config/app_config.dart';
 import '../mocks/mock_data.dart';
 import '../models/models.dart';
+import '../utils/disponibilidade_janelas.dart';
 import 'api_client.dart';
 
 class DisponibilidadeService {
@@ -21,7 +22,7 @@ class DisponibilidadeService {
         await _api.get('/disponibilidades/indisponibilidades/pessoa/$pessoaId') as List<dynamic>;
     return DisponibilidadePessoa(
       pessoaId: pessoaId,
-      semanal: semanalJson.map(_mapSemanal).toList(),
+      semanal: indisponibilidadesDasJanelas(_janelas(semanalJson)),
       datas: datasJson.map(_mapData).toList(),
     );
   }
@@ -41,18 +42,20 @@ class DisponibilidadeService {
       mockDisponibilidades[pessoaId] = updated;
       return mockDelay(updated);
     }
-    await _api.put('/disponibilidades/semanal/pessoa/$pessoaId', {
-      'dias': semanal
-          .map(
-            (d) => {
-              'dia': d.dia.name.toUpperCase(),
-              'manha': d.manha,
-              'tarde': d.tarde,
-              'noite': d.noite,
-            },
-          )
-          .toList(),
-    });
+    final existentes =
+        await _api.get('/disponibilidades/semanal/pessoa/$pessoaId') as List<dynamic>;
+    for (final e in existentes) {
+      await _api.delete('/disponibilidades/semanal/${e['id']}');
+    }
+    for (final janela in janelasDisponiveis(semanal)) {
+      await _api.post('/disponibilidades/semanal', {
+        'pessoaId': pessoaId,
+        'diaSemana': janela.dia.name.toUpperCase(),
+        'horaInicio': janela.horaInicio,
+        'horaFim': janela.horaFim,
+        'disponivel': true,
+      });
+    }
     return getByPessoa(pessoaId);
   }
 
@@ -100,18 +103,18 @@ class DisponibilidadeService {
     await _api.delete('/disponibilidades/indisponibilidades/$id');
   }
 
-  IndisponibilidadeSemanal _mapSemanal(dynamic e) {
-    final diaNome = (e['dia'] as String? ?? e['diaSemana'] as String? ?? 'DOMINGO').toLowerCase();
-    DiaSemana dia = DiaSemana.domingo;
-    for (final value in DiaSemana.values) {
-      if (value.name == diaNome) dia = value;
+  List<JanelaDisponivel> _janelas(List<dynamic> json) {
+    final janelas = <JanelaDisponivel>[];
+    for (final e in json) {
+      if (e['disponivel'] != true) continue;
+      final diaNome = e['diaSemana'] as String?;
+      final inicio = parseHoraMinutos(e['horaInicio'] as String?);
+      final fim = parseHoraMinutos(e['horaFim'] as String?);
+      if (diaNome == null || inicio == null || fim == null) continue;
+      final dia = diaSemanaFromApi(diaNome);
+      janelas.add(JanelaDisponivel(dia: dia, inicioMin: inicio, fimMin: fim));
     }
-    return IndisponibilidadeSemanal(
-      dia: dia,
-      manha: e['manha'] as bool? ?? false,
-      tarde: e['tarde'] as bool? ?? false,
-      noite: e['noite'] as bool? ?? false,
-    );
+    return janelas;
   }
 
   IndisponibilidadeData _mapData(dynamic e) {
