@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/categoria_culto_service.dart';
@@ -192,9 +193,7 @@ class _CategoriasCultoScreenState extends State<CategoriasCultoScreen> {
       }
       await _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -205,13 +204,9 @@ class _CategoriasCultoScreenState extends State<CategoriasCultoScreen> {
     setState(() => _saving = true);
     try {
       final msg = await context.read<CategoriaCultoService>().gerarCultos(categoria.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-      }
+      if (mounted) showSnack(context, msg);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -219,33 +214,18 @@ class _CategoriasCultoScreenState extends State<CategoriasCultoScreen> {
 
   Future<void> _excluir(CategoriaCulto categoria) async {
     if (!_canManage) return;
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Excluir categoria'),
-        content: Text(
-          'Excluir "${categoria.titulo}"? Se houver cultos vinculados ela será apenas desativada.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
+    final confirmado = await confirmDialog(
+      context,
+      title: 'Excluir categoria',
+      message: 'Excluir "${categoria.titulo}"? Se houver cultos vinculados ela será apenas desativada.',
+      confirmLabel: 'Excluir',
     );
-    if (confirmado != true || !mounted) return;
+    if (!confirmado || !mounted) return;
     try {
       await context.read<CategoriaCultoService>().delete(categoria.id);
       await _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -263,10 +243,7 @@ class _CategoriasCultoScreenState extends State<CategoriasCultoScreen> {
       children: [
         const SectionTabs(
           currentPath: '/cultos/categorias',
-          tabs: [
-            ('/cultos/mes', 'Mês'),
-            ('/cultos/categorias', 'Categorias'),
-          ],
+          tabs: cultosMesTabs,
         ),
         Expanded(
           child: ListView(
@@ -289,10 +266,7 @@ class _CategoriasCultoScreenState extends State<CategoriasCultoScreen> {
               else if (_error != null)
                 ErrorView(message: _error!, onRetry: _load)
               else if (_categorias.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: Text('Nenhuma categoria cadastrada.')),
-                )
+                const EmptyView(message: 'Nenhuma categoria cadastrada.')
               else
                 ..._categorias.map(
                   (c) => Padding(

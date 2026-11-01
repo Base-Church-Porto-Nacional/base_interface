@@ -91,17 +91,14 @@ class _MinisterioDetailScreenState extends State<MinisterioDetailScreen> {
             ativo: result['ativo'] as bool,
             tipo: result['tipo'] as MinisterioTipo,
             liderPessoaId: result['liderPessoaId'] as String?,
-            liderNome: result['liderNome'] as String?,
             coordenadorPessoaId: result['coordenadorPessoaId'] as String?,
-            coordenadorNome: result['coordenadorNome'] as String?,
             anotacoes: m.anotacoes,
             ordem: m.ordem,
+            baseMinisterialId: m.baseMinisterialId,
           );
       if (mounted) setState(() => _ministerio = updated);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -116,22 +113,17 @@ class _MinisterioDetailScreenState extends State<MinisterioDetailScreen> {
             ativo: m.ativo,
             tipo: m.tipo,
             liderPessoaId: m.liderPessoaId,
-            liderNome: m.liderNome,
             coordenadorPessoaId: m.coordenadorPessoaId,
-            coordenadorNome: m.coordenadorNome,
             anotacoes: _anotacoes.text.trim(),
             ordem: _ordem.text.trim(),
+            baseMinisterialId: m.baseMinisterialId,
           );
       if (mounted) {
         setState(() => _ministerio = updated);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Anotações e ordem salvas.')),
-        );
+        showSnack(context, 'Anotações e ordem salvas.');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 

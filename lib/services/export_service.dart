@@ -6,7 +6,7 @@ import 'pessoa_service.dart';
 
 enum ExportFormato { txt, md, xlsx }
 
-enum ExportRecurso { pessoas, membros, lideres, dashboard, ministerios }
+enum ExportRecurso { pessoas, membros, lideres, dashboard }
 
 class ExportOpcoes {
   const ExportOpcoes({this.filtro, this.incluirHistorico = false});
@@ -27,9 +27,8 @@ class ExportService {
     ExportOpcoes opcoes = const ExportOpcoes(),
   }) async {
     final content = await _buildContent(recurso, formato, opcoes);
-    final ext = formato.name;
     await SharePlus.instance.share(
-      ShareParams(text: content, subject: '${recurso.name}.$ext'),
+      ShareParams(text: content, subject: '${recurso.name}.${formato.name}'),
     );
   }
 
@@ -38,44 +37,22 @@ class ExportService {
     ExportFormato formato,
     ExportOpcoes opcoes,
   ) async {
-    final incluirHistorico = opcoes.incluirHistorico;
-    final filtro =
-        opcoes.filtro ??
-        switch (recurso) {
-          ExportRecurso.membros => 'MEMBRO',
-          ExportRecurso.lideres => 'LIDER',
-          _ => null,
-        };
-
-
     if (recurso == ExportRecurso.dashboard) {
       final stats = await _dashboardService.getStats();
       if (stats == null) return 'Dashboard indisponível para o seu perfil.';
       return _exportDashboard(stats, formato);
     }
 
-    if (recurso == ExportRecurso.pessoas ||
-        recurso == ExportRecurso.membros ||
-        recurso == ExportRecurso.lideres) {
-      final response = await _pessoaService.list(
-        filtro: filtro ?? 'TODOS',
-        size: 500,
-      );
-      final titulo = switch (recurso) {
-        ExportRecurso.membros => 'Membros',
-        ExportRecurso.lideres => 'Líderes',
-        _ => 'Pessoas',
-      };
-      return await _exportPessoas(
-        response.content,
-        formato,
-        titulo,
-        incluirHistorico,
-      );
-    }
-
-    // Fallback API download não implementado no mobile — retorna placeholder
-    return 'Exportação ${recurso.name} (${formato.name})';
+    final (filtroPadrao, titulo) = switch (recurso) {
+      ExportRecurso.membros => ('MEMBRO', 'Membros'),
+      ExportRecurso.lideres => ('LIDER', 'Líderes'),
+      _ => ('TODOS', 'Pessoas'),
+    };
+    final response = await _pessoaService.list(
+      filtro: opcoes.filtro ?? filtroPadrao,
+      size: 500,
+    );
+    return _exportPessoas(response.content, formato, titulo, opcoes.incluirHistorico);
   }
 
   Future<String> _exportPessoas(

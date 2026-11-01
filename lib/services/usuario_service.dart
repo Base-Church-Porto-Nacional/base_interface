@@ -19,11 +19,9 @@ class UsuarioService {
     required String senha,
     required List<Role> papeis,
     required String igrejaId,
-    required String igrejaNome,
-    String? pessoaNome,
   }) async {
     if (papeis.contains(Role.contador)) await _garantirPapelContador(igrejaId);
-    final json = await _api.post('/pessoas/$pessoaId/usuario', {
+    final json = await _api.post('/pessoas/$pessoaId/usuario', body: {
       'username': username,
       'email': email,
       'senha': senha,
@@ -47,7 +45,7 @@ class UsuarioService {
       'igrejaId': igrejaId,
     };
     if (contador == null) {
-      await _api.post('/papeis', body);
+      await _api.post('/papeis', body: body);
     } else if (contador['podeLancarContagem'] != true) {
       await _api.put('/papeis/${contador['id']}', body);
     }

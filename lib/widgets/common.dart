@@ -175,3 +175,49 @@ class ErrorView extends StatelessWidget {
     );
   }
 }
+
+class EmptyView extends StatelessWidget {
+  const EmptyView({super.key, required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Center(child: Text(message)),
+    );
+  }
+}
+
+void showSnack(BuildContext context, Object message) {
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$message')));
+}
+
+Future<bool> confirmDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+  String confirmLabel = 'Confirmar',
+  bool destructive = false,
+}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+        FilledButton(
+          style: destructive
+              ? FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error)
+              : null,
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(confirmLabel),
+        ),
+      ],
+    ),
+  );
+  return ok == true;
+}

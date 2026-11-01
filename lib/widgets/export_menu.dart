@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../services/export_service.dart';
 import '../theme/app_colors.dart';
+import 'common.dart';
 
 class ExportMenu extends StatefulWidget {
   const ExportMenu({
@@ -37,11 +38,7 @@ class _ExportMenuState extends State<ExportMenu> {
         ),
       );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao exportar: $e')),
-        );
-      }
+      if (mounted) showSnack(context, 'Erro ao exportar: $e');
     } finally {
       if (mounted) setState(() => _exporting = false);
     }

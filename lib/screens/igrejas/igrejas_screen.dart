@@ -65,7 +65,6 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
             matrizId: matriz.id,
             nome: result['nome'] as String,
             pastorPessoaId: result['pastorPessoaId'] as String,
-            pastorNome: result['pastorNome'] as String,
             adminNome: result['adminNome'] as String,
             adminEmail: result['adminEmail'] as String,
             adminUsername: result['adminUsername'] as String,
@@ -74,9 +73,7 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
       await context.read<IgrejaContext>().reload(context.read<AuthProvider>().user);
       _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 

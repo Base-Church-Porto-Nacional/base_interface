@@ -8,9 +8,7 @@ bool canAccessPath(AuthUser? user, String path) {
   if (path == '/dashboard' || path == '/perfil') {
     return hasPermission(user.roles, 'dashboard:view') || isPastorOuAdmin(user);
   }
-  if (path == '/login') return true;
-
-  if (path == '/acesso-negado') return true;
+  if (path == '/login' || path == '/acesso-negado') return true;
 
   if (path.startsWith('/igrejas')) {
     return hasPermission(user.roles, 'igrejas:manage') || isPastorOuAdmin(user);
@@ -21,13 +19,9 @@ bool canAccessPath(AuthUser? user, String path) {
 
   if (path.startsWith('/membros/pessoa/')) {
     final id = path.substring('/membros/pessoa/'.length).split('/').first;
-    if (hasPermission(user.roles, 'pessoas:view') || isPastorOuAdmin(user)) {
-      return true;
-    }
-    if (hasPermission(user.roles, 'pessoas:own') && user.pessoaId == id) {
-      return true;
-    }
-    return false;
+    return hasPermission(user.roles, 'pessoas:view') ||
+        isPastorOuAdmin(user) ||
+        (hasPermission(user.roles, 'pessoas:own') && user.pessoaId == id);
   }
   if (path.startsWith('/membros/pessoas')) {
     return hasPermission(user.roles, 'pessoas:view') || isPastorOuAdmin(user);
@@ -40,7 +34,7 @@ bool canAccessPath(AuthUser? user, String path) {
     return hasPermission(user.roles, 'small_groups:view') || isPastorOuAdmin(user);
   }
 
-  if (path == '/voluntariado/escalas/nova' || path.startsWith('/voluntariado/escalas/nova')) {
+  if (path.startsWith('/voluntariado/escalas/nova')) {
     return _podeAbrirCriacaoEscala(user);
   }
   if (path.startsWith('/voluntariado/escalas')) {
@@ -60,10 +54,8 @@ bool canAccessPath(AuthUser? user, String path) {
 
   if (path.startsWith('/cultos/mes') ||
       path.startsWith('/cultos/categorias') ||
-      path.startsWith('/cultos/culto/')) {
-    return hasPermission(user.roles, 'culto:view') || isPastorOuAdmin(user);
-  }
-  if (path.startsWith('/cultos/conteudo')) {
+      path.startsWith('/cultos/culto/') ||
+      path.startsWith('/cultos/conteudo')) {
     return hasPermission(user.roles, 'culto:view') || isPastorOuAdmin(user);
   }
   if (path.startsWith('/cultos')) {
@@ -74,9 +66,7 @@ bool canAccessPath(AuthUser? user, String path) {
     return hasPermission(user.roles, 'meu_servico:view') || isPastorOuAdmin(user);
   }
   if (path.startsWith('/perfil/disponibilidade')) {
-    return hasPermission(user.roles, 'disponibilidade:*') ||
-        hasPermission(user.roles, 'disponibilidade:view') ||
-        isPastorOuAdmin(user);
+    return hasPermission(user.roles, 'disponibilidade:view') || isPastorOuAdmin(user);
   }
 
   if (path == '/aniversariantes/envios') {

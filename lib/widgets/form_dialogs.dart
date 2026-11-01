@@ -244,27 +244,14 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty) return;
-            Pessoa? lider;
-            Pessoa? coord;
-            for (final p in widget.pessoas) {
-              if (p.id == _liderId) lider = p;
-              if (p.id == _coordenadorId) coord = p;
-            }
-            BaseMinisterial? base;
-            for (final b in widget.bases) {
-              if (b.id == _baseMinisterialId) base = b;
-            }
             Navigator.pop(context, {
               'nome': _nome.text.trim(),
               'descricao': _descricao.text.trim(),
               'ativo': _ativo,
               'tipo': _tipo,
               'liderPessoaId': _liderId,
-              'liderNome': lider?.nome,
               'coordenadorPessoaId': _coordenadorId,
-              'coordenadorNome': coord?.nome,
               'baseMinisterialId': _baseMinisterialId,
-              'baseMinisterialNome': base?.nome,
             });
           },
           child: const Text('Salvar'),
@@ -380,20 +367,12 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty) return;
-            Pessoa? lider;
-            Pessoa? coord;
-            for (final p in widget.pessoas) {
-              if (p.id == _liderId) lider = p;
-              if (p.id == _coordenadorId) coord = p;
-            }
             Navigator.pop(context, {
               'nome': _nome.text.trim(),
               'descricao': _descricao.text.trim(),
               'ativo': _ativo,
               'liderPessoaId': _liderId,
-              'liderNome': lider?.nome,
               'coordenadorPessoaId': _coordenadorId,
-              'coordenadorNome': coord?.nome,
             });
           },
           child: const Text('Salvar'),
@@ -480,14 +459,9 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
                 _adminUsername.text.trim().isEmpty) {
               return;
             }
-            Pessoa? pastor;
-            for (final p in widget.pessoas) {
-              if (p.id == _pastorId) pastor = p;
-            }
             Navigator.pop(context, {
               'nome': _nome.text.trim(),
               'pastorPessoaId': _pastorId,
-              'pastorNome': pastor?.nome ?? '',
               'adminNome': _adminNome.text.trim(),
               'adminEmail': _adminEmail.text.trim(),
               'adminUsername': _adminUsername.text.trim(),
@@ -754,16 +728,11 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty || _liderId == null) return;
-            Pessoa? lider;
-            for (final p in widget.pessoas) {
-              if (p.id == _liderId) lider = p;
-            }
             Navigator.pop(context, {
               'nome': _nome.text.trim(),
               'diaSemana': _diaSemana,
               'horario': _horario.text.trim(),
               'liderPessoaId': _liderId,
-              'liderNome': lider?.nome,
               'nota': _nota,
               'ativo': _ativo,
             });

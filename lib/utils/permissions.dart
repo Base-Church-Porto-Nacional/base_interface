@@ -208,9 +208,6 @@ bool podeGerenciarSmallGroup(AuthUser? user, SmallGroup group) {
   return user.pessoaId != null && user.pessoaId == group.liderPessoaId;
 }
 
-bool podeReportarSmallGroup(AuthUser? user, SmallGroup group) =>
-    podeGerenciarSmallGroup(user, group);
-
 /// GET /aniversarios/aniversariantes é leitura e fica aberto a qualquer papel
 /// logado. POST /aniversarios/enviar e GET /aniversarios/envios usam
 /// assertPastorOuAdmin no back-end, então o front esconde o botão e o histórico
@@ -218,3 +215,8 @@ bool podeReportarSmallGroup(AuthUser? user, SmallGroup group) =>
 bool podeVerAniversarios(AuthUser? user) => user != null;
 
 bool podeEnviarAniversarios(AuthUser? user) => isPastorOuAdmin(user);
+
+bool podeEditarEscala(AuthUser? user, Escala? escala) {
+  if (escala == null || escala.status == EscalaStatus.finalizada) return false;
+  return isPastorOuAdmin(user) || hasPermission(user?.roles ?? [], 'escalas:manage_own');
+}

@@ -18,7 +18,7 @@ class CronogramaService {
   }
 
   Future<CultoEvento> create(CultoEvento evento) async {
-    final json = await _api.post('/cronograma', {
+    final json = await _api.post('/cronograma', body: {
       'titulo': evento.titulo,
       'tipo': tipoEventoToString(evento.tipo),
       'dataEvento': evento.data,

@@ -28,11 +28,10 @@ class AuthService {
       throw Exception('Informe usuário e senha.');
     }
 
-
     final login = await _api.post(
       '/auth/login',
-      {'username': username, 'senha': password},
-      false,
+      body: {'username': username, 'senha': password},
+      auth: false,
     ) as Map<String, dynamic>;
 
     await _api.setToken(login['token'] as String);
@@ -43,10 +42,8 @@ class AuthService {
     } catch (_) {}
 
     final papeis = (login['papeis'] as List<dynamic>? ?? me['papeis'] as List<dynamic>? ?? [])
-        .map((p) => roleFromString((p as String).toUpperCase()))
+        .map((p) => roleFromString(p as String))
         .toList();
-
-    final visiveisJson = me['igrejasVisiveis'] as List<dynamic>? ?? [];
 
     final user = AuthUser(
       id: (login['usuarioId'] ?? me['id']) as String,
@@ -55,26 +52,10 @@ class AuthService {
       roles: papeis,
       pessoaId: me['pessoaId'] as String?,
       igrejaId: me['igrejaId'] as String? ?? '',
-      igrejaTipo: (me['igrejaTipo'] as String? ?? 'FILIAL').toUpperCase() == 'MATRIZ'
-          ? IgrejaTipo.matriz
-          : IgrejaTipo.filial,
+      igrejaTipo: igrejaTipoFromString(me['igrejaTipo'] as String?),
       igrejaNome: me['igrejaNome'] as String? ?? '',
-      igrejasVisiveis: visiveisJson
-          .map(
-            (e) => Igreja(
-              id: e['id'] as String,
-              nome: e['nome'] as String,
-              tipo: (e['tipo'] as String? ?? 'FILIAL').toUpperCase() == 'MATRIZ'
-                  ? IgrejaTipo.matriz
-                  : IgrejaTipo.filial,
-              pastorPessoaId: e['pastorPessoaId'] as String? ?? '',
-              pastorNome: e['pastorNome'] as String? ?? '',
-              adminUsuarioId: e['adminUsuarioId'] as String? ?? '',
-              adminNome: e['adminNome'] as String? ?? '',
-              ativo: e['ativo'] as bool? ?? true,
-              igrejaMatrizId: e['igrejaMatrizId'] as String?,
-            ),
-          )
+      igrejasVisiveis: (me['igrejasVisiveis'] as List<dynamic>? ?? [])
+          .map((e) => Igreja.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 

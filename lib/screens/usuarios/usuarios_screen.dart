@@ -58,10 +58,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
         else if (_error != null)
           ErrorView(message: _error!, onRetry: _load)
         else if (_items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: Text('Nenhum usuário nesta igreja.')),
-          )
+          const EmptyView(message: 'Nenhum usuário nesta igreja.')
         else
           ..._items.map(
             (u) => Padding(

@@ -530,4 +530,33 @@ void main() {
       expect(podeGerenciarBaseMinisterial(null, ada), isFalse);
     });
   });
+
+  group('podeEditarEscala', () {
+    Escala escala(EscalaStatus status) => Escala(
+          id: 'e1',
+          titulo: 'Escala',
+          competencia: '2026-11',
+          tipo: EscalaTipo.ministerio,
+          igrejaId: 'igreja-1',
+          supervisorPessoaId: 'p1',
+          supervisorNome: 'Supervisor',
+          ativo: true,
+          status: status,
+        );
+
+    test('admin e líder editam escala não finalizada', () {
+      expect(podeEditarEscala(mockUser, escala(EscalaStatus.editando)), isTrue);
+      expect(podeEditarEscala(mockUserLider, escala(EscalaStatus.emAndamento)), isTrue);
+    });
+
+    test('ninguém edita escala finalizada ou ausente', () {
+      expect(podeEditarEscala(mockUser, escala(EscalaStatus.finalizada)), isFalse);
+      expect(podeEditarEscala(mockUser, null), isFalse);
+    });
+
+    test('membro sem permissão não edita', () {
+      expect(podeEditarEscala(mockUserMembro, escala(EscalaStatus.editando)), isFalse);
+      expect(podeEditarEscala(null, escala(EscalaStatus.editando)), isFalse);
+    });
+  });
 }

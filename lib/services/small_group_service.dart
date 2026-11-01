@@ -22,12 +22,11 @@ class SmallGroupService {
     required String igrejaId,
     required DiaSemana diaSemana,
     required String liderPessoaId,
-    String? liderNome,
     String? horario,
     required int nota,
     bool ativo = true,
   }) async {
-    final json = await _api.post('/small-groups', {
+    final json = await _api.post('/small-groups', body: {
       'nome': nome,
       'igrejaId': igrejaId,
       'diaSemana': diaSemana.name.toUpperCase(),
@@ -44,7 +43,6 @@ class SmallGroupService {
     required String nome,
     required DiaSemana diaSemana,
     required String liderPessoaId,
-    String? liderNome,
     String? horario,
     required int nota,
     bool ativo = true,
@@ -76,7 +74,7 @@ class SmallGroupService {
     };
     Map<String, dynamic> json;
     if (encontro.id.isEmpty) {
-      json = await _api.post('/small-groups/${encontro.smallGroupId}/encontros', payload)
+      json = await _api.post('/small-groups/${encontro.smallGroupId}/encontros', body: payload)
           as Map<String, dynamic>;
     } else {
       json =
@@ -91,7 +89,7 @@ class SmallGroupService {
       id: json['id'] as String,
       nome: json['nome'] as String,
       igrejaId: json['igrejaId'] as String? ?? '',
-      diaSemana: diaSemanaFromString(json['diaSemana'] as String? ?? 'DOMINGO'),
+      diaSemana: diaSemanaFromApi(json['diaSemana'] as String? ?? 'DOMINGO'),
       horario: json['horario'] as String?,
       liderPessoaId: json['liderPessoaId'] as String? ?? '',
       liderNome: json['liderNome'] as String? ?? '—',
@@ -120,12 +118,4 @@ class SmallGroupService {
       anotacoes: json['anotacoes'] as String?,
     );
   }
-}
-
-DiaSemana diaSemanaFromString(String value) {
-  final nome = value.toUpperCase();
-  for (final d in DiaSemana.values) {
-    if (d.name.toUpperCase() == nome) return d;
-  }
-  return DiaSemana.domingo;
 }

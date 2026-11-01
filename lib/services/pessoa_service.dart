@@ -37,6 +37,47 @@ class PessoaService {
     return paginate(mapped, page: page, size: size);
   }
 
+  Future<List<JornadaEtapa>> jornada(String pessoaId) async {
+    final respostas = await Future.wait([
+      _api.get('/pessoas/$pessoaId/jornada'),
+      _api.get('/pessoas/$pessoaId/jornada/etapas'),
+    ]);
+    final j = respostas[0] as Map<String, dynamic>;
+    final extras = (respostas[1] as List<dynamic>).cast<Map<String, dynamic>>();
+    final registros = <(String, String, bool, String?)>[
+      ('principal-aceitou', 'Aceitou Jesus', j['aceitouJesus'] == true, j['dataAceitouJesus'] as String?),
+      ('principal-batismo', 'Batismo', j['batizado'] == true, j['dataBatismo'] as String?),
+      (
+        'principal-trilha',
+        'Trilha da Base',
+        j['concluiuTrilhaBase'] == true,
+        j['dataConclusaoTrilhaBase'] as String?,
+      ),
+      ('principal-membro', 'Membro', j['membro'] == true, j['dataMembro'] as String?),
+      for (final e in extras)
+        (
+          e['id'] as String,
+          e['etapaNome'] as String? ?? 'Etapa',
+          e['concluida'] == true,
+          e['dataConclusao'] as String?,
+        ),
+    ];
+    final atual = registros.indexWhere((r) => !r.$3);
+    return [
+      for (final (i, (id, titulo, concluida, data)) in registros.indexed)
+        JornadaEtapa(
+          id: id,
+          titulo: titulo,
+          data: data,
+          status: concluida
+              ? JornadaEtapaStatus.concluido
+              : i == atual
+                  ? JornadaEtapaStatus.atual
+                  : JornadaEtapaStatus.pendente,
+        ),
+    ];
+  }
+
   Future<Pessoa> getById(String id) async {
     final json = await _api.get('/pessoas/$id') as Map<String, dynamic>;
     return _mapPessoa(json);
@@ -50,7 +91,7 @@ class PessoaService {
     String? igrejaId,
   }) async {
     final wa = _whatsappNormalizado(whatsapp);
-    final json = await _api.post('/pessoas', {
+    final json = await _api.post('/pessoas', body: {
       'nome': nome,
       if (telefone != null && telefone.isNotEmpty) 'telefone': telefone,
       if (email != null && email.isNotEmpty) 'email': email,
@@ -119,6 +160,9 @@ class PessoaService {
       igrejaId: json['igrejaId'] as String? ?? '',
       usuarioId: json['usuarioId'] as String?,
       papeis: papeis,
+      aceitouJesus: json['aceitouJesus'] == true,
+      batizado: json['batizado'] == true,
+      concluiuTrilhaBase: json['concluiuTrilhaBase'] == true,
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/disponibilidade_service.dart';
 import '../../utils/format.dart';
@@ -79,15 +80,9 @@ class _DisponibilidadeScreenState extends State<DisponibilidadeScreen> {
             pessoaId: pessoaId,
             semanal: _semanal.where((s) => s.marcado).toList(),
           );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dias da semana atualizados.')),
-        );
-      }
+      if (mounted) showSnack(context, 'Dias da semana atualizados.');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -98,9 +93,9 @@ class _DisponibilidadeScreenState extends State<DisponibilidadeScreen> {
     if (pessoaId == null) return;
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime(2026, 8, 26),
-      firstDate: DateTime(2026),
-      lastDate: DateTime(2029),
+      initialDate: DateTime.now(),
+      firstDate: DateTime(DateTime.now().year),
+      lastDate: DateTime(DateTime.now().year + 3),
     );
     if (picked == null || !mounted) return;
     final motivoCtrl = TextEditingController();
@@ -127,17 +122,19 @@ class _DisponibilidadeScreenState extends State<DisponibilidadeScreen> {
           );
       _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
   Future<void> _removeData(IndisponibilidadeData item) async {
     final pessoaId = _pessoaId;
     if (pessoaId == null) return;
-    await context.read<DisponibilidadeService>().removeData(pessoaId, item.id);
-    _load();
+    try {
+      await context.read<DisponibilidadeService>().removeData(pessoaId, item.id);
+      _load();
+    } catch (e) {
+      if (mounted) showSnack(context, e);
+    }
   }
 
   void _toggle(int index, String periodo, bool value) {
@@ -157,10 +154,7 @@ class _DisponibilidadeScreenState extends State<DisponibilidadeScreen> {
       children: [
         const SectionTabs(
           currentPath: '/perfil/disponibilidade',
-          tabs: [
-            ('/meu-servico', 'Visão geral'),
-            ('/perfil/disponibilidade', 'Disponibilidade'),
-          ],
+          tabs: meuServicoTabs,
         ),
         Expanded(
           child: _loading

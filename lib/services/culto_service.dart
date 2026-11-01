@@ -55,7 +55,7 @@ class CultoService {
     if (culto.pregadorId != null && culto.pregadorId!.isNotEmpty) {
       body['pregadorId'] = culto.pregadorId;
     }
-    final json = await _api.post('/cultos', body) as Map<String, dynamic>;
+    final json = await _api.post('/cultos', body: body) as Map<String, dynamic>;
     return _map(json);
   }
 
@@ -120,19 +120,11 @@ class CultoService {
     return _mapRelatorio(json, relatorio.cultoId);
   }
 
-  Future<String> gerarProximoMes({String? igrejaId}) async {
-    final query = igrejaId == null || igrejaId.isEmpty
-        ? ''
-        : '?igrejaId=$igrejaId';
-    final text = await _api.post('/cultos/automacao/proximo-mes$query');
-    return text?.toString() ?? '';
-  }
-
   Future<String> gerarMes(String competencia, {String? igrejaId}) async {
-    final query = igrejaId == null || igrejaId.isEmpty
-        ? ''
-        : '?igrejaId=$igrejaId';
-    final text = await _api.post('/cultos/automacao/mes/$competencia$query');
+    final text = await _api.post(
+      '/cultos/automacao/mes/$competencia',
+      query: {if (igrejaId != null && igrejaId.isNotEmpty) 'igrejaId': igrejaId},
+    );
     return text?.toString() ?? '';
   }
 

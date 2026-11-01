@@ -8,15 +8,6 @@ const tipoFiltros = {
   'PASTOR',
 };
 
-bool etapaConcluida(Pessoa pessoa, String trecho) {
-  final needle = trecho.toLowerCase();
-  return pessoa.jornada.any(
-    (e) =>
-        e.status == JornadaEtapaStatus.concluido &&
-        e.titulo.toLowerCase().contains(needle),
-  );
-}
-
 bool pessoaMatchesFiltro(Pessoa pessoa, String? filtro) {
   final value = filtro?.trim().toUpperCase();
   if (value == null || value.isEmpty || value == 'TODOS') return true;
@@ -26,17 +17,12 @@ bool pessoaMatchesFiltro(Pessoa pessoa, String? filtro) {
     return tipo != null && pessoa.tipos.contains(tipo);
   }
 
-  switch (value) {
-    case 'BATIZADO':
-      return etapaConcluida(pessoa, 'batiz');
-    case 'ACEITOU_JESUS':
-      return etapaConcluida(pessoa, 'aceitou') ||
-          etapaConcluida(pessoa, 'jesus');
-    case 'TRILHA':
-      return etapaConcluida(pessoa, 'trilha');
-    default:
-      return false;
-  }
+  return switch (value) {
+    'BATIZADO' => pessoa.batizado,
+    'ACEITOU_JESUS' => pessoa.aceitouJesus,
+    'TRILHA' => pessoa.concluiuTrilhaBase,
+    _ => false,
+  };
 }
 
 PessoaTipo? _tipoFromFiltro(String value) {

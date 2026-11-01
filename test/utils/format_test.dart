@@ -144,4 +144,19 @@ void main() {
       expect(mesesPt[2], 'Março');
     });
   });
+
+  group('initials', () {
+    test('usa as iniciais dos dois primeiros nomes', () {
+      expect(initials('maria da silva'), 'MD');
+    });
+
+    test('ignora espaços repetidos e nas pontas', () {
+      expect(initials('  Ana   Souza '), 'AS');
+    });
+
+    test('nome único e vazio', () {
+      expect(initials('joão'), 'J');
+      expect(initials('   '), '?');
+    });
+  });
 }

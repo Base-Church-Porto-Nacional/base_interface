@@ -85,7 +85,6 @@ class _SmallGroupsScreenState extends State<SmallGroupsScreen> {
           diaSemana: result['diaSemana'] as DiaSemana,
           horario: result['horario'] as String?,
           liderPessoaId: result['liderPessoaId'] as String,
-          liderNome: result['liderNome'] as String?,
           nota: result['nota'] as int,
           ativo: result['ativo'] as bool,
         );
@@ -96,43 +95,30 @@ class _SmallGroupsScreenState extends State<SmallGroupsScreen> {
           diaSemana: result['diaSemana'] as DiaSemana,
           horario: result['horario'] as String?,
           liderPessoaId: result['liderPessoaId'] as String,
-          liderNome: result['liderNome'] as String?,
           nota: result['nota'] as int,
           ativo: result['ativo'] as bool,
         );
       }
       _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
   Future<void> _delete(SmallGroup group) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Apagar pequeno grupo'),
-        content: Text('Apagar "${group.nome}" e todos os relatórios dele?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Apagar'),
-          ),
-        ],
-      ),
+    final confirm = await confirmDialog(
+      context,
+      title: 'Apagar pequeno grupo',
+      message: 'Apagar "${group.nome}" e todos os relatórios dele?',
+      confirmLabel: 'Apagar',
+      destructive: true,
     );
-    if (confirm != true || !mounted) return;
+    if (!confirm || !mounted) return;
     try {
       await context.read<SmallGroupService>().delete(group.id);
       _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -176,10 +162,7 @@ class _SmallGroupsScreenState extends State<SmallGroupsScreen> {
         else if (_error != null)
           ErrorView(message: _error!, onRetry: _load)
         else if (items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: Text('Nenhum pequeno grupo encontrado.')),
-          )
+          const EmptyView(message: 'Nenhum pequeno grupo encontrado.')
         else
           ...items.map(
             (g) => Padding(

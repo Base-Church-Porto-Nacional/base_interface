@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/base_ministerial_service.dart';
 import '../../services/export_service.dart';
@@ -31,19 +30,7 @@ class _VoluntariosScreenState extends State<VoluntariosScreen> {
   String _search = '';
   bool _loading = true;
   String? _error;
-  Timer? _debounce;
   String? _loadedFor;
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    super.dispose();
-  }
-
-  void _scheduleLoad() {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 250), _load);
-  }
 
   Future<void> _load() async {
     final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;
@@ -123,12 +110,7 @@ class _VoluntariosScreenState extends State<VoluntariosScreen> {
       children: [
         const SectionTabs(
           currentPath: '/voluntariado/voluntarios',
-          tabs: [
-            ('/voluntariado/voluntarios', 'Voluntários'),
-            ('/voluntariado/escalas', 'Escalas'),
-            ('/voluntariado/ministerios', 'Ministérios'),
-            ('/voluntariado/relatorios', 'Relatórios'),
-          ],
+          tabs: voluntariadoTabs,
         ),
         Expanded(
           child: ListView(
@@ -143,7 +125,7 @@ class _VoluntariosScreenState extends State<VoluntariosScreen> {
                 hint: 'Buscar por nome',
                 onChanged: (v) {
                   _search = v;
-                  _scheduleLoad();
+                  _load();
                 },
               ),
               const SizedBox(height: 12),
@@ -169,10 +151,7 @@ class _VoluntariosScreenState extends State<VoluntariosScreen> {
               else if (_error != null)
                 ErrorView(message: _error!, onRetry: _load)
               else if (items.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: Text('Ninguém encontrado.')),
-                )
+                const EmptyView(message: 'Ninguém encontrado.')
               else
                 ...items.map(
                   (p) => Padding(

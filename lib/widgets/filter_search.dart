@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../navigation/nav_config.dart';
 import '../../theme/app_colors.dart';
 
-class FilterMenu extends StatefulWidget {
+class FilterMenu extends StatelessWidget {
   const FilterMenu({
     super.key,
     required this.value,
@@ -15,17 +17,12 @@ class FilterMenu extends StatefulWidget {
   final ValueChanged<String> onChanged;
 
   @override
-  State<FilterMenu> createState() => _FilterMenuState();
-}
-
-class _FilterMenuState extends State<FilterMenu> {
-  @override
   Widget build(BuildContext context) {
-    final active = widget.value != 'TODOS';
+    final active = value != 'TODOS';
 
     return PopupMenuButton<String>(
       tooltip: 'Filtros',
-      onSelected: widget.onChanged,
+      onSelected: onChanged,
       itemBuilder: (_) => [
         for (final (value, label) in pessoaFiltros)
           PopupMenuItem(value: value, child: Text(label)),
@@ -48,24 +45,44 @@ class _FilterMenuState extends State<FilterMenu> {
   }
 }
 
-class SearchField extends StatelessWidget {
+class SearchField extends StatefulWidget {
   const SearchField({
     super.key,
     required this.hint,
     required this.onChanged,
+    this.debounce = const Duration(milliseconds: 250),
   });
 
   final String hint;
   final ValueChanged<String> onChanged;
+  final Duration debounce;
+
+  @override
+  State<SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<SearchField> {
+  Timer? _timer;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    _timer?.cancel();
+    _timer = Timer(widget.debounce, () => widget.onChanged(value));
+  }
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       decoration: InputDecoration(
-        hintText: hint,
+        hintText: widget.hint,
         prefixIcon: const Icon(Icons.search, size: 20),
       ),
-      onChanged: onChanged,
+      onChanged: _onChanged,
     );
   }
 }

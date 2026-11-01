@@ -67,9 +67,7 @@ class _SmallGroupDetailScreenState extends State<SmallGroupDetailScreen> {
       final group = await context.read<SmallGroupService>().getById(widget.groupId);
       if (mounted) setState(() => _group = group);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -137,7 +135,6 @@ class _SmallGroupDetailScreenState extends State<SmallGroupDetailScreen> {
             diaSemana: result['diaSemana'] as DiaSemana,
             horario: result['horario'] as String?,
             liderPessoaId: result['liderPessoaId'] as String,
-            liderNome: result['liderNome'] as String?,
             nota: result['nota'] as int,
             ativo: result['ativo'] as bool,
           );
@@ -149,36 +146,24 @@ class _SmallGroupDetailScreenState extends State<SmallGroupDetailScreen> {
         });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
   Future<void> _delete() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Apagar pequeno grupo'),
-        content: Text('Apagar "${_group?.nome}" e todos os relatórios dele?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Apagar'),
-          ),
-        ],
-      ),
+    final confirm = await confirmDialog(
+      context,
+      title: 'Apagar pequeno grupo',
+      message: 'Apagar "${_group?.nome}" e todos os relatórios dele?',
+      confirmLabel: 'Apagar',
+      destructive: true,
     );
-    if (confirm != true || !mounted) return;
+    if (!confirm || !mounted) return;
     try {
       await context.read<SmallGroupService>().delete(widget.groupId);
       if (mounted) context.pop();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -342,9 +327,7 @@ class _SemanaTileState extends State<_SemanaTile> {
       );
       _encontroId = saved.id;
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
