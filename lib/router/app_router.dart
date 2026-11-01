@@ -2,25 +2,36 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
 import '../screens/acesso/acesso_negado_screen.dart';
+import '../screens/aniversarios/aniversariantes_screen.dart';
+import '../screens/aniversarios/aniversario_envios_screen.dart';
 import '../screens/cronograma/cronograma_screen.dart';
+import '../screens/culto/categorias_culto_screen.dart';
 import '../screens/culto/conteudo_culto_screen.dart';
+import '../screens/culto/culto_detail_screen.dart';
+import '../screens/culto/cultos_mes_screen.dart';
+import '../screens/configuracoes/mensagem_aniversario_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/disponibilidade/disponibilidade_screen.dart';
 import '../screens/escalas/escala_detail_screen.dart';
+import '../screens/escalas/escala_edit_screen.dart';
 import '../screens/escalas/escala_form_screen.dart';
 import '../screens/escalas/escalas_screen.dart';
+import '../screens/escalas/visao_mensal_screen.dart';
 import '../screens/igrejas/igreja_detail_screen.dart';
 import '../screens/igrejas/igrejas_screen.dart';
 import '../screens/login/login_screen.dart';
 import '../screens/membros/membros_screen.dart';
 import '../screens/meu_servico/meu_servico_screen.dart';
+import '../screens/meu_servico/responder_escalas_screen.dart';
 import '../screens/ministerios/ministerio_detail_screen.dart';
 import '../screens/ministerios/ministerios_screen.dart';
 import '../screens/pessoas/pessoa_detail_screen.dart';
 import '../screens/pessoas/pessoas_screen.dart';
+import '../screens/pequenos_grupos/small_group_detail_screen.dart';
+import '../screens/pequenos_grupos/small_groups_screen.dart';
 import '../screens/shell/app_shell.dart';
 import '../screens/usuarios/usuarios_screen.dart';
-import '../screens/voluntariado/lideres_screen.dart';
+import '../screens/voluntariado/relatorios_screen.dart';
 import '../screens/voluntariado/voluntarios_screen.dart';
 import '../utils/route_access.dart';
 import '../widgets/placeholder_screen.dart';
@@ -79,8 +90,14 @@ GoRouter createRouter(AuthProvider auth) {
             ),
           ),
           GoRoute(
-            path: '/voluntariado/lideres',
-            builder: (_, _) => const LideresScreen(),
+            path: '/pequenos-grupos',
+            builder: (_, _) => const SmallGroupsScreen(),
+          ),
+          GoRoute(
+            path: '/pequenos-grupos/:id',
+            builder: (_, state) => SmallGroupDetailScreen(
+              groupId: state.pathParameters['id']!,
+            ),
           ),
           GoRoute(
             path: '/voluntariado/ministerios',
@@ -93,12 +110,28 @@ GoRouter createRouter(AuthProvider auth) {
             ),
           ),
           GoRoute(
+            path: '/voluntariado/relatorios',
+            builder: (_, _) => const RelatoriosScreen(),
+          ),
+          GoRoute(
             path: '/voluntariado/voluntarios',
             builder: (_, _) => const VoluntariosScreen(),
           ),
           GoRoute(
             path: '/voluntariado/escalas/nova',
             builder: (_, state) => EscalaFormScreen(
+              competencia: state.uri.queryParameters['competencia'],
+            ),
+          ),
+          GoRoute(
+            path: '/voluntariado/escalas/:id/editar',
+            builder: (_, state) => EscalaEditScreen(
+              escalaId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/voluntariado/escalas/visao-mensal',
+            builder: (_, state) => VisaoMensalScreen(
               competencia: state.uri.queryParameters['competencia'],
             ),
           ),
@@ -111,6 +144,22 @@ GoRouter createRouter(AuthProvider auth) {
           GoRoute(
             path: '/voluntariado/escalas',
             builder: (_, _) => const EscalasScreen(),
+          ),
+          GoRoute(
+            path: '/cultos/culto/:id',
+            builder: (_, state) => CultoDetailScreen(
+              cultoId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/cultos/mes',
+            builder: (_, state) => CultosMesScreen(
+              competencia: state.uri.queryParameters['competencia'],
+            ),
+          ),
+          GoRoute(
+            path: '/cultos/categorias',
+            builder: (_, _) => const CategoriasCultoScreen(),
           ),
           GoRoute(
             path: '/cultos/conteudo',
@@ -131,8 +180,24 @@ GoRouter createRouter(AuthProvider auth) {
             builder: (_, _) => const MeuServicoScreen(),
           ),
           GoRoute(
+            path: '/meu-servico/responder',
+            builder: (_, _) => const ResponderEscalasScreen(),
+          ),
+          GoRoute(
             path: '/perfil/disponibilidade',
             builder: (_, _) => const DisponibilidadeScreen(),
+          ),
+          GoRoute(
+            path: '/aniversariantes/envios',
+            builder: (_, _) => const AniversarioEnviosScreen(),
+          ),
+          GoRoute(
+            path: '/aniversariantes',
+            builder: (_, _) => const AniversariantesScreen(),
+          ),
+          GoRoute(
+            path: '/configuracoes/mensagem-aniversario',
+            builder: (_, _) => const MensagemAniversarioScreen(),
           ),
           GoRoute(
             path: '/perfil',

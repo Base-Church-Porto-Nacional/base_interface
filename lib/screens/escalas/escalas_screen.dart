@@ -7,9 +7,11 @@ import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/escala_service.dart';
 import '../../services/ministerio_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
+import '../../widgets/filter_search.dart';
 
 class EscalasScreen extends StatefulWidget {
   const EscalasScreen({super.key});
@@ -73,7 +75,7 @@ class _EscalasScreenState extends State<EscalasScreen> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      value: month,
+                      initialValue: month,
                       decoration: const InputDecoration(labelText: 'Mês'),
                       items: [
                         for (var i = 1; i <= 12; i++)
@@ -85,7 +87,7 @@ class _EscalasScreenState extends State<EscalasScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      value: year,
+                      initialValue: year,
                       decoration: const InputDecoration(labelText: 'Ano'),
                       items: [
                         for (var y = 2025; y <= 2028; y++)
@@ -113,6 +115,29 @@ class _EscalasScreenState extends State<EscalasScreen> {
     _load();
   }
 
+  bool _podeEditar(AuthUser? user, Escala e) {
+    if (e.status == EscalaStatus.finalizada) return false;
+    return isPastorOuAdmin(user) ||
+        hasPermission(user?.roles ?? [], 'escalas:manage_own');
+  }
+
+  Future<void> _editar(Escala e) async {
+    if (e.status == EscalaStatus.sugerida) {
+      try {
+        await context.read<EscalaService>().updateStatus(e.id, EscalaStatus.editando);
+        _load();
+      } catch (err) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$err')));
+          return;
+        }
+      }
+    }
+    if (mounted) {
+      context.push('/voluntariado/escalas/${e.id}/editar');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final igrejaId = context.watch<IgrejaContext>().selectedIgrejaId;
@@ -135,48 +160,93 @@ class _EscalasScreenState extends State<EscalasScreen> {
       ),
     );
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Column(
       children: [
-        PageHeader(
-          title: 'Escalas',
-          description: 'Escalas são mensais. Competência em evidência na criação.',
-          actions: [
-            OutlinedButton(
-              onPressed: _pickCompetencia,
-              child: Text(formatCompetencia(_competencia)),
-            ),
-            if (canCreateAny)
-              FilledButton(
-                onPressed: () => context.push(
-                  '/voluntariado/escalas/nova?competencia=$_competencia',
-                ),
-                child: const Text('Nova escala'),
-              ),
+        const SectionTabs(
+          currentPath: '/voluntariado/escalas',
+          tabs: [
+            ('/voluntariado/voluntarios', 'Voluntários'),
+            ('/voluntariado/escalas', 'Escalas'),
+            ('/voluntariado/ministerios', 'Ministérios'),
+            ('/voluntariado/relatorios', 'Relatórios'),
           ],
         ),
-        if (_loading)
-          const LoadingView()
-        else if (_error != null)
-          ErrorView(message: _error!, onRetry: _load)
-        else if (_items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: Text('Nenhuma escala nesta competência.')),
-          )
-        else
-          ..._items.map(
-            (e) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: MobileListTile(
-                title: e.titulo,
-                subtitle:
-                    '${escalaTipoLabel(e.tipo)}${e.ministerioNome != null ? ' · ${e.ministerioNome}' : ''} · Supervisor: ${e.supervisorNome}',
-                trailing: StatusBadge(label: escalaTipoLabel(e.tipo).toUpperCase()),
-                onTap: () => context.push('/voluntariado/escalas/${e.id}'),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              PageHeader(
+                title: 'Escalas',
+                description: 'Escalas mensais por igreja. Sugeridas pela automação do dia 20.',
+                actions: [
+                  OutlinedButton(
+                    onPressed: _pickCompetencia,
+                    child: Text(formatCompetencia(_competencia)),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => context.push(
+                      '/voluntariado/escalas/visao-mensal?competencia=$_competencia',
+                    ),
+                    child: const Text('Visão mensal'),
+                  ),
+                  if (canCreateAny)
+                    FilledButton(
+                      onPressed: () => context.push(
+                        '/voluntariado/escalas/nova?competencia=$_competencia',
+                      ),
+                      child: const Text('Nova escala'),
+                    ),
+                ],
               ),
-            ),
+              if (_loading)
+                const LoadingView()
+              else if (_error != null)
+                ErrorView(message: _error!, onRetry: _load)
+              else if (_items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: Text('Nenhuma escala nesta competência.')),
+                )
+              else
+                ..._items.map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: MobileListTile(
+                      title: e.titulo,
+                      subtitle: [
+                        escalaTipoLabel(e.tipo),
+                        if (e.ministerioNome != null) e.ministerioNome!,
+                        formatCompetencia(e.competencia),
+                      ].join(' · '),
+                      trailing: StatusBadge(
+                        label: escalaStatusLabel(e.status).toUpperCase(),
+                        success: e.status == EscalaStatus.finalizada,
+                      ),
+                      actions: [
+                        if (e.geraAuto())
+                          const StatusBadge(
+                            label: 'RECOMENDADA PELA AUTOMAÇÃO',
+                            success: true,
+                          ),
+                        if (_podeEditar(user, e))
+                          TextButton.icon(
+                            onPressed: () => _editar(e),
+                            icon: const Icon(Icons.edit_outlined, size: 16),
+                            label: const Text('Editar'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.black,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                      ],
+                      onTap: () => context.push('/voluntariado/escalas/${e.id}'),
+                    ),
+                  ),
+                ),
+            ],
           ),
+        ),
       ],
     );
   }

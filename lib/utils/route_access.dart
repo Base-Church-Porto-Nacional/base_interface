@@ -36,6 +36,10 @@ bool canAccessPath(AuthUser? user, String path) {
     return hasPermission(user.roles, 'membros:view') || isPastorOuAdmin(user);
   }
 
+  if (path.startsWith('/pequenos-grupos')) {
+    return hasPermission(user.roles, 'small_groups:view') || isPastorOuAdmin(user);
+  }
+
   if (path == '/voluntariado/escalas/nova' || path.startsWith('/voluntariado/escalas/nova')) {
     return _podeAbrirCriacaoEscala(user);
   }
@@ -47,10 +51,18 @@ bool canAccessPath(AuthUser? user, String path) {
   if (path.startsWith('/voluntariado/ministerios')) {
     return hasPermission(user.roles, 'ministerios:view') || isPastorOuAdmin(user);
   }
+  if (path.startsWith('/voluntariado/relatorios')) {
+    return hasPermission(user.roles, 'relatorios:view') || isPastorOuAdmin(user);
+  }
   if (path.startsWith('/voluntariado')) {
     return hasPermission(user.roles, 'voluntarios:view') || isPastorOuAdmin(user);
   }
 
+  if (path.startsWith('/cultos/mes') ||
+      path.startsWith('/cultos/categorias') ||
+      path.startsWith('/cultos/culto/')) {
+    return hasPermission(user.roles, 'culto:view') || isPastorOuAdmin(user);
+  }
   if (path.startsWith('/cultos/conteudo')) {
     return hasPermission(user.roles, 'culto:view') || isPastorOuAdmin(user);
   }
@@ -65,6 +77,17 @@ bool canAccessPath(AuthUser? user, String path) {
     return hasPermission(user.roles, 'disponibilidade:*') ||
         hasPermission(user.roles, 'disponibilidade:view') ||
         isPastorOuAdmin(user);
+  }
+
+  if (path == '/aniversariantes/envios') {
+    return isPastorOuAdmin(user);
+  }
+  if (path.startsWith('/aniversariantes')) {
+    return podeVerAniversarios(user);
+  }
+
+  if (path.startsWith('/configuracoes')) {
+    return hasPermission(user.roles, 'mensagens:manage') || isPastorOuAdmin(user);
   }
 
   return false;
@@ -89,6 +112,11 @@ bool canCreateMinisterio(AuthUser? user) {
   return hasPermission(user.roles, 'ministerios:create') || isPastorOuAdmin(user);
 }
 
+bool canCreateBaseMinisterial(AuthUser? user) {
+  if (user == null) return false;
+  return isPastorOuAdmin(user);
+}
+
 bool canCreateUsuario(AuthUser? user) {
   if (user == null) return false;
   return hasPermission(user.roles, 'usuarios:create') || isPastorOuAdmin(user);
@@ -97,4 +125,9 @@ bool canCreateUsuario(AuthUser? user) {
 bool canCreateCronograma(AuthUser? user) {
   if (user == null) return false;
   return hasPermission(user.roles, 'cronograma:create') || isPastorOuAdmin(user);
+}
+
+bool canEditMensagemAniversario(AuthUser? user) {
+  if (user == null) return false;
+  return hasPermission(user.roles, 'mensagens:manage') || isPastorOuAdmin(user);
 }

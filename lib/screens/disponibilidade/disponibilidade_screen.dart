@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/disponibilidade_service.dart';
 import '../../utils/format.dart';
 import '../../widgets/common.dart';
+import '../../widgets/filter_search.dart';
 
 class DisponibilidadeScreen extends StatefulWidget {
   const DisponibilidadeScreen({super.key});
@@ -152,76 +153,108 @@ class _DisponibilidadeScreenState extends State<DisponibilidadeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const LoadingView();
-    if (_error != null) return ErrorView(message: _error!, onRetry: _load);
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Column(
       children: [
-        PageHeader(
-          title: 'Disponibilidade',
-          description:
-              'Marque os dias da semana em que não pode servir e as datas do mês (ex.: 01/02, 02/11).',
-          actions: [
-            FilledButton(
-              onPressed: _saving ? null : _saveSemanal,
-              child: Text(_saving ? 'Salvando…' : 'Salvar semana'),
-            ),
+        const SectionTabs(
+          currentPath: '/perfil/disponibilidade',
+          tabs: [
+            ('/meu-servico', 'Visão geral'),
+            ('/perfil/disponibilidade', 'Disponibilidade'),
           ],
         ),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                for (var i = 0; i < _semanal.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
+        Expanded(
+          child: _loading
+              ? const LoadingView()
+              : _error != null
+                  ? ErrorView(message: _error!, onRetry: _load)
+                  : ListView(
+                      padding: const EdgeInsets.all(16),
                       children: [
-                        SizedBox(
-                          width: 72,
-                          child: Text(
-                            diaSemanaLabel(_semanal[i].dia),
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 13),
+                        PageHeader(
+                          title: 'Disponibilidade',
+                          description:
+                              'Marque os dias da semana em que não pode servir e as datas do mês (ex.: 01/02, 02/11).',
+                          actions: [
+                            FilledButton(
+                              onPressed: _saving ? null : _saveSemanal,
+                              child: Text(_saving ? 'Salvando…' : 'Salvar semana'),
+                            ),
+                          ],
+                        ),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              children: [
+                                for (var i = 0; i < _semanal.length; i++)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 72,
+                                          child: Text(
+                                            diaSemanaLabel(_semanal[i].dia),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(fontSize: 13),
+                                          ),
+                                        ),
+                                        _chip(
+                                          'Manhã',
+                                          _semanal[i].manha,
+                                          (v) => _toggle(i, 'manha', v),
+                                        ),
+                                        _chip(
+                                          'Tarde',
+                                          _semanal[i].tarde,
+                                          (v) => _toggle(i, 'tarde', v),
+                                        ),
+                                        _chip(
+                                          'Noite',
+                                          _semanal[i].noite,
+                                          (v) => _toggle(i, 'noite', v),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
-                        _chip('Manhã', _semanal[i].manha, (v) => _toggle(i, 'manha', v)),
-                        _chip('Tarde', _semanal[i].tarde, (v) => _toggle(i, 'tarde', v)),
-                        _chip('Noite', _semanal[i].noite, (v) => _toggle(i, 'noite', v)),
+                        const SizedBox(height: 16),
+                        PageHeader(
+                          title: 'Datas do mês',
+                          actions: [
+                            FilledButton(
+                              onPressed: _addData,
+                              child: const Text('Adicionar data'),
+                            ),
+                          ],
+                        ),
+                        if (_datas.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Text('Nenhuma data específica bloqueada.'),
+                          )
+                        else
+                          ..._datas.map(
+                            (d) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: MobileListTile(
+                                title: formatDateShort(d.data),
+                                subtitle: d.motivo,
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.close, size: 18),
+                                  onPressed: () => _removeData(d),
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
-                  ),
-              ],
-            ),
-          ),
         ),
-        const SizedBox(height: 16),
-        PageHeader(
-          title: 'Datas do mês',
-          actions: [
-            FilledButton(onPressed: _addData, child: const Text('Adicionar data')),
-          ],
-        ),
-        if (_datas.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('Nenhuma data específica bloqueada.'),
-          )
-        else
-          ..._datas.map(
-            (d) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: MobileListTile(
-                title: formatDateShort(d.data),
-                subtitle: d.motivo,
-                trailing: IconButton(
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: () => _removeData(d),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }

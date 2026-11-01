@@ -42,4 +42,12 @@ class AuthProvider extends ChangeNotifier {
     user = null;
     notifyListeners();
   }
+
+  Future<void> expireSession() async {
+    if (user == null) return;
+    await _authService.logout();
+    user = null;
+    error = 'Sessão expirada. Faça login novamente.';
+    notifyListeners();
+  }
 }

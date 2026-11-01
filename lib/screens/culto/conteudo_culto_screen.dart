@@ -11,6 +11,7 @@ import '../../services/ministerio_service.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
+import '../../widgets/filter_search.dart';
 
 class ConteudoCultoScreen extends StatefulWidget {
   const ConteudoCultoScreen({super.key, this.eventoId});
@@ -133,72 +134,86 @@ class _ConteudoCultoScreenState extends State<ConteudoCultoScreen> {
         podeVerConteudoMidia(user, _ministerios);
     final readOnly = !canTexto && !canLouvor && midia;
 
-    if (_loading) return const LoadingView();
-    if (_error != null) return ErrorView(message: _error!, onRetry: _loadLista);
-
     CultoEvento? culto;
     for (final c in _cultos) {
       if (c.id == _eventoId) culto = c;
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Column(
       children: [
-        PageHeader(
-          title: 'Gestão de culto',
-          description: readOnly
-              ? 'Mídia: pregação e louvor em somente leitura, com cópia.'
-              : 'Pastor/pregador informa o texto. Música informa o louvor.',
-        ),
-        if (_cultos.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: Text('Nenhum culto para gerenciar.')),
-          )
-        else ...[
-          DropdownButtonFormField<String>(
-            value: _eventoId,
-            decoration: const InputDecoration(labelText: 'Culto'),
-            items: [
-              for (final c in _cultos)
-                DropdownMenuItem(
-                  value: c.id,
-                  child: Text('${c.titulo} · ${formatDate(c.data)}'),
-                ),
-            ],
-            onChanged: (v) {
-              if (v != null) _loadConteudo(v);
-            },
-          ),
-          if (culto != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Supervisor: ${culto.supervisorNome}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+        const SectionTabs(
+          currentPath: '/cultos/conteudo',
+          tabs: [
+            ('/cultos', 'Agenda'),
+            ('/cultos/conteudo', 'Gestão de culto'),
           ],
-          const SizedBox(height: 16),
-          _section(
-            title: 'Texto do culto (slides)',
-            controller: _texto,
-            editable: canTexto,
-            onSave: canTexto ? () => _save(texto: true, louvor: false) : null,
-            onCopy: () => _copy('Texto', _texto.text),
-          ),
-          const SizedBox(height: 12),
-          _section(
-            title: 'Louvor',
-            controller: _louvor,
-            editable: canLouvor,
-            onSave: canLouvor ? () => _save(texto: false, louvor: true) : null,
-            onCopy: () => _copy('Louvor', _louvor.text),
-          ),
-          if (_saving)
-            const Padding(
-              padding: EdgeInsets.only(top: 16),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-        ],
+        ),
+        Expanded(
+          child: _loading
+              ? const LoadingView()
+              : _error != null
+                  ? ErrorView(message: _error!, onRetry: _loadLista)
+                  : ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        PageHeader(
+                          title: 'Gestão de culto',
+                          description: readOnly
+                              ? 'Mídia: pregação e louvor em somente leitura, com cópia.'
+                              : 'Pastor/pregador informa o texto. Música informa o louvor.',
+                        ),
+                        if (_cultos.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Center(child: Text('Nenhum culto para gerenciar.')),
+                          )
+                        else ...[
+                          DropdownButtonFormField<String>(
+                            value: _eventoId,
+                            decoration: const InputDecoration(labelText: 'Culto'),
+                            items: [
+                              for (final c in _cultos)
+                                DropdownMenuItem(
+                                  value: c.id,
+                                  child: Text('${c.titulo} · ${formatDate(c.data)}'),
+                                ),
+                            ],
+                            onChanged: (v) {
+                              if (v != null) _loadConteudo(v);
+                            },
+                          ),
+                          if (culto != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'Supervisor: ${culto.supervisorNome}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                          const SizedBox(height: 16),
+                          _section(
+                            title: 'Texto do culto (slides)',
+                            controller: _texto,
+                            editable: canTexto,
+                            onSave: canTexto ? () => _save(texto: true, louvor: false) : null,
+                            onCopy: () => _copy('Texto', _texto.text),
+                          ),
+                          const SizedBox(height: 12),
+                          _section(
+                            title: 'Louvor',
+                            controller: _louvor,
+                            editable: canLouvor,
+                            onSave: canLouvor ? () => _save(texto: false, louvor: true) : null,
+                            onCopy: () => _copy('Louvor', _louvor.text),
+                          ),
+                          if (_saving)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 16),
+                              child: Center(child: CircularProgressIndicator()),
+                            ),
+                        ],
+                      ],
+                    ),
+        ),
       ],
     );
   }

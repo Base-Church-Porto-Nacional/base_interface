@@ -75,6 +75,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
         initialNome: editing?.nome ?? '',
         initialTelefone: editing?.telefone ?? '',
         initialEmail: editing?.email ?? '',
+        initialWhatsapp: editing?.whatsapp ?? '',
       ),
     );
     if (result == null || !mounted) return;
@@ -86,6 +87,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
           nome: result['nome']!,
           telefone: result['telefone'],
           email: result['email'],
+          whatsapp: result['whatsapp'],
           igrejaId: context.read<IgrejaContext>().selectedIgrejaId,
         );
         if (mounted) context.push('/membros/pessoa/${created.id}');
@@ -95,6 +97,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
           nome: result['nome']!,
           telefone: result['telefone'],
           email: result['email'],
+          whatsapp: result['whatsapp'],
         );
         _load();
       }
@@ -156,6 +159,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
                       subtitle: p.ministerios.isNotEmpty
                           ? p.ministerios.join(', ')
                           : pessoaStatusLabel(p.status),
+                      badges: p.papeisExibiveis.map(roleLabel).toList(),
                       trailing: StatusBadge(
                         label: pessoaStatusLabel(p.status),
                         success: p.status == PessoaStatus.ativo,

@@ -1,5 +1,3 @@
-import '../config/app_config.dart';
-import '../mocks/mock_data.dart';
 import '../models/models.dart';
 import 'api_client.dart';
 
@@ -9,23 +7,12 @@ class MinisterioService {
   final ApiClient _api;
 
   Future<List<Ministerio>> list({String? igrejaId}) async {
-    if (AppConfig.useMock) {
-      return mockDelay(ministeriosDaIgreja(igrejaId));
-    }
     final query = igrejaId == null ? null : {'igrejaId': igrejaId};
     final list = await _api.get('/ministerios', query: query) as List<dynamic>;
     return list.map((e) => _map(e as Map<String, dynamic>)).toList();
   }
 
   Future<Ministerio> getById(String id) async {
-    if (AppConfig.useMock) {
-      return mockDelay(
-        mockMinisterios.firstWhere(
-          (m) => m.id == id,
-          orElse: () => throw Exception('Ministério não encontrado.'),
-        ),
-      );
-    }
     final json = await _api.get('/ministerios/$id') as Map<String, dynamic>;
     return _map(json);
   }
@@ -42,24 +29,9 @@ class MinisterioService {
     String? coordenadorNome,
     String? anotacoes,
     String? ordem,
+    String? baseMinisterialId,
+    String? baseMinisterialNome,
   }) async {
-    if (AppConfig.useMock) {
-      final index = mockMinisterios.indexWhere((m) => m.id == id);
-      if (index < 0) throw Exception('Ministério não encontrado.');
-      mockMinisterios[index] = mockMinisterios[index].copyWith(
-        nome: nome,
-        descricao: descricao,
-        ativo: ativo,
-        tipo: tipo,
-        liderPessoaId: liderPessoaId,
-        liderNome: liderNome,
-        coordenadorPessoaId: coordenadorPessoaId,
-        coordenadorNome: coordenadorNome,
-        anotacoes: anotacoes,
-        ordem: ordem,
-      );
-      return mockDelay(mockMinisterios[index]);
-    }
     final json = await _api.put('/ministerios/$id', {
       'nome': nome,
       'descricao': descricao,
@@ -69,6 +41,7 @@ class MinisterioService {
       'coordenadorPessoaId': coordenadorPessoaId,
       'anotacoes': anotacoes,
       'ordem': ordem,
+      'baseMinisterialId': baseMinisterialId,
     }) as Map<String, dynamic>;
     return _map(json);
   }
@@ -83,35 +56,9 @@ class MinisterioService {
     String? liderNome,
     String? coordenadorPessoaId,
     String? coordenadorNome,
+    String? baseMinisterialId,
+    String? baseMinisterialNome,
   }) async {
-    if (AppConfig.useMock) {
-      final id = 'm${DateTime.now().millisecondsSinceEpoch}';
-      final created = Ministerio(
-        id: id,
-        nome: nome,
-        liderNome: liderNome ?? '—',
-        liderPessoaId: liderPessoaId,
-        coordenadorPessoaId: coordenadorPessoaId,
-        coordenadorNome: coordenadorNome,
-        totalVoluntarios: 0,
-        totalServicos: 1,
-        ativo: ativo,
-        descricao: descricao,
-        igrejaId: igrejaId,
-        tipo: tipo,
-        servicos: [
-          Servico(
-            id: 's${id}c',
-            ministerioId: id,
-            nome: 'Coordenador',
-            ficcao: true,
-            ativo: true,
-          ),
-        ],
-      );
-      mockMinisterios.insert(0, created);
-      return mockDelay(created);
-    }
     final json = await _api.post('/ministerios', {
       'nome': nome,
       'descricao': descricao,
@@ -120,6 +67,7 @@ class MinisterioService {
       'tipo': ministerioTipoToString(tipo),
       'liderPessoaId': liderPessoaId,
       'coordenadorPessoaId': coordenadorPessoaId,
+      'baseMinisterialId': baseMinisterialId,
     }) as Map<String, dynamic>;
     return _map(json);
   }
@@ -141,6 +89,8 @@ class MinisterioService {
       tipo: ministerioTipoFromString(json['tipo'] as String? ?? 'GERAL'),
       anotacoes: json['anotacoes'] as String?,
       ordem: json['ordem'] as String?,
+      baseMinisterialId: json['baseMinisterialId'] as String?,
+      baseMinisterialNome: json['baseMinisterialNome'] as String?,
       servicos: servicosJson
           .map(
             (e) => Servico(
