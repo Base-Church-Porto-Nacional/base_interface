@@ -1,6 +1,6 @@
 # Base Church — Gestão
 
-App Flutter (iOS, Android e Web) do sistema de gestão da Base Church. Consome a API Spring Boot (`base_api`) ou roda com dados mock locais.
+App Flutter (iOS, Android e Web) do sistema de gestão da Base Church. Consome a API Spring Boot (`base_api`).
 
 ## Stack
 
@@ -9,7 +9,7 @@ App Flutter (iOS, Android e Web) do sistema de gestão da Base Church. Consome a
 - `provider` — estado (auth + serviços)
 - `google_fonts` — DM Sans + Syne
 - `share_plus` — exportação (TXT, Markdown, Excel como texto)
-- Mock local ou API Spring Boot
+- API Spring Boot (`base_api`)
 
 ## Começar
 
@@ -18,18 +18,19 @@ flutter pub get
 flutter run
 ```
 
-Login mock: `admin` / `admin123`
+O app precisa da `base_api` rodando (veja abaixo).
 
 ## Configuração
 
-Em `lib/config/app_config.dart`:
+`API_URL` é definida em tempo de compilação via `--dart-define` (ver `lib/config/app_config.dart`). Padrão: `http://localhost:8080/api`. Em release ela é obrigatória.
 
-| Constante | Descrição | Padrão |
-|-----------|-----------|--------|
-| `useMock` | `true` = dados locais | `true` |
-| `apiUrl` | Base da API | `http://localhost:8080/api` |
+```bash
+# desenvolvimento contra a API local
+flutter run --dart-define=API_URL=http://localhost:8080/api
 
-Para API real, altere `useMock` para `false` e aponte `apiUrl` para o backend.
+# produção
+flutter build web --release --dart-define=API_URL=https://<servidor>/api
+```
 
 Com a API:
 
@@ -61,13 +62,13 @@ Login da API: `admin` / `admin123`
 
 ```text
 lib/
-  config/       # API URL, mock
+  config/       # API URL
   models/       # Entidades
   navigation/   # Menu e filtros
   providers/    # Auth
   router/       # go_router
   screens/      # Telas
-  services/     # HTTP + mocks
+  services/     # HTTP
   theme/        # Cores e ThemeData
   utils/        # Permissões, formatação
   widgets/      # Componentes reutilizáveis
@@ -91,4 +92,4 @@ flutter build ios
 | Pessoas | `GET/POST/PUT /pessoas` + export |
 | Pessoa → Histórico | `GET /pessoas/{id}/historico` |
 | Ministérios | `/ministerios` |
-| Exportação | share local (mock) ou `GET /export/{recurso}` |
+| Exportação | gerada no app e compartilhada via share |
