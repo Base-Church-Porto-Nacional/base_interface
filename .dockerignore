@@ -1,0 +1,12 @@
+.git/
+.github/
+.idea/
+.dart_tool/
+.vscode/
+build/
+android/
+ios/
+test/
+deploy/traefik/
+*.iml
+.DS_Store
