@@ -94,6 +94,8 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
     if (router == null || providers == null) {
       return MaterialApp(
         theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.system,
         home: const Scaffold(body: Center(child: CircularProgressIndicator())),
       );
     }
@@ -103,6 +105,8 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
       child: MaterialApp.router(
         title: 'Base Church',
         theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.system,
         routerConfig: router,
       ),
     );

@@ -60,7 +60,7 @@ Os SVGs são **monocromáticos** (um único `fill`) e pintados em runtime pelo t
 | `onInverse` | `#FFFFFF` | `#FFFFFF` | texto/selo sobre `inverse` |
 | `textPrimary` | `#0A0A0A` | `#FAFAFA` | texto principal |
 | `textSecondary` | `#525252` | `#A3A3A3` | apoio |
-| `textMuted` | `#737373` | `#8A8A8A` | placeholder, metadado (≥ 4.5:1) |
+| `textMuted` | `#6E6E6E` | `#8C8C8C` | placeholder, metadado (≥ 4.5:1) |
 | `border` | `#E5E5E5` | `#262626` | divisórias |
 | `borderStrong` | `#D4D4D4` | `#404040` | inputs, outlined |
 | `primary` / `onPrimary` | `#000000` / `#FFFFFF` | `#FFFFFF` / `#000000` | botão primário (inverte no escuro) |
@@ -71,7 +71,7 @@ Os SVGs são **monocromáticos** (um único `fill`) e pintados em runtime pelo t
 
 ### 4.2 Escala primitiva (referência)
 
-`black #000` · `n950 #0A0A0A` · `n900 #141414` · `n850 #1C1C1C` · `n800 #242424` · `n750 #262626` · `n700 #404040` · `n500 #737373` · `n450 #8A8A8A` · `n400 #A3A3A3` · `n300 #D4D4D4` · `n200 #E5E5E5` · `n100 #F5F5F5` · `n50 #FAFAFA` · `white #FFF`
+`black #000` · `n950 #0A0A0A` · `n900 #141414` · `n850 #1C1C1C` · `n800 #242424` · `n750 #262626` · `n700 #404040` · `n500 #6E6E6E` · `n450 #8C8C8C` · `n400 #A3A3A3` · `n300 #D4D4D4` · `n200 #E5E5E5` · `n100 #F5F5F5` · `n50 #FAFAFA` · `white #FFF`
 
 Semânticos apontam para primitivos; telas usam **apenas semânticos**.
 
