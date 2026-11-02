@@ -93,6 +93,7 @@ Semânticos apontam para primitivos; telas usam **apenas semânticos**.
 - **Archivo** (OFL) entra **embutida** em `assets/fonts/Archivo[wdth,wght].ttf` e é usada com `FontVariation('wdth', 125)` + `FontVariation('wght', …)`, porque o `google_fonts` não expõe o eixo de largura. Fallback se o eixo falhar no web: `Archivo Black`.
 - **DM Sans** continua via `google_fonts`. **Syne sai.**
 - Archivo nunca em texto corrido nem abaixo de 12px.
+- Abaixo de 600px `pageTitle` cai para 22px e `hero` para 28px. Títulos (`BrandHeadline`) nunca partem palavra: se a palavra mais longa não cabe, o tamanho reduz até ela caber, sem ficar abaixo de 12px renderizados.
 
 ## 6. Profundidade: elevação, luz e vidro
 
@@ -157,7 +158,7 @@ Avaliadas e não adotadas agora:
 - **Espaço (base 4):** 4 · 8 · 12 · 16 · 24 · 32 · 48. Margem lateral 16 (< 600px) e 24 (≥ 600px). Conteúdo máx. 1200px.
 - **Alvos de toque:** ≥ 48×48. Inputs e botões principais com 48 de altura.
 - **Movimento:** 150ms `easeOut` para hover/press; 250ms `easeOutCubic` para entrada de diálogo/sheet (fade + 8px de subida); anel do selo no login: 1 volta/60s linear. Card em hover sobe 2px e vai de `e1` → `e2`; botão pressionado desce 1px. Tudo desligado com `MediaQuery.disableAnimations`.
-- **Ícones:** Material Symbols *outlined*, 20–24px, `textSecondary`; preenchido só no item ativo do menu.
+- **Ícones:** Material Symbols *outlined*, 20–24px, `textSecondary`.
 
 ## 8. Componentes de marca
 
@@ -205,7 +206,8 @@ Tokens ficam em `lib/theme/`: `app_tokens.dart` (primitivos), `brand_colors.dart
 
 ### 9.3 Shell (app bar + drawer)
 - App bar: `GlassSurface` encostado no topo (raio 0) sobre a `AmbientBackground` do shell, `BrandMark` 24 + título `titleLarge`. O conteúdo **não** rola por baixo da barra (exigiria refazer o padding das 31 telas com `PageHeader`); o vidro fica visível pela luz ambiente.
-- Drawer: `SpotlightBlock` com `BrandSeal` 72 + nome da igreja selecionada + papel do usuário em `eyebrow`. Item ativo: pílula branca 8% com ícone preenchido.
+- Perfil e saída: avatar abre `/perfil` e "Sair" fica ao lado. Em telas < 400px ou com fonte > 130%, "Sair" vai para o menu do avatar (Perfil · Sair) para a barra caber sem cortar; o seletor de igreja encolhe até 88px e chega a 260px em telas ≥ 900px.
+- Drawer: `SpotlightBlock` com `BrandSeal` 72 + nome da igreja selecionada + papel do usuário em `eyebrow`. Itens são só texto (o menu não tem ícones); item ativo: pílula branca 8% com texto em peso 600, anunciado como selecionado.
 
 ### 9.4 Dashboard
 `hero` com saudação ("BOA NOITE, GUSTAVO"), `eyebrow` com a igreja selecionada, grade de `StatTile` (2 colunas mobile, 4 desktop) sobre `AmbientBackground`.
