@@ -48,6 +48,11 @@ abstract final class AppTheme {
     );
 
     final radius8 = BorderRadius.circular(8);
+    final focusRing = BorderSide(color: c.focus, width: 2, strokeAlign: 3);
+    WidgetStateProperty<BorderSide?> focusSide([BorderSide? rest]) =>
+        WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.focused) ? focusRing : rest,
+        );
     OutlineInputBorder inputBorder(Color color, [double width = 1]) =>
         OutlineInputBorder(
           borderRadius: radius8,
@@ -60,17 +65,26 @@ abstract final class AppTheme {
       extensions: [c],
       scaffoldBackgroundColor: c.background,
       canvasColor: c.surfaceOverlay,
-      focusColor: c.focus,
+      focusColor: c.textPrimary.withValues(alpha: 0.12),
       colorScheme: ColorScheme(
         brightness: brightness,
         primary: c.primary,
         onPrimary: c.onPrimary,
         secondary: c.primary,
         onSecondary: c.onPrimary,
+        tertiary: c.primary,
+        onTertiary: c.onPrimary,
         error: c.danger,
         onError: c.onPrimary,
         surface: c.surface,
         onSurface: c.textPrimary,
+        onSurfaceVariant: c.textSecondary,
+        surfaceContainerLowest: c.surface,
+        surfaceContainerLow: c.surface,
+        surfaceContainer: c.surfaceRaised,
+        surfaceContainerHigh: c.surfaceOverlay,
+        surfaceContainerHighest: c.surfaceOverlay,
+        surfaceTint: Colors.transparent,
         outline: c.borderStrong,
         outlineVariant: c.border,
       ),
@@ -131,23 +145,40 @@ abstract final class AppTheme {
           foregroundColor: c.onPrimary,
           shape: RoundedRectangleBorder(borderRadius: radius8),
           textStyle: textTheme.labelLarge,
-        ),
+        ).copyWith(side: focusSide()),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(64, 48),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           foregroundColor: c.textPrimary,
-          side: BorderSide(color: c.borderStrong),
           shape: RoundedRectangleBorder(borderRadius: radius8),
           textStyle: textTheme.labelLarge,
-        ),
+        ).copyWith(side: focusSide(BorderSide(color: c.borderStrong))),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           minimumSize: const Size(64, 48),
           foregroundColor: c.textSecondary,
+          shape: RoundedRectangleBorder(borderRadius: radius8),
           textStyle: textTheme.labelLarge,
+        ).copyWith(side: focusSide()),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? c.onPrimary
+              : c.textSecondary,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? c.primary
+              : c.surfaceRaised,
+        ),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? c.primary
+              : c.textMuted,
         ),
       ),
       dividerTheme: DividerThemeData(color: c.border, thickness: 1),

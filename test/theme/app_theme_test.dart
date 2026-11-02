@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../helpers/contrast.dart';
+
 T _quiet<T>(T Function() body) => runZoned(
   body,
   zoneSpecification: ZoneSpecification(print: (_, _, _, _) {}),
@@ -42,4 +44,56 @@ void main() {
     expect(AppTypography.hero.fontSize, 36);
     expect(AppTypography.eyebrow.letterSpacing, 1.2);
   });
+
+  for (final (nome, theme, c) in [
+    ('claro', light, BrandColors.light),
+    ('escuro', dark, BrandColors.dark),
+  ]) {
+    test('foco translucido mantem item legivel ($nome)', () {
+      expect(theme.focusColor.a, lessThan(0.2));
+      final fundo = Color.alphaBlend(theme.focusColor, theme.canvasColor);
+      expect(contrastRatio(c.textPrimary, fundo), greaterThanOrEqualTo(4.5));
+    });
+
+    test('switch desligado com contraste de 3:1 ($nome)', () {
+      final s = theme.switchTheme;
+      final thumb = s.thumbColor!.resolve({})!;
+      final track = s.trackColor!.resolve({})!;
+      final outline = s.trackOutlineColor!.resolve({})!;
+      expect(contrastRatio(thumb, track), greaterThanOrEqualTo(3));
+      expect(contrastRatio(outline, c.surface), greaterThanOrEqualTo(3));
+      final on = {WidgetState.selected};
+      expect(s.thumbColor!.resolve(on), c.onPrimary);
+      expect(s.trackColor!.resolve(on), c.primary);
+    });
+
+    test('superficies do ColorScheme vem da marca ($nome)', () {
+      final cs = theme.colorScheme;
+      final marca = {c.surface, c.surfaceRaised, c.surfaceOverlay};
+      for (final cor in [
+        cs.surfaceContainerLowest,
+        cs.surfaceContainerLow,
+        cs.surfaceContainer,
+        cs.surfaceContainerHigh,
+        cs.surfaceContainerHighest,
+      ]) {
+        expect(marca, contains(cor));
+      }
+      expect(cs.surfaceTint.a, 0);
+    });
+
+    test('botoes mostram anel de foco ($nome)', () {
+      const focado = {WidgetState.focused};
+      for (final style in [
+        theme.filledButtonTheme.style!,
+        theme.outlinedButtonTheme.style!,
+        theme.textButtonTheme.style!,
+      ]) {
+        final side = style.side!.resolve(focado)!;
+        expect(side.color, c.focus);
+        expect(side.width, 2);
+        expect(side.strokeOffset, greaterThan(side.width));
+      }
+    });
+  }
 }
