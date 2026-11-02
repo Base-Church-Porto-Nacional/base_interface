@@ -57,6 +57,18 @@ void main() {
       }
     });
 
+    test('acessoTokenEhPublico: com e sem sessão', () {
+      for (final user in [null, admin, membro]) {
+        expect(canAccessPath(user, '/acesso/abc123'), isTrue);
+      }
+    });
+
+    test('esqueciSenhaEhPublico: com e sem sessão', () {
+      for (final user in [null, admin, membro]) {
+        expect(canAccessPath(user, '/esqueci-senha'), isTrue);
+      }
+    });
+
     test('rota desconhecida é bloqueada para todos', () {
       for (final user in [admin, pastorFilial, lider, membro]) {
         expect(canAccessPath(user, '/rota-que-nao-existe'), isFalse);

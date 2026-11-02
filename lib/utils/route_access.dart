@@ -11,9 +11,15 @@ bool _acessaVoluntariado(AuthUser user) =>
     user.permissoes.ehVoluntario ||
     user.permissoes.tem(Capacidade.escalasGerir);
 
+/// Telas de acesso abertas com ou sem sessão: link de convite/redefinição e
+/// "esqueci minha senha".
+bool ehRotaPublica(String path) =>
+    path == '/esqueci-senha' || path.startsWith('/acesso/');
+
 /// Fail-closed: se a rota não for reconhecida, bloqueia. As decisões vêm das
 /// permissões calculadas pelo servidor (`GET /api/me`).
 bool canAccessPath(AuthUser? user, String path) {
+  if (ehRotaPublica(path)) return true;
   if (user == null) return false;
 
   if (path == '/login' || path == '/acesso-negado') return true;

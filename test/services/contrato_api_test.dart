@@ -1,4 +1,6 @@
 import 'package:base_church/models/models.dart';
+import 'package:base_church/services/acesso_service.dart';
+import 'package:base_church/services/api_client.dart';
 import 'package:base_church/services/auth_service.dart';
 import 'package:base_church/services/dashboard_service.dart';
 import 'package:base_church/services/disponibilidade_service.dart';
@@ -23,7 +25,6 @@ void main() {
           {
             'token': 'jwt',
             'usuarioId': 'u1',
-            'username': 'ana',
           },
         ),
         'GET /me': (r) {
@@ -60,11 +61,11 @@ void main() {
       });
 
       final user = await fake.run(
-        () => AuthService(api, prefs).login('ana', 'segredo'),
+        () => AuthService(api, prefs).login('ana@base.church', 'segredo'),
       );
 
       expect(fake.log, ['POST /auth/login', 'GET /me']);
-      expect(fake.corpo(0), {'username': 'ana', 'senha': 'segredo'});
+      expect(fake.corpo(0), {'identificador': 'ana@base.church', 'senha': 'segredo'});
       expect(fake.chamadas.first.headers.containsKey('Authorization'), isFalse);
       expect(user.id, 'u1');
       expect(user.nome, 'Ana Costa');
@@ -244,7 +245,8 @@ void main() {
   group('UsuarioService', () {
     final usuarioJson = {
       'id': 'u9',
-      'username': 'recepcao',
+      'email': 'r@base.church',
+      'telefone': '63999990000',
       'igrejaId': 'filial',
       'papeis': ['SECRETARIA', 'CONTADOR'],
     };
@@ -272,6 +274,16 @@ void main() {
         'senha': 's',
         'igrejaId': 'filial',
       });
+    });
+
+    test('mapeia e-mail e telefone da conta', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({'GET /usuarios': (_) => (200, [usuarioJson])});
+
+      final contas = await fake.run(() => UsuarioService(api).list());
+
+      expect(contas.single.email, 'r@base.church');
+      expect(contas.single.telefone, '63999990000');
     });
 
     test('alterarPapeis faz PUT /usuarios/{id}/papeis', () async {
@@ -492,6 +504,65 @@ void main() {
           isA<Exception>().having((e) => e.toString(), 'mensagem', contains('já está vinculada')),
         ),
       );
+    });
+  });
+
+  group('AcessoService', () {
+    test('info faz GET /auth/token/{token} sem Bearer', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'GET /auth/token/abc': (_) =>
+            (200, {'tipo': 'CONVITE', 'primeiroNome': 'Ana'}),
+      });
+
+      final info = await fake.run(() => AcessoService(api).info('abc'));
+
+      expect(fake.log, ['GET /auth/token/abc']);
+      expect(fake.chamadas.first.headers.containsKey('Authorization'), isFalse);
+      expect(info.tipo, 'CONVITE');
+      expect(info.primeiroNome, 'Ana');
+    });
+
+    test('410 não dispara sessão expirada', () async {
+      final api = await apiClientDeTeste();
+      var expirou = false;
+      api.onUnauthorized = () => expirou = true;
+      final fake = FakeApi({
+        'GET /auth/token/x': (_) => (410, {'message': 'expirou'}),
+      });
+
+      await expectLater(
+        fake.run(() => AcessoService(api).info('x')),
+        throwsA(isA<ApiException>().having((e) => e.status, 'status', 410)),
+      );
+      expect(expirou, isFalse);
+    });
+
+    test('definirSenha faz POST /auth/definir-senha sem Bearer', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /auth/definir-senha': (_) => (200, {'token': 'jwt'}),
+      });
+
+      final r = await fake.run(
+        () => AcessoService(api).definirSenha('abc', 'senha1234'),
+      );
+
+      expect(fake.log, ['POST /auth/definir-senha']);
+      expect(fake.corpo(0), {'token': 'abc', 'senha': 'senha1234'});
+      expect(fake.chamadas.first.headers.containsKey('Authorization'), isFalse);
+      expect(r['token'], 'jwt');
+    });
+
+    test('esqueciSenha faz POST /auth/esqueci-senha', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({'POST /auth/esqueci-senha': (_) => (204, null)});
+
+      await fake.run(() => AcessoService(api).esqueciSenha('ana@base.church'));
+
+      expect(fake.log, ['POST /auth/esqueci-senha']);
+      expect(fake.corpo(0), {'identificador': 'ana@base.church'});
+      expect(fake.chamadas.first.headers.containsKey('Authorization'), isFalse);
     });
   });
 }

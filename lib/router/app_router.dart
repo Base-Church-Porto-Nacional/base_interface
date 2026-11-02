@@ -2,6 +2,8 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
 import '../screens/acesso/acesso_negado_screen.dart';
+import '../screens/acesso/definir_senha_screen.dart';
+import '../screens/acesso/esqueci_senha_screen.dart';
 import '../screens/aniversarios/aniversariantes_screen.dart';
 import '../screens/aniversarios/aniversario_envios_screen.dart';
 import '../screens/cronograma/cronograma_screen.dart';
@@ -43,6 +45,7 @@ GoRouter createRouter(AuthProvider auth) {
     redirect: (context, state) {
       final loggedIn = auth.isAuthenticated;
       final path = state.uri.path;
+      if (ehRotaPublica(path)) return null;
       final onLogin = path == '/login';
       if (!loggedIn && !onLogin) return '/login';
       if (loggedIn && onLogin) return '/dashboard';
@@ -53,6 +56,15 @@ GoRouter createRouter(AuthProvider auth) {
       GoRoute(
         path: '/login',
         builder: (_, _) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/acesso/:token',
+        builder: (_, state) =>
+            DefinirSenhaScreen(token: state.pathParameters['token']!),
+      ),
+      GoRoute(
+        path: '/esqueci-senha',
+        builder: (_, _) => const EsqueciSenhaScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
@@ -76,7 +77,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 24),
                       TextField(
                         controller: _userController,
-                        decoration: const InputDecoration(labelText: 'Usuário'),
+                        decoration: const InputDecoration(labelText: 'E-mail ou telefone'),
+                        keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: 12),
@@ -109,6 +111,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               )
                             : const Text('Entrar'),
+                      ),
+                      TextButton(
+                        onPressed: () => context.go('/esqueci-senha'),
+                        child: const Text('Esqueci minha senha'),
                       ),
                     ],
                   ),

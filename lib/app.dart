@@ -8,6 +8,7 @@ import 'providers/igreja_context.dart';
 import 'router/app_router.dart';
 import 'services/aniversario_service.dart';
 import 'services/api_client.dart';
+import 'services/acesso_service.dart';
 import 'services/auth_service.dart';
 import 'services/base_ministerial_service.dart';
 import 'services/small_group_service.dart';
@@ -49,6 +50,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
     final prefs = await SharedPreferences.getInstance();
     final api = ApiClient(prefs);
     final authService = AuthService(api, prefs);
+    final acessoService = AcessoService(api);
     final pessoaService = PessoaService(api);
     final ministerioService = MinisterioService(api);
     final baseMinisterialService = BaseMinisterialService(api);
@@ -80,6 +82,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
         _services = AppServices(
           api: api,
           authService: authService,
+          acessoService: acessoService,
           pessoaService: pessoaService,
           ministerioService: ministerioService,
           baseMinisterialService: baseMinisterialService,
@@ -123,6 +126,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
         ChangeNotifierProvider.value(value: _authProvider!),
         ChangeNotifierProvider.value(value: _igrejaContext!),
         Provider.value(value: services.authService),
+        Provider.value(value: services.acessoService),
         Provider.value(value: services.pessoaService),
         Provider.value(value: services.ministerioService),
         Provider.value(value: services.baseMinisterialService),
@@ -153,6 +157,7 @@ class AppServices {
   AppServices({
     required this.api,
     required this.authService,
+    required this.acessoService,
     required this.pessoaService,
     required this.ministerioService,
     required this.baseMinisterialService,
@@ -173,6 +178,7 @@ class AppServices {
 
   final ApiClient api;
   final AuthService authService;
+  final AcessoService acessoService;
   final PessoaService pessoaService;
   final MinisterioService ministerioService;
   final BaseMinisterialService baseMinisterialService;

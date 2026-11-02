@@ -23,16 +23,22 @@ class AuthService {
     }
   }
 
-  Future<AuthUser> login(String username, String password) async {
-    if (username.isEmpty || password.isEmpty) {
-      throw Exception('Informe usuário e senha.');
+  Future<AuthUser> login(String identificador, String senha) async {
+    if (identificador.trim().isEmpty || senha.isEmpty) {
+      throw Exception('Informe e-mail ou telefone e a senha.');
     }
 
     final login = await _api.post('/auth/login', {
-      'username': username,
-      'senha': password,
+      'identificador': identificador.trim(),
+      'senha': senha,
     }, false) as Map<String, dynamic>;
 
+    return entrarComLogin(login);
+  }
+
+  /// Guarda a sessão a partir de um LoginResponse (login normal ou definir
+  /// senha) e carrega `GET /me`.
+  Future<AuthUser> entrarComLogin(Map<String, dynamic> login) async {
     await _api.setToken(login['token'] as String);
 
     Map<String, dynamic> me = login;
@@ -43,8 +49,8 @@ class AuthService {
     final user = _montarUsuario(
       me,
       id: (login['usuarioId'] ?? me['id']) as String,
-      nome: (me['nome'] ?? login['username']) as String,
-      email: (me['email'] ?? login['username']) as String,
+      nome: me['nome'] as String? ?? '',
+      email: me['email'] as String? ?? '',
     );
 
     await _prefs.setString(_userKey, jsonEncode(user.toJson()));

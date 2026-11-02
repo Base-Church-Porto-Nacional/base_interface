@@ -61,12 +61,19 @@ class AuthProvider extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<bool> login(String username, String password) async {
+  Future<bool> login(String identificador, String senha) =>
+      _entrar(() => _authService.login(identificador, senha));
+
+  /// Entra com o LoginResponse de `definir-senha` (mesmo caminho do login).
+  Future<bool> entrarComLogin(Map<String, dynamic> loginResponse) =>
+      _entrar(() => _authService.entrarComLogin(loginResponse));
+
+  Future<bool> _entrar(Future<AuthUser> Function() acao) async {
     isLoading = true;
     error = null;
     notifyListeners();
     try {
-      user = await _authService.login(username, password);
+      user = await acao();
       return true;
     } catch (e) {
       error = e.toString().replaceFirst('Exception: ', '');

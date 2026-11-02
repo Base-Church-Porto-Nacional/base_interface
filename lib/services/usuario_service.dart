@@ -65,8 +65,8 @@ class UsuarioService {
   UsuarioConta _map(Map<String, dynamic> json) {
     return UsuarioConta(
       id: json['id'] as String,
-      username: json['username'] as String? ?? json['email'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      telefone: json['telefone'] as String?,
       pessoaId: json['pessoaId'] as String?,
       pessoaNome: json['pessoaNome'] as String?,
       igrejaId: json['igrejaId'] as String? ?? '',

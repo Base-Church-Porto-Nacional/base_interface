@@ -514,8 +514,8 @@ class Ministerio {
 class UsuarioConta {
   const UsuarioConta({
     required this.id,
-    required this.username,
     required this.email,
+    this.telefone,
     required this.igrejaId,
     required this.igrejaNome,
     required this.papeis,
@@ -525,8 +525,8 @@ class UsuarioConta {
   });
 
   final String id;
-  final String username;
   final String email;
+  final String? telefone;
   final String? pessoaId;
   final String? pessoaNome;
   final String igrejaId;

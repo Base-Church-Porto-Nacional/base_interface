@@ -67,9 +67,9 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
             (u) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: MobileListTile(
-                title: u.pessoaNome ?? u.username,
+                title: u.pessoaNome ?? (u.email.isNotEmpty ? u.email : (u.telefone ?? '—')),
                 subtitle:
-                    '${u.username} · ${u.papeis.map(papelLabel).join(', ')} · ${u.igrejaNome}',
+                    '${[u.email, u.telefone].where((c) => c != null && c.isNotEmpty).join(' · ')} · ${u.papeis.map(papelLabel).join(', ')} · ${u.igrejaNome}',
                 trailing: StatusBadge(label: u.ativo ? 'ATIVO' : 'INATIVO', success: u.ativo),
                 onTap: u.pessoaId == null
                     ? null
