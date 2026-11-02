@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
+import '../theme/brand_colors.dart';
 
 class PageHeader extends StatelessWidget {
   const PageHeader({
     super.key,
+    this.eyebrow,
     this.title,
     this.description,
     this.actions = const [],
   });
 
+  final String? eyebrow;
   final String? title;
   final String? description;
   final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
-    if (title == null && description == null && actions.isEmpty) {
+    if (eyebrow == null &&
+        title == null &&
+        description == null &&
+        actions.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -25,8 +32,24 @@ class PageHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (eyebrow != null) ...[
+            Text(
+              eyebrow!.toUpperCase(),
+              style: AppTypography.eyebrow.copyWith(
+                color: context.brand.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
           if (title != null)
-            Text(title!, style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              title!.toUpperCase(),
+              style: AppTypography.pageTitle.copyWith(
+                color: context.brand.textPrimary,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           if (description != null) ...[
             const SizedBox(height: 4),
             Text(description!, style: Theme.of(context).textTheme.bodySmall),
