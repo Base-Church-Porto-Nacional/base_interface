@@ -1,4 +1,3 @@
-enum Role { admin, pastor, lider, voluntario, membro, contador }
 
 enum PessoaStatus { ativo, inativo }
 
@@ -254,13 +253,13 @@ class Pessoa {
   final List<JornadaEtapa> jornada;
   final String igrejaId;
   final String? usuarioId;
-  final List<Role> papeis;
+  final List<String> papeis;
 
   bool get temUsuario => usuarioId != null && usuarioId!.isNotEmpty;
 
   bool get temWhatsapp => whatsapp.trim().isNotEmpty;
 
-  List<Role> get papeisExibiveis =>
+  List<String> get papeisExibiveis =>
       papeis.isNotEmpty ? papeis : _papeisDeTipos(tipos);
 
   Pessoa copyWith({
@@ -292,18 +291,18 @@ class Pessoa {
   }
 }
 
-List<Role> _papeisDeTipos(List<PessoaTipo> tipos) {
-  final papeis = <Role>[];
+List<String> _papeisDeTipos(List<PessoaTipo> tipos) {
+  final papeis = <String>[];
   for (final t in tipos) {
     switch (t) {
       case PessoaTipo.membro:
-        papeis.add(Role.membro);
+        papeis.add('MEMBRO');
       case PessoaTipo.voluntario:
-        papeis.add(Role.voluntario);
+        papeis.add('VOLUNTARIO');
       case PessoaTipo.lider:
-        papeis.add(Role.lider);
+        papeis.add('LIDER');
       case PessoaTipo.pastor:
-        papeis.add(Role.pastor);
+        papeis.add('PASTOR');
       case PessoaTipo.visitante:
         break;
     }
@@ -311,24 +310,31 @@ List<Role> _papeisDeTipos(List<PessoaTipo> tipos) {
   return papeis;
 }
 
-List<PessoaTipo> pessoaTiposDePapeis(List<Role> papeis) {
+/// Papéis são strings do servidor (sistema ou customizados da igreja).
+/// Só LIDER/VOLUNTARIO/MEMBRO/PASTOR viram "tipo" de pessoa para filtros.
+List<PessoaTipo> pessoaTiposDePapeis(List<String> papeis) {
   final tipos = <PessoaTipo>[];
   for (final r in papeis) {
-    switch (r) {
-      case Role.pastor:
+    switch (r.toUpperCase()) {
+      case 'PASTOR':
         tipos.add(PessoaTipo.pastor);
-      case Role.lider:
+      case 'LIDER':
         tipos.add(PessoaTipo.lider);
-      case Role.voluntario:
+      case 'VOLUNTARIO':
         tipos.add(PessoaTipo.voluntario);
-      case Role.membro:
+      case 'MEMBRO':
         tipos.add(PessoaTipo.membro);
-      case Role.admin:
-      case Role.contador:
-        break;
     }
   }
   return tipos.isNotEmpty ? tipos : <PessoaTipo>[PessoaTipo.visitante];
+}
+
+/// Resultado de `GET /api/pessoas/busca`.
+class PessoaResumo {
+  const PessoaResumo({required this.id, required this.nome});
+
+  final String id;
+  final String nome;
 }
 
 class PessoaHistorico {
@@ -524,7 +530,7 @@ class UsuarioConta {
   final String? pessoaNome;
   final String igrejaId;
   final String igrejaNome;
-  final List<Role> papeis;
+  final List<String> papeis;
   final bool ativo;
 }
 
@@ -1521,40 +1527,6 @@ class PageResponse<T> {
   final int size;
 }
 
-Role _roleFromString(String value) {
-  switch (value.toUpperCase()) {
-    case 'ADMIN':
-      return Role.admin;
-    case 'PASTOR':
-      return Role.pastor;
-    case 'LIDER':
-      return Role.lider;
-    case 'VOLUNTARIO':
-      return Role.voluntario;
-    case 'CONTADOR':
-      return Role.contador;
-    default:
-      return Role.membro;
-  }
-}
-
-String _roleToString(Role role) {
-  switch (role) {
-    case Role.admin:
-      return 'ADMIN';
-    case Role.pastor:
-      return 'PASTOR';
-    case Role.lider:
-      return 'LIDER';
-    case Role.voluntario:
-      return 'VOLUNTARIO';
-    case Role.membro:
-      return 'MEMBRO';
-    case Role.contador:
-      return 'CONTADOR';
-  }
-}
-
 IgrejaTipo _igrejaTipoFromString(String value) {
   return value.toUpperCase() == 'MATRIZ'
       ? IgrejaTipo.matriz
@@ -1738,26 +1710,28 @@ CultoStatus cultoStatusFromApi(String value) {
   }
 }
 
-String roleLabel(Role role) {
-  switch (role) {
-    case Role.admin:
+String papelLabel(String papel) {
+  switch (papel.toUpperCase()) {
+    case 'ADMIN':
       return 'Admin';
-    case Role.pastor:
+    case 'PASTOR':
       return 'Pastor';
-    case Role.lider:
+    case 'SECRETARIA':
+      return 'Secretaria';
+    case 'LIDER':
       return 'Líder';
-    case Role.voluntario:
+    case 'VOLUNTARIO':
       return 'Voluntário';
-    case Role.membro:
+    case 'MEMBRO':
       return 'Membro';
-    case Role.contador:
+    case 'CONTADOR':
       return 'Contador';
+    default:
+      if (papel.isEmpty) return papel;
+      final lower = papel.toLowerCase();
+      return lower[0].toUpperCase() + lower.substring(1);
   }
 }
-
-Role roleFromString(String value) => _roleFromString(value);
-
-String roleToString(Role role) => _roleToString(role);
 
 MinisterioTipo ministerioTipoFromString(String value) {
   switch (value.toUpperCase()) {

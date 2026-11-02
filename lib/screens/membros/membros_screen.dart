@@ -8,7 +8,9 @@ import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/export_service.dart';
+import '../../services/ministerio_service.dart';
 import '../../services/pessoa_service.dart';
+import '../../utils/permissions.dart';
 import '../../utils/route_access.dart';
 import '../../widgets/common.dart';
 import '../../widgets/export_menu.dart';
@@ -67,7 +69,17 @@ class _MembrosScreenState extends State<MembrosScreen> {
   }
 
   Future<void> _openForm([Pessoa? editing]) async {
-    if (!canMutatePessoas(context.read<AuthProvider>().user)) return;
+    final user = context.read<AuthProvider>().user;
+    if (!canCadastrarPessoas(user)) return;
+    // Líder (sem gestão) só cadastra vinculando a um serviço que lidera.
+    List<Servico>? servicos;
+    if (editing == null && !isGestao(user)) {
+      final ministerios = await context.read<MinisterioService>().list(
+            igrejaId: context.read<IgrejaContext>().selectedIgrejaId,
+          );
+      servicos = servicosLiderados(user, ministerios);
+    }
+    if (!mounted) return;
     final result = await showDialog<Map<String, String>>(
       context: context,
       builder: (_) => PessoaFormDialog(
@@ -76,6 +88,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
         initialTelefone: editing?.telefone ?? '',
         initialEmail: editing?.email ?? '',
         initialWhatsapp: editing?.whatsapp ?? '',
+        servicos: servicos,
       ),
     );
     if (result == null || !mounted) return;
@@ -89,6 +102,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
           email: result['email'],
           whatsapp: result['whatsapp'],
           igrejaId: context.read<IgrejaContext>().selectedIgrejaId,
+          servicoId: result['servicoId'],
         );
         if (mounted) context.push('/membros/pessoa/${created.id}');
       } else {
@@ -110,7 +124,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final podeMutar = canMutatePessoas(context.watch<AuthProvider>().user);
+    final podeMutar = canCadastrarPessoas(context.watch<AuthProvider>().user);
     return Column(
       children: [
         SectionTabs(
@@ -159,7 +173,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
                       subtitle: p.ministerios.isNotEmpty
                           ? p.ministerios.join(', ')
                           : pessoaStatusLabel(p.status),
-                      badges: p.papeisExibiveis.map(roleLabel).toList(),
+                      badges: p.papeisExibiveis.map(papelLabel).toList(),
                       trailing: StatusBadge(
                         label: pessoaStatusLabel(p.status),
                         success: p.status == PessoaStatus.ativo,

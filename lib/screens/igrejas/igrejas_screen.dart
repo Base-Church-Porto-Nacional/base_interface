@@ -48,6 +48,7 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
   Future<void> _novaFilial() async {
     final user = context.read<AuthProvider>().user;
     if (user == null || !user.isMatriz) return;
+    if (!user.permissoes.tem(Capacidade.filialCriar)) return;
     Igreja? matriz;
     for (final i in _items) {
       if (i.isMatriz) matriz = i;
@@ -89,7 +90,8 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
           title: 'Gestão Igreja',
           description: 'Matriz e filiais. Cada igreja tem um pastor e um admin.',
           actions: [
-            if (context.watch<AuthProvider>().user?.isMatriz == true)
+            if (context.watch<AuthProvider>().user case final u?
+                when u.isMatriz && u.permissoes.tem(Capacidade.filialCriar))
               FilledButton(onPressed: _novaFilial, child: const Text('Nova filial')),
           ],
         ),

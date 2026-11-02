@@ -153,8 +153,8 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
 
   List<Ministerio> get _ministeriosPermitidos {
     final user = context.read<AuthProvider>().user;
-    if (isPastorOuAdmin(user) ||
-        isSupervisorNoMes(
+    if (user?.permissoes.tem(Capacidade.escalasGerir) == true ||
+        podeAtuarComoSupervisor(
           user: user,
           escalas: _escalas,
           competencia: _competencia,

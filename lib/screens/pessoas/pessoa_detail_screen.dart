@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/igreja_context.dart';
 import '../../services/pessoa_service.dart';
 import '../../services/usuario_service.dart';
 import '../../theme/app_colors.dart';
@@ -63,13 +62,11 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
     final p = _pessoa;
     if (p == null || p.temUsuario) return;
     if (!canCreateUsuario(context.read<AuthProvider>().user)) return;
-    final igreja = context.read<IgrejaContext>().selected;
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (_) => UsuarioFormDialog(
         pessoaNome: p.nome,
         email: p.email,
-        voluntario: p.tipos.contains(PessoaTipo.voluntario),
       ),
     );
     if (result == null || !mounted) return;
@@ -79,10 +76,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
             username: result['username'] as String,
             email: result['email'] as String,
             senha: result['senha'] as String,
-            papeis: (result['papeis'] as List<Role>),
             igrejaId: p.igrejaId,
-            igrejaNome: igreja?.nome ?? '',
-            pessoaNome: p.nome,
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -97,10 +91,51 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
     }
   }
 
+  Future<void> _gerirPapeis() async {
+    final p = _pessoa;
+    final auth = context.read<AuthProvider>();
+    final user = auth.user;
+    final usuarioId = p?.usuarioId;
+    if (p == null || usuarioId == null || user == null) return;
+    final podeGestao = user.permissoes.tem(Capacidade.papeisGestaoAtribuir);
+    final podeCustom = user.permissoes.tem(Capacidade.papeisCustomGerir);
+    if (!podeGestao && !podeCustom) return;
+    final usuarioService = context.read<UsuarioService>();
+    try {
+      final customizados =
+          podeCustom ? await usuarioService.listarPapeisCustomizados(p.igrejaId) : <String>[];
+      if (!mounted) return;
+      final novos = await showDialog<List<String>>(
+        context: context,
+        builder: (_) => PapeisDialog(
+          pessoaNome: p.nome,
+          atuais: p.papeis,
+          customizados: customizados,
+          podeGestao: podeGestao,
+          podeCustom: podeCustom,
+        ),
+      );
+      if (novos == null || !mounted) return;
+      await usuarioService.alterarPapeis(usuarioId, novos);
+      // Mudou os papéis da própria conta: o servidor invalida o token e
+      // recalcula as permissões; recarregarMe() reflete isso no app.
+      if (usuarioId == user.id) await auth.recarregarMe();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Papéis atualizados.')),
+      );
+      _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
   Future<void> _editPessoa() async {
     final p = _pessoa;
     if (p == null) return;
-    if (!canMutatePessoas(context.read<AuthProvider>().user)) return;
+    if (!canCadastrarPessoas(context.read<AuthProvider>().user)) return;
 
     final result = await showDialog<Map<String, String>>(
       context: context,
@@ -168,10 +203,14 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
   }
 
   Widget _buildHero(Pessoa p) {
-    final papeis = p.papeisExibiveis.map(roleLabel).join(' · ');
+    final papeis = p.papeisExibiveis.map(papelLabel).join(' · ');
     final user = context.watch<AuthProvider>().user;
-    final podeEditar = canMutatePessoas(user);
+    final podeEditar = canCadastrarPessoas(user);
     final podeCriarConta = canCreateUsuario(user) && !p.temUsuario;
+    final podePapeis = p.temUsuario &&
+        user != null &&
+        (user.permissoes.tem(Capacidade.papeisGestaoAtribuir) ||
+            user.permissoes.tem(Capacidade.papeisCustomGerir));
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +243,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
           ),
         ),
         const SizedBox(width: 12),
-        if (podeEditar || podeCriarConta)
+        if (podeEditar || podeCriarConta || podePapeis)
           Column(
             children: [
               if (podeEditar)
@@ -218,6 +257,19 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
                   ),
                   child: const Text('Editar'),
                 ),
+              if (podePapeis) ...[
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: _gerirPapeis,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text('Papéis'),
+                ),
+              ],
               if (podeCriarConta) ...[
                 const SizedBox(height: 8),
                 OutlinedButton(

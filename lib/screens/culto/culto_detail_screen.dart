@@ -191,7 +191,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
     final user = context.read<AuthProvider>().user;
     final canTexto = podeEditarTextoCulto(user, pregadorPessoaId: _pregadorId);
     final canLouvor = podeEditarLouvor(user, _ministerios);
-    final canManage = isPastorOuAdmin(user);
+    final canManage = isGestao(user);
 
     final temaAtual = _conteudo.tema ?? culto.tema ?? '';
     var mudou = false;
@@ -390,7 +390,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
     }
     final culto = _culto!;
     final user = context.watch<AuthProvider>().user;
-    final canManage = isPastorOuAdmin(user);
+    final canManage = isGestao(user);
     final canTexto = podeEditarTextoCulto(user, pregadorPessoaId: _pregadorId);
     final canLouvor = podeEditarLouvor(user, _ministerios);
 

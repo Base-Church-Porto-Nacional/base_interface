@@ -17,7 +17,7 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final igrejaCtx = context.watch<IgrejaContext>();
-    final navItems = visibleNavItems(auth.user?.roles ?? []);
+    final navItems = visibleNavItems(auth.user);
     final location = GoRouterState.of(context).uri.path;
     final section = _findSection(location);
     final canSwitch = igrejaCtx.canSwitch(auth.user);

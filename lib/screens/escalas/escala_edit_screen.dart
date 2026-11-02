@@ -72,8 +72,7 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
   bool _podeEditar(AuthUser? user) {
     final e = _escala;
     if (e == null || e.status == EscalaStatus.finalizada) return false;
-    return isPastorOuAdmin(user) ||
-        hasPermission(user?.roles ?? [], 'escalas:manage_own');
+    return podeGerirEscalas(user);
   }
 
   List<String> get _datasDisponiveis {

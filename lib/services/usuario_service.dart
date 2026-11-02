@@ -17,40 +17,34 @@ class UsuarioService {
     required String username,
     required String email,
     required String senha,
-    required List<Role> papeis,
     required String igrejaId,
-    required String igrejaNome,
-    String? pessoaNome,
   }) async {
-    if (papeis.contains(Role.contador)) await _garantirPapelContador(igrejaId);
     final json = await _api.post('/pessoas/$pessoaId/usuario', {
       'username': username,
       'email': email,
       'senha': senha,
-      'papeis': papeis.map(roleToString).toList(),
       'igrejaId': igrejaId,
     }) as Map<String, dynamic>;
     return _map(json);
   }
 
-  Future<void> _garantirPapelContador(String igrejaId) async {
-    final papeis = await _api.get('/papeis', query: {'igrejaId': igrejaId}) as List<dynamic>;
-    Map<String, dynamic>? contador;
-    for (final e in papeis) {
-      final papel = e as Map<String, dynamic>;
-      if ((papel['nome'] as String?)?.toUpperCase() == 'CONTADOR') contador = papel;
-    }
-    final body = {
-      'nome': 'CONTADOR',
-      'descricao': contador?['descricao'] ?? 'Recepção — lança a contagem do culto',
-      'podeLancarContagem': true,
-      'igrejaId': igrejaId,
-    };
-    if (contador == null) {
-      await _api.post('/papeis', body);
-    } else if (contador['podeLancarContagem'] != true) {
-      await _api.put('/papeis/${contador['id']}', body);
-    }
+  /// Substitui os papéis do usuário. PASTOR/SECRETARIA exigem
+  /// `papeisGestaoAtribuir`; papéis customizados exigem `papeisCustomGerir`.
+  Future<UsuarioConta> alterarPapeis(String usuarioId, List<String> papeis) async {
+    final json = await _api.put('/usuarios/$usuarioId/papeis', {
+      'papeis': papeis,
+    }) as Map<String, dynamic>;
+    return _map(json);
+  }
+
+  /// Nomes dos papéis customizados (não-sistema) da igreja.
+  Future<List<String>> listarPapeisCustomizados(String igrejaId) async {
+    final list = await _api.get('/papeis', query: {'igrejaId': igrejaId})
+        as List<dynamic>;
+    return [
+      for (final e in list)
+        if ((e as Map<String, dynamic>)['sistema'] != true) e['nome'] as String,
+    ];
   }
 
   UsuarioConta _map(Map<String, dynamic> json) {
@@ -63,7 +57,7 @@ class UsuarioService {
       igrejaId: json['igrejaId'] as String? ?? '',
       igrejaNome: json['igrejaNome'] as String? ?? '',
       papeis: (json['papeis'] as List<dynamic>? ?? [])
-          .map((p) => roleFromString(p as String))
+          .map((p) => p as String)
           .toList(),
       ativo: json['ativo'] as bool? ?? true,
     );

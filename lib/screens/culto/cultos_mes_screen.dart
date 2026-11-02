@@ -103,7 +103,7 @@ class _CultosMesScreenState extends State<CultosMesScreen> {
       });
     }
     final user = context.watch<AuthProvider>().user;
-    final canManage = isPastorOuAdmin(user);
+    final canManage = isGestao(user);
     final sugereGerar =
         canManage && _cultos.isEmpty && _competencia == _proximoMes;
 

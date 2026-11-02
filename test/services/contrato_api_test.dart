@@ -237,75 +237,119 @@ void main() {
     });
   });
 
-  group('UsuarioService.createFromPessoa com CONTADOR', () {
-    Future<void> criar(FakeApi fake) async {
+  group('UsuarioService', () {
+    final usuarioJson = {
+      'id': 'u9',
+      'username': 'recepcao',
+      'igrejaId': 'filial',
+      'papeis': ['SECRETARIA', 'CONTADOR'],
+    };
+
+    test('createFromPessoa não envia papéis nem consulta /papeis', () async {
       final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /pessoas/p9/usuario': (_) => (201, usuarioJson),
+      });
+
       await fake.run(
         () => UsuarioService(api).createFromPessoa(
           pessoaId: 'p9',
           username: 'recepcao',
           email: 'r@base.church',
           senha: 's',
-          papeis: const [Role.contador],
           igrejaId: 'filial',
-          igrejaNome: 'Zona Sul',
         ),
       );
-    }
 
-    final usuarioCriado = {
-      'id': 'u9',
-      'username': 'recepcao',
-      'igrejaId': 'filial',
-      'papeis': ['CONTADOR'],
-    };
+      expect(fake.log, ['POST /pessoas/p9/usuario']);
+      expect(fake.corpo(0), {
+        'username': 'recepcao',
+        'email': 'r@base.church',
+        'senha': 's',
+        'igrejaId': 'filial',
+      });
+    });
 
-    test('cria o papel na igreja da pessoa antes do usuário', () async {
+    test('alterarPapeis faz PUT /usuarios/{id}/papeis', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({'PUT /usuarios/u9/papeis': (_) => (200, usuarioJson)});
+
+      final conta = await fake.run(
+        () => UsuarioService(api).alterarPapeis('u9', ['SECRETARIA', 'CONTADOR']),
+      );
+
+      expect(fake.log, ['PUT /usuarios/u9/papeis']);
+      expect(fake.corpo(0), {
+        'papeis': ['SECRETARIA', 'CONTADOR'],
+      });
+      expect(conta.papeis, ['SECRETARIA', 'CONTADOR']);
+    });
+
+    test('listarPapeisCustomizados filtra os de sistema', () async {
+      final api = await apiClientDeTeste();
       final fake = FakeApi({
         'GET /papeis': (r) {
-          expect(r.url.queryParameters['igrejaId'], 'filial');
+          expect(r.url.queryParameters['igrejaId'], 'i1');
           return (
             200,
             [
-              {'id': 'sys', 'nome': 'MEMBRO'},
+              {'id': 'a', 'nome': 'PASTOR', 'sistema': true},
+              {'id': 'b', 'nome': 'CONTADOR', 'sistema': false},
             ],
           );
         },
-        'POST /papeis': (_) => (201, {'id': 'pc'}),
-        'POST /pessoas/p9/usuario': (_) => (201, usuarioCriado),
       });
 
-      await criar(fake);
+      final papeis = await fake.run(
+        () => UsuarioService(api).listarPapeisCustomizados('i1'),
+      );
 
-      expect(fake.log, [
-        'GET /papeis',
-        'POST /papeis',
-        'POST /pessoas/p9/usuario',
-      ]);
-      expect(fake.corpo(1), {
-        'nome': 'CONTADOR',
-        'descricao': 'Recepção — lança a contagem do culto',
-        'podeLancarContagem': true,
-        'igrejaId': 'filial',
+      expect(papeis, ['CONTADOR']);
+    });
+  });
+
+  group('PessoaService', () {
+    test('buscarPorNome faz GET /pessoas/busca?nome=', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'GET /pessoas/busca': (r) {
+          expect(r.url.queryParameters['nome'], 'jo');
+          return (
+            200,
+            [
+              {'id': 'p1', 'nome': 'João'},
+            ],
+          );
+        },
       });
-      expect((fake.corpo(2) as Map)['papeis'], ['CONTADOR']);
-      expect((fake.corpo(2) as Map)['igrejaId'], 'filial');
+
+      final r = await fake.run(() => PessoaService(api).buscarPorNome('jo'));
+
+      expect(r.map((e) => (e.id, e.nome)), [('p1', 'João')]);
     });
 
-    test('reaproveita o papel que já existe na igreja', () async {
+    test('create envia servicoId quando informado', () async {
+      final api = await apiClientDeTeste();
       final fake = FakeApi({
-        'GET /papeis': (_) => (
-          200,
-          [
-            {'id': 'pc', 'nome': 'CONTADOR', 'podeLancarContagem': true},
-          ],
-        ),
-        'POST /pessoas/p9/usuario': (_) => (201, usuarioCriado),
+        'POST /pessoas': (_) => (201, {'id': 'p2', 'nome': 'Ana'}),
       });
 
-      await criar(fake);
+      await fake.run(
+        () => PessoaService(api).create(nome: 'Ana', servicoId: 's1'),
+      );
 
-      expect(fake.log, ['GET /papeis', 'POST /pessoas/p9/usuario']);
+      expect(fake.corpo(0), {'nome': 'Ana', 'servicoId': 's1'});
+    });
+
+    test('create sem servicoId não envia o campo', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /pessoas': (_) => (201, {'id': 'p2', 'nome': 'Ana'}),
+      });
+
+      await fake.run(() => PessoaService(api).create(nome: 'Ana'));
+
+      expect((fake.corpo(0) as Map).containsKey('servicoId'), isFalse);
     });
   });
 }

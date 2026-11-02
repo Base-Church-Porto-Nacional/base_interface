@@ -49,8 +49,7 @@ class _EscalaDetailScreenState extends State<EscalaDetailScreen> {
   bool _podeEditar(AuthUser? user) {
     final e = _escala;
     if (e == null || e.status == EscalaStatus.finalizada) return false;
-    return isPastorOuAdmin(user) ||
-        hasPermission(user?.roles ?? [], 'escalas:manage_own');
+    return podeGerirEscalas(user);
   }
 
   Future<void> _confirmarTransicao(EscalaStatus para, String titulo, String corpo) async {

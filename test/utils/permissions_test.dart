@@ -406,7 +406,7 @@ void main() {
     });
   });
 
-  group('isSupervisorNoMes', () {
+  group('podeAtuarComoSupervisor', () {
     final escalaSupervisor = Escala(
       id: 'e-sup-ago',
       titulo: 'Supervisores — agosto',
@@ -427,7 +427,7 @@ void main() {
 
     test('pastor e admin são supervisores sem escala cadastrada', () {
       expect(
-        isSupervisorNoMes(
+        podeAtuarComoSupervisor(
           user: mockUser,
           escalas: const [],
           competencia: '2026-09',
@@ -439,7 +439,7 @@ void main() {
 
     test('reconhece o supervisor da escala do mês', () {
       expect(
-        isSupervisorNoMes(
+        podeAtuarComoSupervisor(
           user: mockUser,
           escalas: [escalaSupervisor],
           competencia: '2026-08',
@@ -451,7 +451,7 @@ void main() {
 
     test('reconhece o voluntário designado como supervisor', () {
       expect(
-        isSupervisorNoMes(
+        podeAtuarComoSupervisor(
           user: mockUserCoordenador,
           escalas: [escalaSupervisor],
           competencia: '2026-08',
@@ -463,7 +463,7 @@ void main() {
 
     test('nega para quem não participa da escala do mês', () {
       expect(
-        isSupervisorNoMes(
+        podeAtuarComoSupervisor(
           user: mockUserMembro,
           escalas: [escalaSupervisor],
           competencia: '2026-08',
@@ -486,7 +486,7 @@ void main() {
       );
 
       expect(
-        isSupervisorNoMes(
+        podeAtuarComoSupervisor(
           user: semPessoa,
           escalas: [escalaSupervisor],
           competencia: '2026-08',

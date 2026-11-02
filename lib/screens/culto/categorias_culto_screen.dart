@@ -26,7 +26,7 @@ class _CategoriasCultoScreenState extends State<CategoriasCultoScreen> {
   String? _error;
   String? _loadedFor;
 
-  bool get _canManage => isPastorOuAdmin(context.read<AuthProvider>().user);
+  bool get _canManage => isGestao(context.read<AuthProvider>().user);
 
   Future<void> _load() async {
     final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;

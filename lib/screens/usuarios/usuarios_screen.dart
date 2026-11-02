@@ -69,7 +69,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
               child: MobileListTile(
                 title: u.pessoaNome ?? u.username,
                 subtitle:
-                    '${u.username} · ${u.papeis.map(roleLabel).join(', ')} · ${u.igrejaNome}',
+                    '${u.username} · ${u.papeis.map(papelLabel).join(', ')} · ${u.igrejaNome}',
                 trailing: StatusBadge(label: u.ativo ? 'ATIVO' : 'INATIVO', success: u.ativo),
                 onTap: u.pessoaId == null
                     ? null

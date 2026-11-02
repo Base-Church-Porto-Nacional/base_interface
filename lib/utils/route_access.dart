@@ -62,6 +62,11 @@ bool canAccessPath(AuthUser? user, String path) {
 
 bool canMutatePessoas(AuthUser? user) => _temCap(user, Capacidade.pessoasGerir);
 
+/// Gestão cadastra livremente; líder cadastra pessoa num serviço que lidera.
+bool canCadastrarPessoas(AuthUser? user) =>
+    _temCap(user, Capacidade.pessoasGerir) ||
+    (user?.permissoes.lideraAlgo ?? false);
+
 bool canCreateMinisterio(AuthUser? user) =>
     _temCap(user, Capacidade.ministeriosGerir);
 

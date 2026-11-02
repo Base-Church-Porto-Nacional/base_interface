@@ -82,10 +82,15 @@ class _VoluntariosScreenState extends State<VoluntariosScreen> {
     }
   }
 
+  /// Gestor = coordenador de ministério/base ou conta com papel PASTOR/SECRETARIA.
+  bool _ehGestor(Pessoa p) =>
+      _gestorIds.contains(p.id) ||
+      p.papeis.any((r) => const {'PASTOR', 'SECRETARIA'}.contains(r.toUpperCase()));
+
   List<Pessoa> get _filtered {
     return _pessoas.where((p) {
       final isLider = p.tipos.contains(PessoaTipo.lider);
-      final isGestor = _gestorIds.contains(p.id);
+      final isGestor = _ehGestor(p);
       final isVoluntario = p.tipos.contains(PessoaTipo.voluntario);
       switch (_filtro) {
         case _EquipeFiltro.todos:
@@ -103,7 +108,7 @@ class _VoluntariosScreenState extends State<VoluntariosScreen> {
   String _papelDe(Pessoa p) {
     final papeis = <String>[];
     if (p.tipos.contains(PessoaTipo.lider)) papeis.add('Líder');
-    if (_gestorIds.contains(p.id)) papeis.add('Gestor');
+    if (_ehGestor(p)) papeis.add('Gestor');
     if (p.tipos.contains(PessoaTipo.voluntario)) papeis.add('Voluntário');
     return papeis.isEmpty ? '—' : papeis.join(' · ');
   }

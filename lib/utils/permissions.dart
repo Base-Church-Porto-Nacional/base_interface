@@ -6,6 +6,19 @@ bool _tem(AuthUser? user, Capacidade c) => user?.permissoes.tem(c) ?? false;
 /// Substitui `isPastorOuAdmin`; a decisão vem do servidor.
 bool isGestao(AuthUser? user) => _tem(user, Capacidade.pessoasVerTodas);
 
+bool podeGerirEscalas(AuthUser? user) =>
+    _tem(user, Capacidade.escalasGerir) ||
+    (user?.permissoes.lideraAlgo ?? false);
+
+/// Serviços reais (não fictícios) dos ministérios que o usuário lidera.
+List<Servico> servicosLiderados(AuthUser? user, List<Ministerio> ministerios) {
+  if (user == null) return const [];
+  return [
+    for (final m in ministerios)
+      if (user.permissoes.ministeriosLiderados.contains(m.id)) ...m.servicosReais,
+  ];
+}
+
 bool podeLancarContagem(AuthUser? user) => _tem(user, Capacidade.cultoContagem);
 
 bool isLiderDoMinisterio(AuthUser? user, Ministerio ministerio) {
@@ -57,7 +70,7 @@ bool pertenceAoMinisterioTipo(
   );
 }
 
-bool isSupervisorNoMes({
+bool podeAtuarComoSupervisor({
   required AuthUser? user,
   required List<Escala> escalas,
   required String competencia,
@@ -88,7 +101,7 @@ bool podeCriarTipoEscala({
   if (user == null) return false;
   if (_tem(user, Capacidade.escalasGerir)) return true;
 
-  final supervisor = isSupervisorNoMes(
+  final supervisor = podeAtuarComoSupervisor(
     user: user,
     escalas: escalas,
     competencia: competencia,

@@ -37,6 +37,20 @@ class PessoaService {
     return paginate(mapped, page: page, size: size);
   }
 
+  /// Busca leve por nome (mín. 2 caracteres, máx. 20 resultados no servidor).
+  Future<List<PessoaResumo>> buscarPorNome(String termo) async {
+    final list = await _api.get('/pessoas/busca', query: {'nome': termo.trim()})
+        as List<dynamic>;
+    return list
+        .map(
+          (e) => PessoaResumo(
+            id: (e as Map<String, dynamic>)['id'] as String,
+            nome: e['nome'] as String,
+          ),
+        )
+        .toList();
+  }
+
   Future<Pessoa> getById(String id) async {
     final json = await _api.get('/pessoas/$id') as Map<String, dynamic>;
     return _mapPessoa(json);
@@ -48,6 +62,7 @@ class PessoaService {
     String? email,
     String? whatsapp,
     String? igrejaId,
+    String? servicoId,
   }) async {
     final wa = _whatsappNormalizado(whatsapp);
     final json = await _api.post('/pessoas', {
@@ -56,6 +71,7 @@ class PessoaService {
       if (email != null && email.isNotEmpty) 'email': email,
       if (wa != null) 'whatsapp': wa,
       if (igrejaId != null) 'igrejaId': igrejaId,
+      if (servicoId != null) 'servicoId': servicoId,
     }) as Map<String, dynamic>;
     return _mapPessoa(json);
   }
@@ -102,7 +118,7 @@ class PessoaService {
 
   Pessoa _mapPessoa(Map<String, dynamic> json) {
     final papeis = (json['papeis'] as List<dynamic>? ?? const [])
-        .map((r) => roleFromString(r as String))
+        .map((r) => r as String)
         .toList();
     return Pessoa(
       id: json['id'] as String,
