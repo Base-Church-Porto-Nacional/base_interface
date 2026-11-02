@@ -10,13 +10,19 @@ import 'package:provider/provider.dart';
 import '../helpers/fake_api.dart';
 import '../helpers/fixtures.dart';
 
-Pessoa pessoa({String? usuarioId, String? acesso}) => Pessoa(
+Pessoa pessoa({
+  String? usuarioId,
+  String? acesso,
+  List<PessoaTipo> tipos = const [PessoaTipo.membro],
+  List<String> papeis = const [],
+}) => Pessoa(
   id: 'p9',
   nome: 'Bruno',
   telefone: '',
   email: 'b@x.com',
   status: PessoaStatus.ativo,
-  tipos: const [PessoaTipo.membro],
+  tipos: tipos,
+  papeis: papeis,
   ministerios: const [],
   dataCadastro: '2026-01-01',
   igrejaId: 'i1',
@@ -64,7 +70,8 @@ void main() {
 
   testWidgets('convidadoMostraReenviar', (tester) async {
     await abrir(tester, pessoa(usuarioId: 'u9', acesso: 'CONVIDADO'), mockUser);
-    expect(find.text('Convite enviado'), findsOneWidget);
+    expect(find.text('Convite pendente'), findsOneWidget);
+    expect(find.text('Convite enviado'), findsNothing);
     expect(find.text('Reenviar convite'), findsOneWidget);
     expect(find.text('Convidar'), findsNothing);
     expect(find.text('Redefinir senha'), findsNothing);
@@ -117,6 +124,72 @@ void main() {
     );
     expect(find.text('Redefinir senha'), findsNothing);
     expect(find.text('Desativar'), findsNothing);
+  });
+
+  testWidgets('propriaContaNaoMostraDesativarNemRedefinir', (tester) async {
+    await abrir(
+      tester,
+      pessoa(
+        usuarioId: mockUser.id,
+        acesso: 'ATIVO',
+        tipos: const [PessoaTipo.pastor],
+      ),
+      mockUser,
+    );
+    expect(find.text('Ativo'), findsOneWidget);
+    expect(find.text('Redefinir senha'), findsNothing);
+    expect(find.text('Desativar'), findsNothing);
+  });
+
+  testWidgets('secretariaNaoGereContaDePastor', (tester) async {
+    await abrir(
+      tester,
+      pessoa(
+        usuarioId: 'u9',
+        acesso: 'ATIVO',
+        tipos: const [PessoaTipo.pastor],
+      ),
+      mockUserSecretaria,
+    );
+    expect(find.text('Redefinir senha'), findsNothing);
+    expect(find.text('Desativar'), findsNothing);
+
+    await abrir(
+      tester,
+      pessoa(usuarioId: 'u9', acesso: 'DESATIVADO', papeis: const ['PASTOR']),
+      mockUserSecretaria,
+    );
+    expect(find.text('Reativar'), findsNothing);
+  });
+
+  testWidgets('secretariaNaoGereContaDeOutraSecretaria', (tester) async {
+    await abrir(
+      tester,
+      pessoa(usuarioId: 'u9', acesso: 'ATIVO', papeis: const ['SECRETARIA']),
+      mockUserSecretaria,
+    );
+    expect(find.text('Redefinir senha'), findsNothing);
+    expect(find.text('Desativar'), findsNothing);
+  });
+
+  testWidgets('secretariaGereContaDeMembro', (tester) async {
+    await abrir(
+      tester,
+      pessoa(usuarioId: 'u9', acesso: 'ATIVO'),
+      mockUserSecretaria,
+    );
+    expect(find.text('Redefinir senha'), findsOneWidget);
+    expect(find.text('Desativar'), findsOneWidget);
+  });
+
+  testWidgets('pastorGereContaDeSecretaria', (tester) async {
+    await abrir(
+      tester,
+      pessoa(usuarioId: 'u9', acesso: 'ATIVO', papeis: const ['SECRETARIA']),
+      mockUser,
+    );
+    expect(find.text('Redefinir senha'), findsOneWidget);
+    expect(find.text('Desativar'), findsOneWidget);
   });
 
   testWidgets('convidar chama o servidor, mostra o link e avisa onAlterado', (

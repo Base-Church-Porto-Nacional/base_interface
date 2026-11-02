@@ -8,7 +8,7 @@ import 'common.dart';
 import 'link_acesso_dialog.dart';
 
 String acessoStatusLabel(String? status) => switch (status) {
-  'CONVIDADO' => 'Convite enviado',
+  'CONVIDADO' => 'Convite pendente',
   'ATIVO' => 'Ativo',
   'DESATIVADO' => 'Desativado',
   _ => 'Sem acesso',
@@ -120,8 +120,21 @@ class _AcessoAppCardState extends State<AcessoAppCard> {
   Widget build(BuildContext context) {
     final p = widget.pessoa;
     final status = p.acessoStatus;
-    final gerir = podeGerirContas(widget.user);
     final convidar = podeConvidar(widget.user);
+    // Conta de pastor/secretaria: só quem atribui esses papéis (pastor) mexe
+    // em senha e acesso — o servidor responde 403 para os demais.
+    final contaDeGestao =
+        p.tipos.contains(PessoaTipo.pastor) ||
+        p.papeis.contains('PASTOR') ||
+        p.papeis.contains('SECRETARIA');
+    final gerir =
+        podeGerirContas(widget.user) &&
+        (!contaDeGestao ||
+            (widget.user?.permissoes.tem(Capacidade.papeisGestaoAtribuir) ??
+                false));
+    // Na própria conta não há "Desativar" nem "Redefinir senha" (troca de
+    // senha é pelo perfil).
+    final propriaConta = p.temUsuario && p.usuarioId == widget.user?.id;
 
     final acoes = <Widget>[
       if (status == null && convidar)
@@ -134,12 +147,14 @@ class _AcessoAppCardState extends State<AcessoAppCard> {
           onPressed: _ocupado ? null : () => _convidar(reenvio: true),
           child: const Text('Reenviar convite'),
         ),
-      if (status == 'ATIVO' && gerir)
+      if (status == 'ATIVO' && gerir && !propriaConta)
         OutlinedButton(
           onPressed: _ocupado ? null : _redefinir,
           child: const Text('Redefinir senha'),
         ),
-      if ((status == 'ATIVO' || status == 'CONVIDADO') && gerir)
+      if ((status == 'ATIVO' || status == 'CONVIDADO') &&
+          gerir &&
+          !propriaConta)
         OutlinedButton(
           onPressed: _ocupado ? null : _desativar,
           child: const Text('Desativar'),
