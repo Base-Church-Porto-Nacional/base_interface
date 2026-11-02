@@ -78,7 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextField(
                         controller: _userController,
                         decoration: const InputDecoration(labelText: 'E-mail ou telefone'),
-                        keyboardType: TextInputType.emailAddress,
+                        // Texto: aceita e-mail ou telefone (teclado de e-mail atrapalha números).
+                        keyboardType: TextInputType.text,
                         textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: 12),
