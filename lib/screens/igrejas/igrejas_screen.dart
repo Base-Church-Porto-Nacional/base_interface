@@ -69,7 +69,6 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
             pastorNome: result['pastorNome'] as String,
             adminNome: result['adminNome'] as String,
             adminEmail: result['adminEmail'] as String,
-            adminUsername: result['adminUsername'] as String,
           );
       if (!mounted) return;
       await context.read<IgrejaContext>().reload(context.read<AuthProvider>().user);

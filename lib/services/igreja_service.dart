@@ -28,14 +28,12 @@ class IgrejaService {
     required String pastorNome,
     required String adminNome,
     required String adminEmail,
-    required String adminUsername,
   }) async {
     final json = await _api.post('/igrejas/$matrizId/filiais', {
       'nome': nome,
       'pastorPessoaId': pastorPessoaId,
       'adminNome': adminNome,
       'adminEmail': adminEmail,
-      'adminUsername': adminUsername,
     }) as Map<String, dynamic>;
     return _map(json);
   }

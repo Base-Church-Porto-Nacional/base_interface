@@ -443,7 +443,6 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
   final _nome = TextEditingController();
   final _adminNome = TextEditingController();
   final _adminEmail = TextEditingController();
-  final _adminUsername = TextEditingController();
   String? _pastorId;
 
   @override
@@ -451,7 +450,6 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
     _nome.dispose();
     _adminNome.dispose();
     _adminEmail.dispose();
-    _adminUsername.dispose();
     super.dispose();
   }
 
@@ -488,11 +486,6 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
               decoration: const InputDecoration(labelText: 'E-mail do admin *'),
               keyboardType: TextInputType.emailAddress,
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _adminUsername,
-              decoration: const InputDecoration(labelText: 'Usuário do admin *'),
-            ),
           ],
         ),
       ),
@@ -503,8 +496,7 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
             if (_nome.text.trim().isEmpty ||
                 _pastorId == null ||
                 _adminNome.text.trim().isEmpty ||
-                _adminEmail.text.trim().isEmpty ||
-                _adminUsername.text.trim().isEmpty) {
+                _adminEmail.text.trim().isEmpty) {
               return;
             }
             Pessoa? pastor;
@@ -517,7 +509,6 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
               'pastorNome': pastor?.nome ?? '',
               'adminNome': _adminNome.text.trim(),
               'adminEmail': _adminEmail.text.trim(),
-              'adminUsername': _adminUsername.text.trim(),
             });
           },
           child: const Text('Criar'),
