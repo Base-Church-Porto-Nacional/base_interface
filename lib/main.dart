@@ -9,6 +9,9 @@ void main() {
   // devolve o index.html para qualquer caminho. No-op em iOS/Android.
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+  // Lida antes do primeiro frame: a tela de carregamento troca a URL para "/".
+  final rotaInicial =
+      WidgetsBinding.instance.platformDispatcher.defaultRouteName;
   final erro = AppConfig.erroDeConfiguracao;
   if (erro != null) {
     runApp(
@@ -25,5 +28,5 @@ void main() {
     );
     return;
   }
-  runApp(const BaseChurchApp());
+  runApp(BaseChurchApp(rotaInicial: rotaInicial));
 }

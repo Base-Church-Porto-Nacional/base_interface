@@ -28,7 +28,10 @@ import 'services/usuario_service.dart';
 import 'theme/app_theme.dart';
 
 class BaseChurchApp extends StatefulWidget {
-  const BaseChurchApp({super.key});
+  const BaseChurchApp({super.key, this.rotaInicial});
+
+  /// Caminho aberto no navegador ao carregar o app (web); null nos testes.
+  final String? rotaInicial;
 
   @override
   State<BaseChurchApp> createState() => _BaseChurchAppState();
@@ -102,7 +105,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
         );
         _authProvider = authProvider;
         _igrejaContext = igrejaContext;
-        _router = createRouter(authProvider);
+        _router = createRouter(authProvider, rotaInicial: widget.rotaInicial);
       });
     }
   }
