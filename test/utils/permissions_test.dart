@@ -2,6 +2,7 @@ import '../helpers/fixtures.dart';
 
 import 'package:base_church/models/models.dart';
 import 'package:base_church/utils/permissions.dart';
+import 'package:base_church/utils/route_access.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -11,43 +12,152 @@ void main() {
   final ministerios = mockMinisterios;
   final ada = mockBasesMinisteriais.firstWhere((b) => b.id == 'b1');
 
-  group('hasPermission', () {
-    test('admin e pastor têm acesso total', () {
-      expect(hasPermission([Role.admin], 'culto:edit'), isTrue);
-      expect(hasPermission([Role.pastor], 'qualquer:coisa'), isTrue);
+  group('Permissoes', () {
+    test('fromJson converte SCREAMING_SNAKE e ignora capacidade desconhecida', () {
+      final p = Permissoes.fromJson({
+        'capacidades': ['PESSOAS_VER_TODAS', 'CULTO_CONTAGEM', 'VOA_AVIAO'],
+        'ministeriosLiderados': ['m1'],
+        'basesLideradas': ['b1'],
+        'gruposLiderados': ['g1'],
+        'ehVoluntario': true,
+      });
+      expect(p.capacidades, {
+        Capacidade.pessoasVerTodas,
+        Capacidade.cultoContagem,
+      });
+      expect(p.ministeriosLiderados, {'m1'});
+      expect(p.basesLideradas, {'b1'});
+      expect(p.gruposLiderados, {'g1'});
+      expect(p.ehVoluntario, isTrue);
+      expect(p.tem(Capacidade.cultoContagem), isTrue);
+      expect(p.tem(Capacidade.exportar), isFalse);
+      expect(p.lideraAlgo, isTrue);
     });
 
-    test('lista vazia de papéis não concede nada', () {
-      expect(hasPermission(const [], 'dashboard:view'), isFalse);
+    test('todas as 14 capacidades do backend são reconhecidas', () {
+      const nomes = [
+        'CONFIGURAR', 'CONTAS_GERIR', 'CULTO_CONTAGEM', 'CULTO_CONTEUDO_EDITAR',
+        'DADOS_PASTORAIS_EDITAR', 'ESCALAS_GERIR', 'EXPORTAR', 'FILIAL_CRIAR',
+        'MINISTERIOS_GERIR', 'PAPEIS_CUSTOM_GERIR', 'PAPEIS_GESTAO_ATRIBUIR',
+        'PESSOAS_GERIR', 'PESSOAS_VER_TODAS', 'RELATORIOS_VER',
+      ];
+      final p = Permissoes.fromJson({'capacidades': nomes});
+      expect(p.capacidades, Capacidade.values.toSet());
+      expect(Capacidade.values.length, 14);
     });
 
-    test('coringa de recurso concede qualquer ação do recurso', () {
-      expect(hasPermission([Role.voluntario], 'disponibilidade:view'), isTrue);
-      expect(hasPermission([Role.voluntario], 'disponibilidade:edit'), isTrue);
-      expect(hasPermission([Role.membro], 'disponibilidade:remove'), isTrue);
+    test('json ausente ou vazio vira permissões vazias', () {
+      expect(Permissoes.fromJson(null).capacidades, isEmpty);
+      expect(Permissoes.fromJson(const {}).lideraAlgo, isFalse);
     });
 
-    test('a coringa de recurso não vaza para outros recursos', () {
-      expect(hasPermission([Role.voluntario], 'culto:edit'), isFalse);
-      expect(hasPermission([Role.membro], 'escalas:manage'), isFalse);
+    test('AuthUser faz round-trip de papeis e permissoes', () {
+      final u = AuthUser.fromJson(mockUserLider.toJson());
+      expect(u.papeis, mockUserLider.papeis);
+      expect(u.permissoes.ministeriosLiderados, {'m1'});
+      expect(u.permissoes.ehVoluntario, isTrue);
+      final p = AuthUser.fromJson(mockUser.toJson());
+      expect(p.permissoes.capacidades, Capacidade.values.toSet());
     });
 
-    test('concede a permissão quando qualquer um dos papéis tem acesso', () {
+    test('sessão persistida no formato antigo não quebra e fica sem permissões', () {
+      final u = AuthUser.fromJson({
+        'id': 'u1',
+        'nome': 'Ana',
+        'email': 'a@b.c',
+        'roles': ['ADMIN', 'PASTOR'],
+        'igrejaId': 'i1',
+        'igrejaTipo': 'MATRIZ',
+        'igrejaNome': 'Base',
+      });
+      expect(u.permissoes.capacidades, isEmpty);
+      expect(u.papeis, isEmpty);
+      expect(u.permissoesAusentes, isTrue);
+      expect(AuthUser.fromJson(mockUser.toJson()).permissoesAusentes, isFalse);
+    });
+  });
+
+  group('isGestao', () {
+    test('pastor e secretaria são gestão; líder, contador e membro não', () {
+      expect(isGestao(mockUser), isTrue);
+      expect(isGestao(mockUserSecretaria), isTrue);
+      expect(isGestao(mockUserLider), isFalse);
+      expect(isGestao(mockUserContador), isFalse);
+      expect(isGestao(mockUserMembro), isFalse);
+      expect(isGestao(null), isFalse);
+    });
+  });
+
+  group('regras por perfil', () {
+    test('secretariaNaoEditaTextoCulto', () {
+      expect(podeEditarTextoCulto(mockUserSecretaria), isFalse);
       expect(
-        hasPermission([Role.voluntario, Role.lider], 'ministerios:view'),
-        isTrue,
+        podeEditarTextoCulto(mockUserSecretaria, pregadorPessoaId: 'p1'),
+        isFalse,
       );
+      expect(podeEditarTextoCulto(mockUser), isTrue);
     });
 
-    test('líder não edita o texto do culto nem gerencia usuários', () {
-      expect(hasPermission([Role.lider], 'usuarios:view'), isFalse);
-      expect(hasPermission([Role.lider], 'igrejas:manage'), isFalse);
+    test('secretariaCriaEscalaPregador', () {
+      for (final tipo in EscalaTipo.values) {
+        expect(
+          podeCriarTipoEscala(
+            user: mockUserSecretaria,
+            tipo: tipo,
+            ministerios: ministerios,
+            escalas: const [],
+            competencia: '2026-09',
+            igrejaId: 'i1',
+          ),
+          isTrue,
+          reason: escalaTipoLabel(tipo),
+        );
+      }
     });
 
-    test('membro só acessa o próprio registro e o próprio serviço', () {
-      expect(hasPermission([Role.membro], 'pessoas:own'), isTrue);
-      expect(hasPermission([Role.membro], 'pessoas:view'), isFalse);
-      expect(hasPermission([Role.membro], 'escalas:own'), isTrue);
+    test('liderGerenciaSoMinisterioLiderado', () {
+      expect(podeGerenciarMinisterio(mockUserLider, louvor), isTrue);
+      expect(podeGerenciarMinisterio(mockUserLider, midia), isFalse);
+      expect(podeGerenciarMinisterio(mockUserLider, infantil), isFalse);
+      expect(podeGerenciarMinisterio(mockUserSecretaria, infantil), isTrue);
+    });
+
+    test('contadorLancaContagem', () {
+      expect(podeLancarContagem(mockUserContador), isTrue);
+      expect(podeLancarContagem(mockUserSecretaria), isTrue);
+      expect(podeLancarContagem(mockUserLider), isFalse);
+      expect(isGestao(mockUserContador), isFalse);
+    });
+
+    test('canCreateUsuario exige contasGerir; podeEnviarAniversarios exige configurar', () {
+      expect(canCreateUsuario(mockUser), isTrue);
+      expect(canCreateUsuario(mockUserLider), isFalse);
+      expect(podeEnviarAniversarios(mockUserSecretaria), isTrue);
+      expect(podeEnviarAniversarios(mockUserLider), isFalse);
+      expect(podeEnviarAniversarios(null), isFalse);
+    });
+
+    test('líder sem papel não gerencia grupo alheio (remove regra qualquer LIDER)', () {
+      const meu = SmallGroup(
+        id: 'g1', nome: 'G1', igrejaId: 'i1', diaSemana: DiaSemana.sexta,
+        liderPessoaId: 'p9', liderNome: 'X', ativo: true, nota: 0,
+      );
+      const outro = SmallGroup(
+        id: 'g2', nome: 'G2', igrejaId: 'i1', diaSemana: DiaSemana.sexta,
+        liderPessoaId: 'p9', liderNome: 'X', ativo: true, nota: 0,
+        ministerioId: 'm1',
+      );
+      const lideraG1 = AuthUser(
+        id: 'u20', nome: 'L', email: 'l@b.c', papeis: [],
+        permissoes: Permissoes(gruposLiderados: {'g1'}),
+        igrejaId: 'i1', igrejaTipo: IgrejaTipo.matriz, igrejaNome: 'B',
+      );
+      expect(podeGerenciarSmallGroup(lideraG1, meu), isTrue);
+      expect(podeGerenciarSmallGroup(lideraG1, outro), isFalse);
+      expect(podeGerenciarSmallGroup(mockUserLider, outro), isTrue); // ministério m1
+      expect(podeGerenciarSmallGroup(mockUserLider, meu), isFalse);
+      expect(podeGerenciarSmallGroup(mockUserSecretaria, meu), isTrue);
+      expect(podeGerenciarSmallGroup(mockUserMembro, meu), isFalse);
     });
   });
 
@@ -65,22 +175,7 @@ void main() {
     });
 
     test('contador não ganha gestão do culto', () {
-      expect(isPastorOuAdmin(mockUserContador), isFalse);
-      expect(hasPermission([Role.contador], 'culto:edit'), isFalse);
-      expect(hasPermission([Role.contador], 'pessoas:view'), isFalse);
-    });
-  });
-
-  group('isPastorOuAdmin', () {
-    test('reconhece pastor e admin', () {
-      expect(isPastorOuAdmin(mockUser), isTrue);
-      expect(isPastorOuAdmin(mockUserPastorFilial), isTrue);
-    });
-
-    test('nega para os demais papéis e para usuário nulo', () {
-      expect(isPastorOuAdmin(mockUserLider), isFalse);
-      expect(isPastorOuAdmin(mockUserMembro), isFalse);
-      expect(isPastorOuAdmin(null), isFalse);
+      expect(isGestao(mockUserContador), isFalse);
     });
   });
 
@@ -144,7 +239,8 @@ void main() {
         id: 'u9',
         nome: 'Sem pessoa',
         email: 'sem@base.church',
-        roles: [Role.lider],
+        papeis: ['LIDER'],
+        permissoes: Permissoes(),
         igrejaId: 'i1',
         igrejaTipo: IgrejaTipo.matriz,
         igrejaNome: 'Base Church',
@@ -382,7 +478,8 @@ void main() {
         id: 'u9',
         nome: 'Sem pessoa',
         email: 'sem@base.church',
-        roles: [Role.lider],
+        papeis: ['LIDER'],
+        permissoes: Permissoes(),
         igrejaId: 'i1',
         igrejaTipo: IgrejaTipo.matriz,
         igrejaNome: 'Base Church',

@@ -23,7 +23,6 @@ void main() {
             'token': 'jwt',
             'usuarioId': 'u1',
             'username': 'ana',
-            'papeis': ['admin', 'PASTOR'],
           },
         ),
         'GET /me': (r) {
@@ -33,6 +32,14 @@ void main() {
             {
               'nome': 'Ana Costa',
               'email': 'ana@base.church',
+              'papeis': ['ADMIN', 'PASTOR'],
+              'permissoes': {
+                'capacidades': ['PESSOAS_VER_TODAS', 'INEXISTENTE'],
+                'ministeriosLiderados': ['m1'],
+                'basesLideradas': [],
+                'gruposLiderados': [],
+                'ehVoluntario': true,
+              },
               'pessoaId': 'p1',
               'igrejaId': 'i1',
               'igrejaTipo': 'MATRIZ',
@@ -60,7 +67,10 @@ void main() {
       expect(fake.chamadas.first.headers.containsKey('Authorization'), isFalse);
       expect(user.id, 'u1');
       expect(user.nome, 'Ana Costa');
-      expect(user.roles, [Role.admin, Role.pastor]);
+      expect(user.papeis, ['ADMIN', 'PASTOR']);
+      expect(user.permissoes.capacidades, {Capacidade.pessoasVerTodas});
+      expect(user.permissoes.ministeriosLiderados, {'m1'});
+      expect(user.permissoes.ehVoluntario, isTrue);
       expect(user.igrejaTipo, IgrejaTipo.matriz);
       expect(user.igrejasVisiveis.map((i) => i.id), ['i1', 'i2']);
       expect(api.token, 'jwt');

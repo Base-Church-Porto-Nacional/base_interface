@@ -5,72 +5,86 @@ class NavItem {
   const NavItem({
     required this.label,
     required this.path,
-    this.permission,
+    this.visivel,
     this.children = const [],
   });
 
   final String label;
   final String path;
-  final String? permission;
+
+  /// Regra de visibilidade no menu; null = todos.
+  final bool Function(AuthUser user)? visivel;
   final List<NavItem> children;
 }
 
-const mainNav = [
-  NavItem(label: 'Dash', path: '/dashboard', permission: 'dashboard:view'),
-  NavItem(label: 'Gestão Igreja', path: '/igrejas', permission: 'igrejas:manage'),
+bool _verGestaoIgreja(AuthUser u) =>
+    u.permissoes.tem(Capacidade.filialCriar) || isGestao(u);
+
+bool _verPessoas(AuthUser u) => isGestao(u) || u.permissoes.lideraAlgo;
+
+bool _verVoluntariado(AuthUser u) =>
+    _verPessoas(u) ||
+    u.permissoes.ehVoluntario ||
+    u.permissoes.tem(Capacidade.escalasGerir);
+
+final mainNav = [
+  NavItem(label: 'Dash', path: '/dashboard'),
+  NavItem(label: 'Gestão Igreja', path: '/igrejas', visivel: _verGestaoIgreja),
   NavItem(
     label: 'Membros',
     path: '/membros',
-    permission: 'membros:view',
+    visivel: _verPessoas,
     children: [
       NavItem(label: 'Membros', path: '/membros'),
-      NavItem(label: 'Pessoas', path: '/membros/pessoas', permission: 'pessoas:view'),
+      NavItem(label: 'Pessoas', path: '/membros/pessoas', visivel: _verPessoas),
     ],
   ),
   NavItem(label: 'Aniversariantes', path: '/aniversariantes'),
   NavItem(
     label: 'Pequenos grupos',
     path: '/pequenos-grupos',
-    permission: 'small_groups:view',
+    visivel: _verPessoas,
   ),
   NavItem(
     label: 'Voluntariado',
     path: '/voluntariado/voluntarios',
-    permission: 'voluntarios:view',
+    visivel: _verVoluntariado,
     children: [
       NavItem(label: 'Voluntários', path: '/voluntariado/voluntarios'),
       NavItem(label: 'Escalas', path: '/voluntariado/escalas'),
       NavItem(
         label: 'Ministérios',
         path: '/voluntariado/ministerios',
-        permission: 'ministerios:view',
+        visivel: _verVoluntariado,
       ),
       NavItem(
         label: 'Relatórios',
         path: '/voluntariado/relatorios',
-        permission: 'relatorios:view',
+        visivel: (u) => u.permissoes.tem(Capacidade.relatoriosVer),
       ),
     ],
   ),
   NavItem(
     label: 'Cultos',
     path: '/cultos/mes',
-    permission: 'cronograma:view',
     children: [
       NavItem(label: 'Mês', path: '/cultos/mes'),
       NavItem(label: 'Categorias', path: '/cultos/categorias'),
     ],
   ),
-  NavItem(label: 'Usuários', path: '/usuarios', permission: 'usuarios:view'),
+  NavItem(
+    label: 'Usuários',
+    path: '/usuarios',
+    visivel: (u) => u.permissoes.tem(Capacidade.contasGerir),
+  ),
   NavItem(
     label: 'Configurações',
     path: '/configuracoes/mensagem-aniversario',
-    permission: 'mensagens:manage',
+    visivel: (u) => u.permissoes.tem(Capacidade.configurar),
   ),
   NavItem(
     label: 'Meu serviço',
     path: '/meu-servico',
-    permission: 'meu_servico:view',
     children: [
       NavItem(label: 'Visão geral', path: '/meu-servico'),
       NavItem(label: 'Responder escalas', path: '/meu-servico/responder'),
@@ -79,17 +93,9 @@ const mainNav = [
   ),
 ];
 
-List<NavItem> visibleNavItems(List<Role> roles) {
-  return mainNav.where((item) {
-    if (item.permission == null) return true;
-    if (item.permission == 'igrejas:manage' || item.permission == 'usuarios:view') {
-      return hasPermission(roles, item.permission!) ||
-          hasPermission(roles, '*') ||
-          roles.contains(Role.admin) ||
-          roles.contains(Role.pastor);
-    }
-    return hasPermission(roles, item.permission!);
-  }).toList();
+List<NavItem> visibleNavItems(AuthUser? user) {
+  if (user == null) return const [];
+  return mainNav.where((item) => item.visivel?.call(user) ?? true).toList();
 }
 
 const pessoaFiltros = [

@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/models.dart';
 import '../services/auth_service.dart';
-import '../utils/permissions.dart';
 
 class AuthProvider extends ChangeNotifier {
   AuthProvider(this._authService) {
     user = _authService.getStoredUser();
+    // Sessão persistida no formato antigo (sem `permissoes`): busca /me agora;
+    // enquanto isso o usuário fica sem permissões (fail-closed).
+    if (user?.permissoesAusentes ?? false) {
+      unawaited(recarregarMe());
+    }
   }
 
   final AuthService _authService;
@@ -17,9 +23,22 @@ class AuthProvider extends ChangeNotifier {
 
   bool get isAuthenticated => user != null && _authService.isAuthenticated;
 
-  bool can(String permission) => hasPermission(user?.roles ?? [], permission);
+  bool can(Capacidade capacidade) => user?.permissoes.tem(capacidade) ?? false;
 
-  bool hasRole(Role role) => user?.roles.contains(role) ?? false;
+  /// Recarrega `GET /me` (permissões novas após mudar papéis, ou migração de
+  /// sessão antiga). Falha de rede mantém o usuário atual.
+  Future<void> recarregarMe() async {
+    if (user == null) return;
+    try {
+      final atualizado = await _authService.recarregarMe();
+      if (atualizado != null) {
+        user = atualizado;
+        notifyListeners();
+      }
+    } catch (_) {
+      await expireSession();
+    }
+  }
 
   Future<bool> login(String username, String password) async {
     isLoading = true;

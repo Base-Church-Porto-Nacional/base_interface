@@ -48,28 +48,123 @@ class Igreja {
   bool get isMatriz => tipo == IgrejaTipo.matriz;
 }
 
+/// Capacidades calculadas pelo servidor (espelha o enum do backend).
+/// O nome em Dart é camelCase; no JSON vem SCREAMING_SNAKE.
+enum Capacidade {
+  configurar,
+  contasGerir,
+  cultoContagem,
+  cultoConteudoEditar,
+  dadosPastoraisEditar,
+  escalasGerir,
+  exportar,
+  filialCriar,
+  ministeriosGerir,
+  papeisCustomGerir,
+  papeisGestaoAtribuir,
+  pessoasGerir,
+  pessoasVerTodas,
+  relatoriosVer;
+
+  /// 'PESSOAS_VER_TODAS' -> pessoasVerTodas. Nome desconhecido devolve null
+  /// (fail-closed: capacidade que o app não conhece nunca é concedida).
+  static Capacidade? fromJson(String nome) {
+    final partes = nome.toLowerCase().split('_');
+    final camel =
+        partes.first +
+        partes
+            .skip(1)
+            .map((p) => p.isEmpty ? p : p[0].toUpperCase() + p.substring(1))
+            .join();
+    for (final c in Capacidade.values) {
+      if (c.name == camel) return c;
+    }
+    return null;
+  }
+
+  String toJson() =>
+      name.replaceAllMapped(RegExp('[A-Z]'), (m) => '_${m[0]}').toUpperCase();
+}
+
+class Permissoes {
+  const Permissoes({
+    this.capacidades = const {},
+    this.ministeriosLiderados = const {},
+    this.basesLideradas = const {},
+    this.gruposLiderados = const {},
+    this.ehVoluntario = false,
+  });
+
+  final Set<Capacidade> capacidades;
+  final Set<String> ministeriosLiderados;
+  final Set<String> basesLideradas;
+  final Set<String> gruposLiderados;
+  final bool ehVoluntario;
+
+  bool tem(Capacidade c) => capacidades.contains(c);
+
+  bool get lideraAlgo =>
+      ministeriosLiderados.isNotEmpty ||
+      basesLideradas.isNotEmpty ||
+      gruposLiderados.isNotEmpty;
+
+  factory Permissoes.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return const Permissoes();
+    Set<String> ids(String k) =>
+        (json[k] as List<dynamic>? ?? const []).map((e) => e as String).toSet();
+    return Permissoes(
+      capacidades: (json['capacidades'] as List<dynamic>? ?? const [])
+          .map((e) => Capacidade.fromJson(e as String))
+          .whereType<Capacidade>()
+          .toSet(),
+      ministeriosLiderados: ids('ministeriosLiderados'),
+      basesLideradas: ids('basesLideradas'),
+      gruposLiderados: ids('gruposLiderados'),
+      ehVoluntario: json['ehVoluntario'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'capacidades': (capacidades.map((c) => c.toJson()).toList()..sort()),
+    'ministeriosLiderados': ministeriosLiderados.toList()..sort(),
+    'basesLideradas': basesLideradas.toList()..sort(),
+    'gruposLiderados': gruposLiderados.toList()..sort(),
+    'ehVoluntario': ehVoluntario,
+  };
+}
+
 class AuthUser {
   const AuthUser({
     required this.id,
     required this.nome,
     required this.email,
-    required this.roles,
+    required this.papeis,
+    required this.permissoes,
     required this.igrejaId,
     required this.igrejaTipo,
     required this.igrejaNome,
     this.pessoaId,
     this.igrejasVisiveis = const [],
+    this.permissoesAusentes = false,
   });
 
   final String id;
   final String nome;
   final String email;
-  final List<Role> roles;
+
+  /// Nomes dos papéis atribuídos (ex.: "PASTOR", "SECRETARIA", "CONTADOR").
+  /// Só para exibição; as decisões usam [permissoes].
+  final List<String> papeis;
+  final Permissoes permissoes;
   final String? pessoaId;
   final String igrejaId;
   final IgrejaTipo igrejaTipo;
   final String igrejaNome;
   final List<Igreja> igrejasVisiveis;
+
+  /// true quando a sessão persistida é do formato antigo (sem `permissoes`):
+  /// o app deve recarregar `/me`.
+  final bool permissoesAusentes;
 
   bool get isMatriz => igrejaTipo == IgrejaTipo.matriz;
 
@@ -78,12 +173,18 @@ class AuthUser {
       id: json['id'] as String,
       nome: json['nome'] as String,
       email: json['email'] as String,
-      roles: (json['roles'] as List<dynamic>)
-          .map((r) => _roleFromString(r as String))
+      papeis: (json['papeis'] as List<dynamic>? ?? const [])
+          .map((p) => p as String)
           .toList(),
+      permissoes: Permissoes.fromJson(
+        json['permissoes'] as Map<String, dynamic>?,
+      ),
+      permissoesAusentes: json['permissoes'] == null,
       pessoaId: json['pessoaId'] as String?,
       igrejaId: json['igrejaId'] as String? ?? '',
-      igrejaTipo: _igrejaTipoFromString(json['igrejaTipo'] as String? ?? 'FILIAL'),
+      igrejaTipo: _igrejaTipoFromString(
+        json['igrejaTipo'] as String? ?? 'FILIAL',
+      ),
       igrejaNome: json['igrejaNome'] as String? ?? '',
       igrejasVisiveis: (json['igrejasVisiveis'] as List<dynamic>? ?? [])
           .map((e) => _igrejaFromJson(e as Map<String, dynamic>))
@@ -92,16 +193,17 @@ class AuthUser {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'nome': nome,
-        'email': email,
-        'roles': roles.map(_roleToString).toList(),
-        'pessoaId': pessoaId,
-        'igrejaId': igrejaId,
-        'igrejaTipo': _igrejaTipoToString(igrejaTipo),
-        'igrejaNome': igrejaNome,
-        'igrejasVisiveis': igrejasVisiveis.map(_igrejaToJson).toList(),
-      };
+    'id': id,
+    'nome': nome,
+    'email': email,
+    'papeis': papeis,
+    'permissoes': permissoes.toJson(),
+    'pessoaId': pessoaId,
+    'igrejaId': igrejaId,
+    'igrejaTipo': _igrejaTipoToString(igrejaTipo),
+    'igrejaNome': igrejaNome,
+    'igrejasVisiveis': igrejasVisiveis.map(_igrejaToJson).toList(),
+  };
 }
 
 class JornadaEtapa {
@@ -158,7 +260,8 @@ class Pessoa {
 
   bool get temWhatsapp => whatsapp.trim().isNotEmpty;
 
-  List<Role> get papeisExibiveis => papeis.isNotEmpty ? papeis : _papeisDeTipos(tipos);
+  List<Role> get papeisExibiveis =>
+      papeis.isNotEmpty ? papeis : _papeisDeTipos(tipos);
 
   Pessoa copyWith({
     String? nome,
@@ -552,11 +655,17 @@ class Escala {
   bool geraAuto() => status == EscalaStatus.sugerida;
 
   int preenchidosDoServico(String? servicoId) => voluntarios
-      .where((v) => v.servicoId == servicoId && v.status != EscalaItemStatus.recusado)
+      .where(
+        (v) =>
+            v.servicoId == servicoId && v.status != EscalaItemStatus.recusado,
+      )
       .length;
 
   List<EscalaVoluntario> voluntariosDoServico(String? servicoId) => voluntarios
-      .where((v) => v.servicoId == servicoId && v.status != EscalaItemStatus.recusado)
+      .where(
+        (v) =>
+            v.servicoId == servicoId && v.status != EscalaItemStatus.recusado,
+      )
       .toList();
 
   Escala copyWith({
@@ -794,7 +903,10 @@ class SugestaoItem {
 }
 
 class SmallGroupParticipante {
-  const SmallGroupParticipante({required this.pessoaId, required this.pessoaNome});
+  const SmallGroupParticipante({
+    required this.pessoaId,
+    required this.pessoaNome,
+  });
 
   final String pessoaId;
   final String pessoaNome;
@@ -848,6 +960,7 @@ class SmallGroup {
     required this.ativo,
     required this.nota,
     this.horario,
+    this.ministerioId,
     this.encontros = const [],
   });
 
@@ -860,6 +973,7 @@ class SmallGroup {
   final String liderNome;
   final bool ativo;
   final int nota;
+  final String? ministerioId;
   final List<SmallGroupEncontro> encontros;
 
   String get notaLabel => nota == 0 ? 'Sem nota' : '$nota / 5';
@@ -1301,11 +1415,7 @@ class MensagemVariavel {
 }
 
 const mensagemAniversarioVariaveis = [
-  MensagemVariavel(
-    chave: 'Nome',
-    rotulo: 'Nome do membro',
-    exemplo: 'Gustavo',
-  ),
+  MensagemVariavel(chave: 'Nome', rotulo: 'Nome do membro', exemplo: 'Gustavo'),
   MensagemVariavel(
     chave: 'Nome Completo',
     rotulo: 'Nome completo do membro',
@@ -1446,7 +1556,9 @@ String _roleToString(Role role) {
 }
 
 IgrejaTipo _igrejaTipoFromString(String value) {
-  return value.toUpperCase() == 'MATRIZ' ? IgrejaTipo.matriz : IgrejaTipo.filial;
+  return value.toUpperCase() == 'MATRIZ'
+      ? IgrejaTipo.matriz
+      : IgrejaTipo.filial;
 }
 
 String _igrejaTipoToString(IgrejaTipo tipo) {
@@ -1468,16 +1580,16 @@ Igreja _igrejaFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, dynamic> _igrejaToJson(Igreja i) => {
-      'id': i.id,
-      'nome': i.nome,
-      'tipo': _igrejaTipoToString(i.tipo),
-      'pastorPessoaId': i.pastorPessoaId,
-      'pastorNome': i.pastorNome,
-      'adminUsuarioId': i.adminUsuarioId,
-      'adminNome': i.adminNome,
-      'ativo': i.ativo,
-      'igrejaMatrizId': i.igrejaMatrizId,
-    };
+  'id': i.id,
+  'nome': i.nome,
+  'tipo': _igrejaTipoToString(i.tipo),
+  'pastorPessoaId': i.pastorPessoaId,
+  'pastorNome': i.pastorNome,
+  'adminUsuarioId': i.adminUsuarioId,
+  'adminNome': i.adminNome,
+  'ativo': i.ativo,
+  'igrejaMatrizId': i.igrejaMatrizId,
+};
 
 String pessoaStatusLabel(PessoaStatus status) =>
     status == PessoaStatus.ativo ? 'ATIVO' : 'INATIVO';

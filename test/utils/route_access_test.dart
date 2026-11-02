@@ -1,6 +1,7 @@
 import '../helpers/fixtures.dart';
 
 import 'package:base_church/models/models.dart';
+import 'package:base_church/navigation/nav_config.dart';
 import 'package:base_church/utils/route_access.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,12 +10,25 @@ void main() {
   final pastorFilial = mockUserPastorFilial;
   final lider = mockUserLider;
   final membro = mockUserMembro;
+  final secretaria = mockUserSecretaria;
+  final voluntario = AuthUser(
+    id: 'u12',
+    nome: 'Vera',
+    email: 'v@base.church',
+    papeis: const ['VOLUNTARIO', 'MEMBRO'],
+    permissoes: const Permissoes(ehVoluntario: true),
+    pessoaId: 'p12',
+    igrejaId: 'i1',
+    igrejaTipo: IgrejaTipo.matriz,
+    igrejaNome: 'Base Church',
+  );
 
   final semPapeis = const AuthUser(
     id: 'u11',
     nome: 'Sem permissões',
     email: 'sem@base.church',
-    roles: [],
+    papeis: [],
+    permissoes: Permissoes(),
     igrejaId: 'i1',
     igrejaTipo: IgrejaTipo.matriz,
     igrejaNome: 'Base Church',
@@ -73,22 +87,19 @@ void main() {
   });
 
   group('dashboard e perfil', () {
-    test('admin, pastor e papéis com dashboard:view acessam', () {
-      expect(canAccessPath(admin, '/dashboard'), isTrue);
-      expect(canAccessPath(pastorFilial, '/dashboard'), isTrue);
-      expect(canAccessPath(lider, '/dashboard'), isTrue);
-      expect(canAccessPath(membro, '/dashboard'), isTrue);
-      expect(canAccessPath(membro, '/perfil'), isTrue);
-    });
-
-    test('usuário sem papel é bloqueado no dashboard', () {
-      expect(canAccessPath(semPapeis, '/dashboard'), isFalse);
-      expect(canAccessPath(semPapeis, '/perfil'), isFalse);
+    test('qualquer usuário logado acessa dashboard e perfil', () {
+      for (final u in [admin, pastorFilial, lider, membro, secretaria, semPapeis]) {
+        expect(canAccessPath(u, '/dashboard'), isTrue);
+        expect(canAccessPath(u, '/perfil'), isTrue);
+      }
     });
   });
 
   group('administração', () {
-    test('apenas pastor e admin administram igrejas e usuários', () {
+    test('membroNaoAcessaUsuarios; secretaria gere contas mas não cria filial', () {
+      expect(canAccessPath(membro, '/usuarios'), isFalse);
+      expect(canAccessPath(secretaria, '/usuarios'), isTrue);
+      expect(canAccessPath(secretaria, '/igrejas'), isTrue); // gestão
       expect(canAccessPath(admin, '/igrejas'), isTrue);
       expect(canAccessPath(admin, '/usuarios'), isTrue);
       expect(canAccessPath(pastorFilial, '/igrejas'), isTrue);
@@ -118,6 +129,10 @@ void main() {
   });
 
   group('membros', () {
+    test('liderAcessaPessoas', () {
+      expect(canAccessPath(lider, '/membros/pessoas'), isTrue);
+    });
+
     test('líder vê qualquer ficha de pessoa', () {
       expect(canAccessPath(lider, '/membros/pessoa/p2'), isTrue);
       expect(canAccessPath(lider, '/membros/pessoa/p5'), isTrue);
@@ -133,8 +148,9 @@ void main() {
       expect(canAccessPath(membro, '/membros/pessoas'), isFalse);
     });
 
-    test('nenhum papel além de pastor e admin altera pessoas', () {
+    test('só quem tem pessoasGerir altera pessoas', () {
       expect(canMutatePessoas(admin), isTrue);
+      expect(canMutatePessoas(secretaria), isTrue);
       expect(canMutatePessoas(pastorFilial), isTrue);
       expect(canMutatePessoas(lider), isFalse);
       expect(canMutatePessoas(membro), isFalse);
@@ -143,26 +159,34 @@ void main() {
   });
 
   group('voluntariado', () {
-    test('líder acessa escalas, ministérios, relatórios e voluntários', () {
+    test('líder acessa escalas, ministérios e voluntários', () {
       expect(canAccessPath(lider, '/voluntariado/escalas'), isTrue);
       expect(canAccessPath(lider, '/voluntariado/escalas/e1'), isTrue);
       expect(canAccessPath(lider, '/voluntariado/ministerios'), isTrue);
-      expect(canAccessPath(lider, '/voluntariado/relatorios'), isTrue);
       expect(canAccessPath(lider, '/voluntariado/voluntarios'), isTrue);
     });
 
-    test('membro não acessa as telas do voluntariado', () {
+    test('membro puro não acessa as telas do voluntariado', () {
       expect(canAccessPath(membro, '/voluntariado/escalas'), isFalse);
       expect(canAccessPath(membro, '/voluntariado/ministerios'), isFalse);
       expect(canAccessPath(membro, '/voluntariado/relatorios'), isFalse);
+      expect(canAccessPath(membro, '/voluntariado/escalas/nova'), isFalse);
     });
 
-    test('membro sem escalas:view ainda abre o formulário de nova escala', () {
-      expect(canAccessPath(membro, '/voluntariado/escalas/nova'), isTrue);
+    test('voluntário acessa voluntariado e abre o formulário de nova escala', () {
+      expect(canAccessPath(voluntario, '/voluntariado/escalas'), isTrue);
+      expect(canAccessPath(voluntario, '/voluntariado/ministerios'), isTrue);
+      expect(canAccessPath(voluntario, '/voluntariado/escalas/nova'), isTrue);
       expect(
-        canAccessPath(membro, '/voluntariado/escalas/nova?tipo=culto'),
+        canAccessPath(voluntario, '/voluntariado/escalas/nova?tipo=culto'),
         isTrue,
       );
+      expect(canAccessPath(voluntario, '/voluntariado/relatorios'), isFalse);
+    });
+
+    test('relatórios exige relatoriosVer', () {
+      expect(canAccessPath(secretaria, '/voluntariado/relatorios'), isTrue);
+      expect(canAccessPath(lider, '/voluntariado/relatorios'), isFalse);
     });
 
     test('pastor e admin acessam a criação de escala', () {
@@ -170,8 +194,9 @@ void main() {
       expect(canAccessPath(pastorFilial, '/voluntariado/escalas/nova'), isTrue);
     });
 
-    test('criação de ministério e de usuário fica com pastor e admin', () {
+    test('criação de ministério e de usuário segue as capacidades', () {
       expect(canCreateMinisterio(admin), isTrue);
+      expect(canCreateMinisterio(secretaria), isTrue);
       expect(canCreateMinisterio(lider), isFalse);
       expect(canCreateMinisterio(null), isFalse);
 
@@ -210,16 +235,13 @@ void main() {
       }
     });
 
-    test(
-      'quem não tem culto:view nem é pastor não chega às telas de culto',
-      () {
-        expect(canAccessPath(semPapeis, '/cultos'), isFalse);
-        expect(canAccessPath(semPapeis, '/cultos/mes/2026-09'), isFalse);
-        expect(canAccessPath(semPapeis, '/cultos/conteudo/c1'), isFalse);
-      },
-    );
+    test('cultos são abertos a qualquer usuário logado', () {
+      expect(canAccessPath(semPapeis, '/cultos'), isTrue);
+      expect(canAccessPath(semPapeis, '/cultos/mes/2026-09'), isTrue);
+      expect(canAccessPath(semPapeis, '/cultos/conteudo/c1'), isTrue);
+    });
 
-    test('criação de cronograma fica com pastor e admin', () {
+    test('criação de cronograma fica com a gestão', () {
       expect(canCreateCronograma(admin), isTrue);
       expect(canCreateCronograma(pastorFilial), isTrue);
       expect(canCreateCronograma(lider), isFalse);
@@ -239,13 +261,10 @@ void main() {
       expect(canAccessPath(lider, '/perfil/disponibilidade'), isTrue);
     });
 
-    test(
-      'disponibilidade exige permissão explícita ou papel com o recurso',
-      () {
-        expect(canAccessPath(semPapeis, '/perfil/disponibilidade'), isFalse);
-        expect(canAccessPath(admin, '/perfil/disponibilidade'), isTrue);
-      },
-    );
+    test('disponibilidade é aberta a qualquer usuário logado', () {
+      expect(canAccessPath(semPapeis, '/perfil/disponibilidade'), isTrue);
+      expect(canAccessPath(admin, '/perfil/disponibilidade'), isTrue);
+    });
   });
 
   group('pequenos grupos', () {
@@ -261,6 +280,40 @@ void main() {
     test('voluntário e membro sem a permissão ficam de fora', () {
       expect(canAccessPath(membro, '/pequenos-grupos'), isFalse);
       expect(canAccessPath(semPapeis, '/pequenos-grupos'), isFalse);
+    });
+  });
+
+  group('menu (visibleNavItems)', () {
+    List<String> labels(AuthUser u) => [
+          for (final i in visibleNavItems(u)) ...[
+            i.label,
+            ...i.children.map((c) => c.label),
+          ],
+        ];
+
+    test('pastor vê tudo', () {
+      expect(labels(admin), containsAll([
+        'Gestão Igreja', 'Usuários', 'Configurações', 'Meu serviço',
+        'Pessoas', 'Voluntariado',
+      ]));
+    });
+
+    test('membro vê só o básico', () {
+      final l = labels(membro);
+      expect(l, contains('Meu serviço'));
+      for (final x in ['Gestão Igreja', 'Usuários', 'Configurações', 'Voluntariado']) {
+        expect(l, isNot(contains(x)));
+      }
+    });
+
+    test('líder vê Pessoas e Voluntariado mas não Usuários', () {
+      final l = labels(lider);
+      expect(l, containsAll(['Pessoas', 'Voluntariado']));
+      expect(l, isNot(contains('Usuários')));
+    });
+
+    test('secretaria vê Usuários e Configurações', () {
+      expect(labels(secretaria), containsAll(['Usuários', 'Configurações']));
     });
   });
 }

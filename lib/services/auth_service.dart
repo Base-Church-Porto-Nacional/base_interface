@@ -28,12 +28,10 @@ class AuthService {
       throw Exception('Informe usuário e senha.');
     }
 
-
-    final login = await _api.post(
-      '/auth/login',
-      {'username': username, 'senha': password},
-      false,
-    ) as Map<String, dynamic>;
+    final login = await _api.post('/auth/login', {
+      'username': username,
+      'senha': password,
+    }, false) as Map<String, dynamic>;
 
     await _api.setToken(login['token'] as String);
 
@@ -42,20 +40,63 @@ class AuthService {
       me = await _api.get('/me') as Map<String, dynamic>;
     } catch (_) {}
 
-    final papeis = (login['papeis'] as List<dynamic>? ?? me['papeis'] as List<dynamic>? ?? [])
-        .map((p) => roleFromString((p as String).toUpperCase()))
-        .toList();
-
-    final visiveisJson = me['igrejasVisiveis'] as List<dynamic>? ?? [];
-
-    final user = AuthUser(
+    final user = _montarUsuario(
+      me,
       id: (login['usuarioId'] ?? me['id']) as String,
       nome: (me['nome'] ?? login['username']) as String,
       email: (me['email'] ?? login['username']) as String,
-      roles: papeis,
+    );
+
+    await _prefs.setString(_userKey, jsonEncode(user.toJson()));
+    return user;
+  }
+
+  /// Recarrega `GET /me` e atualiza o usuário persistido (permissões novas
+  /// após mudança de papel, ou sessão antiga sem `permissoes`).
+  /// Em falha de rede mantém o usuário armazenado.
+  Future<AuthUser?> recarregarMe() async {
+    final atual = getStoredUser();
+    if (atual == null) return null;
+    try {
+      final me = await _api.get('/me') as Map<String, dynamic>;
+      final user = _montarUsuario(
+        me,
+        id: (me['id'] as String?) ?? atual.id,
+        nome: (me['nome'] as String?) ?? atual.nome,
+        email: (me['email'] as String?) ?? atual.email,
+      );
+      await _prefs.setString(_userKey, jsonEncode(user.toJson()));
+      return user;
+    } on ApiException catch (e) {
+      if (e.status == 401) rethrow;
+      return atual;
+    } catch (_) {
+      return atual;
+    }
+  }
+
+  AuthUser _montarUsuario(
+    Map<String, dynamic> me, {
+    required String id,
+    required String nome,
+    required String email,
+  }) {
+    final visiveisJson = me['igrejasVisiveis'] as List<dynamic>? ?? [];
+    return AuthUser(
+      id: id,
+      nome: nome,
+      email: email,
+      papeis: (me['papeis'] as List<dynamic>? ?? const [])
+          .map((p) => p as String)
+          .toList(),
+      permissoes: Permissoes.fromJson(
+        me['permissoes'] as Map<String, dynamic>?,
+      ),
+      permissoesAusentes: me['permissoes'] == null,
       pessoaId: me['pessoaId'] as String?,
       igrejaId: me['igrejaId'] as String? ?? '',
-      igrejaTipo: (me['igrejaTipo'] as String? ?? 'FILIAL').toUpperCase() == 'MATRIZ'
+      igrejaTipo:
+          (me['igrejaTipo'] as String? ?? 'FILIAL').toUpperCase() == 'MATRIZ'
           ? IgrejaTipo.matriz
           : IgrejaTipo.filial,
       igrejaNome: me['igrejaNome'] as String? ?? '',
@@ -77,9 +118,6 @@ class AuthService {
           )
           .toList(),
     );
-
-    await _prefs.setString(_userKey, jsonEncode(user.toJson()));
-    return user;
   }
 
   Future<void> logout() async {

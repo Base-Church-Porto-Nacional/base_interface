@@ -97,6 +97,7 @@ class SmallGroupService {
       liderNome: json['liderNome'] as String? ?? '—',
       ativo: json['ativo'] as bool? ?? true,
       nota: (json['nota'] as num?)?.toInt() ?? 0,
+      ministerioId: json['ministerioId'] as String?,
       encontros: encontrosJson.map((e) => _mapEncontro(e as Map<String, dynamic>)).toList(),
     );
   }
