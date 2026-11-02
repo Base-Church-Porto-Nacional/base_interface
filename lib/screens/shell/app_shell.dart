@@ -19,6 +19,7 @@ class AppShell extends StatelessWidget {
   static const double _compactTextScale = 1.3;
   static const double _wideWidth = 900;
   static const double _selectorMinWidth = 88;
+  static const double _selectorShare = 0.4;
   static const double _selectorWidth = 180;
   static const double _selectorWideWidth = 260;
 
@@ -74,16 +75,14 @@ class AppShell extends StatelessWidget {
                   ),
                   if (canSwitch) ...[
                     const SizedBox(width: 8),
-                    Flexible(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minWidth: _selectorMinWidth,
-                          maxWidth: width >= _wideWidth
-                              ? _selectorWideWidth
-                              : _selectorWidth,
-                        ),
-                        child: _IgrejaSelector(igrejaCtx: igrejaCtx),
+                    SizedBox(
+                      width: (width * _selectorShare).clamp(
+                        _selectorMinWidth,
+                        width >= _wideWidth
+                            ? _selectorWideWidth
+                            : _selectorWidth,
                       ),
+                      child: _IgrejaSelector(igrejaCtx: igrejaCtx),
                     ),
                   ],
                   if (compact)

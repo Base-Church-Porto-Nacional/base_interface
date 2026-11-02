@@ -150,6 +150,10 @@ void main() {
       t.getSize(find.byType(DropdownButton<String>)).width,
       greaterThan(200),
     );
+    expect(
+      t.getRect(find.widgetWithText(TextButton, 'Sair')).right,
+      greaterThan(1280 - 16),
+    );
   });
 
   testWidgets('luz ambiente passa por baixo da app bar', (t) async {
