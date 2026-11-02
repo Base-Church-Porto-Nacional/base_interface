@@ -22,6 +22,7 @@ class SplashScreen extends StatelessWidget {
                 height: 2,
                 child: LinearProgressIndicator(
                   minHeight: 2,
+                  value: MediaQuery.disableAnimationsOf(context) ? 0.4 : null,
                   color: onInverse,
                   backgroundColor: onInverse.withValues(alpha: 0.16),
                 ),

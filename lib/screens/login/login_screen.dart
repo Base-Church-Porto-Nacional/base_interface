@@ -265,7 +265,7 @@ class _Stage extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.6),
+                color: context.brand.inverse.withValues(alpha: 0.6),
                 blurRadius: size * 0.35,
                 offset: Offset(0, size * 0.12),
               ),
