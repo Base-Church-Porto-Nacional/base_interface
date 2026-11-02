@@ -37,6 +37,21 @@ class UsuarioService {
     return _map(json);
   }
 
+  /// Cria um papel customizado da igreja (`POST /papeis`). Nomes reservados
+  /// (PASTOR, LIDER, ...) são recusados pelo servidor. Devolve o nome salvo.
+  Future<String> criarPapel({
+    required String nome,
+    required bool podeLancarContagem,
+    required String igrejaId,
+  }) async {
+    final json = await _api.post('/papeis', {
+      'nome': nome,
+      'podeLancarContagem': podeLancarContagem,
+      'igrejaId': igrejaId,
+    }) as Map<String, dynamic>;
+    return json['nome'] as String;
+  }
+
   /// Nomes dos papéis customizados (não-sistema) da igreja.
   Future<List<String>> listarPapeisCustomizados(String igrejaId) async {
     final list = await _api.get('/papeis', query: {'igrejaId': igrejaId})

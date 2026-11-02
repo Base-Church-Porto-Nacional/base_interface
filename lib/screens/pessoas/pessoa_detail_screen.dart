@@ -113,6 +113,16 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
           customizados: customizados,
           podeGestao: podeGestao,
           podeCustom: podeCustom,
+          onCriarPapel: podeCustom
+              ? (nome, contagem) async {
+                  await usuarioService.criarPapel(
+                    nome: nome,
+                    podeLancarContagem: contagem,
+                    igrejaId: p.igrejaId,
+                  );
+                  return usuarioService.listarPapeisCustomizados(p.igrejaId);
+                }
+              : null,
         ),
       );
       if (novos == null || !mounted) return;

@@ -105,6 +105,27 @@ class _MinisterioDetailScreenState extends State<MinisterioDetailScreen> {
     }
   }
 
+  Future<void> _adicionarPessoaExistente() async {
+    final m = _ministerio;
+    if (m == null) return;
+    final pessoaService = context.read<PessoaService>();
+    final ministerioService = context.read<MinisterioService>();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AdicionarPessoaExistenteDialog(
+        ministerio: m,
+        buscar: pessoaService.buscarPorNome,
+        vincular: (pessoaId, servicoId) =>
+            ministerioService.vincularPessoa(pessoaId: pessoaId, servicoId: servicoId),
+      ),
+    );
+    if (ok != true || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Pessoa adicionada ao ministério.')),
+    );
+    _load();
+  }
+
   Future<void> _saveNotas() async {
     final m = _ministerio;
     if (m == null) return;
@@ -155,6 +176,11 @@ class _MinisterioDetailScreenState extends State<MinisterioDetailScreen> {
           actions: [
             OutlinedButton(onPressed: () => context.pop(), child: const Text('Voltar')),
             if (canManage) OutlinedButton(onPressed: _edit, child: const Text('Editar')),
+            if (canManage)
+              OutlinedButton(
+                onPressed: _adicionarPessoaExistente,
+                child: const Text('Adicionar pessoa existente'),
+              ),
           ],
         ),
         Card(

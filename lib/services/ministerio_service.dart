@@ -12,6 +12,19 @@ class MinisterioService {
     return list.map((e) => _map(e as Map<String, dynamic>)).toList();
   }
 
+  /// Vincula uma pessoa já cadastrada a um serviço (real) do ministério
+  /// (`POST /voluntarios`). Erros do servidor (já vinculada, sem permissão,
+  /// pessoa de outra igreja) sobem como exceção com a mensagem do backend.
+  Future<void> vincularPessoa({
+    required String pessoaId,
+    required String servicoId,
+  }) async {
+    await _api.post('/voluntarios', {
+      'pessoaId': pessoaId,
+      'servicoId': servicoId,
+    });
+  }
+
   Future<Ministerio> getById(String id) async {
     final json = await _api.get('/ministerios/$id') as Map<String, dynamic>;
     return _map(json);
