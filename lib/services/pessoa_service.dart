@@ -76,19 +76,20 @@ class PessoaService {
     return _mapPessoa(json);
   }
 
+  /// PUT parcial: só envia os campos que o formulário edita. Campo ausente não
+  /// é alterado no servidor; texto vazio limpa o campo.
   Future<Pessoa> update(
     String id, {
-    required String nome,
+    String? nome,
     String? telefone,
     String? email,
     String? whatsapp,
   }) async {
-    final wa = _whatsappNormalizado(whatsapp);
     final json = await _api.put('/pessoas/$id', {
-      'nome': nome,
-      'telefone': telefone,
-      'email': email,
-      'whatsapp': wa,
+      'nome': ?nome,
+      if (telefone != null) 'telefone': telefone.trim(),
+      if (email != null) 'email': email.trim(),
+      if (whatsapp != null) 'whatsapp': whatsapp.trim(),
     }) as Map<String, dynamic>;
     return _mapPessoa(json);
   }
@@ -120,6 +121,9 @@ class PessoaService {
     final papeis = (json['papeis'] as List<dynamic>? ?? const [])
         .map((r) => r as String)
         .toList();
+    final funcoes = (json['funcoes'] as List<dynamic>? ?? const [])
+        .map((r) => r as String)
+        .toList();
     return Pessoa(
       id: json['id'] as String,
       nome: json['nome'] as String,
@@ -129,7 +133,7 @@ class PessoaService {
       status: (json['ativo'] as bool? ?? true)
           ? PessoaStatus.ativo
           : PessoaStatus.inativo,
-      tipos: pessoaTiposDePapeis(papeis),
+      tipos: pessoaTiposDeFuncoes(funcoes),
       ministerios: const [],
       dataCadastro: json['dataCadastro'] as String? ?? '',
       igrejaId: json['igrejaId'] as String? ?? '',

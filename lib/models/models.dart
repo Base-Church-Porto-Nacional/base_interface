@@ -310,11 +310,12 @@ List<String> _papeisDeTipos(List<PessoaTipo> tipos) {
   return papeis;
 }
 
-/// Papéis são strings do servidor (sistema ou customizados da igreja).
-/// Só LIDER/VOLUNTARIO/MEMBRO/PASTOR viram "tipo" de pessoa para filtros.
-List<PessoaTipo> pessoaTiposDePapeis(List<String> papeis) {
+/// `funcoes` vêm do servidor, derivadas por pessoa: PASTOR/SECRETARIA (papéis de
+/// sistema), LIDER (lidera algo), VOLUNTARIO (serve) e MEMBRO (tem conta ativa).
+/// Só PASTOR/LIDER/VOLUNTARIO/MEMBRO viram "tipo" de pessoa; vazio = visitante.
+List<PessoaTipo> pessoaTiposDeFuncoes(List<String> funcoes) {
   final tipos = <PessoaTipo>[];
-  for (final r in papeis) {
+  for (final r in funcoes) {
     switch (r.toUpperCase()) {
       case 'PASTOR':
         tipos.add(PessoaTipo.pastor);

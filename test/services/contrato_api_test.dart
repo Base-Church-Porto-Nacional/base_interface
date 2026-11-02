@@ -2,6 +2,7 @@ import 'package:base_church/models/models.dart';
 import 'package:base_church/services/auth_service.dart';
 import 'package:base_church/services/dashboard_service.dart';
 import 'package:base_church/services/disponibilidade_service.dart';
+import 'package:base_church/services/ministerio_service.dart';
 import 'package:base_church/services/pessoa_service.dart';
 import 'package:base_church/services/usuario_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,7 +33,7 @@ void main() {
             {
               'nome': 'Ana Costa',
               'email': 'ana@base.church',
-              'papeis': ['ADMIN', 'PASTOR'],
+              'papeis': ['PASTOR'],
               'permissoes': {
                 'capacidades': ['PESSOAS_VER_TODAS', 'INEXISTENTE'],
                 'ministeriosLiderados': ['m1'],
@@ -67,7 +68,7 @@ void main() {
       expect(fake.chamadas.first.headers.containsKey('Authorization'), isFalse);
       expect(user.id, 'u1');
       expect(user.nome, 'Ana Costa');
-      expect(user.papeis, ['ADMIN', 'PASTOR']);
+      expect(user.papeis, ['PASTOR']);
       expect(user.permissoes.capacidades, {Capacidade.pessoasVerTodas});
       expect(user.permissoes.ministeriosLiderados, {'m1'});
       expect(user.permissoes.ehVoluntario, isTrue);
@@ -195,17 +196,20 @@ void main() {
             {
               'id': 'p1',
               'nome': 'Ana',
-              'papeis': ['MEMBRO', 'LIDER'],
+              'papeis': ['PASTOR'],
+              'funcoes': ['MEMBRO', 'LIDER', 'PASTOR'],
             },
             {
               'id': 'p2',
               'nome': 'Bia',
-              'papeis': ['VOLUNTARIO'],
+              'papeis': <String>[],
+              'funcoes': ['VOLUNTARIO'],
             },
             {
               'id': 'p3',
               'nome': 'Caio',
-              'papeis': ['MEMBRO'],
+              'papeis': ['CONTADOR'],
+              'funcoes': ['MEMBRO'],
             },
           ],
         ),
@@ -306,6 +310,51 @@ void main() {
 
       expect(papeis, ['CONTADOR']);
     });
+    test('criarPapel faz POST /papeis com nome, contagem e igreja', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /papeis': (_) => (
+          201,
+          {'id': 'c1', 'nome': 'CONTADOR', 'sistema': false, 'podeLancarContagem': true},
+        ),
+      });
+
+      final nome = await fake.run(
+        () => UsuarioService(api).criarPapel(
+          nome: 'Contador',
+          podeLancarContagem: true,
+          igrejaId: 'i1',
+        ),
+      );
+
+      expect(fake.log, ['POST /papeis']);
+      expect(fake.corpo(0), {
+        'nome': 'Contador',
+        'podeLancarContagem': true,
+        'igrejaId': 'i1',
+      });
+      expect(nome, 'CONTADOR');
+    });
+
+    test('criarPapel repassa a recusa do servidor (nome reservado)', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /papeis': (_) => (400, {'message': 'Nome de papel reservado: LIDER'}),
+      });
+
+      expect(
+        () => fake.run(
+          () => UsuarioService(api).criarPapel(
+            nome: 'LIDER',
+            podeLancarContagem: false,
+            igrejaId: 'i1',
+          ),
+        ),
+        throwsA(
+          isA<Exception>().having((e) => e.toString(), 'mensagem', contains('reservado')),
+        ),
+      );
+    });
   });
 
   group('PessoaService', () {
@@ -326,6 +375,68 @@ void main() {
       final r = await fake.run(() => PessoaService(api).buscarPorNome('jo'));
 
       expect(r.map((e) => (e.id, e.nome)), [('p1', 'João')]);
+    });
+
+    test('tipos vêm de funcoes (papéis de sistema/customizados não viram tipo)', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'GET /pessoas': (_) => (
+          200,
+          [
+            {
+              'id': 'p1',
+              'nome': 'Ana',
+              'papeis': ['SECRETARIA', 'CONTADOR'],
+              'funcoes': ['LIDER', 'MEMBRO', 'SECRETARIA', 'VOLUNTARIO'],
+            },
+            {'id': 'p2', 'nome': 'Bia', 'papeis': <String>[], 'funcoes': <String>[]},
+            {'id': 'p3', 'nome': 'Caio', 'papeis': ['LIDER']},
+          ],
+        ),
+      });
+
+      final page = await fake.run(() => PessoaService(api).list(size: 10));
+      final porId = {for (final p in page.content) p.id: p.tipos};
+
+      expect(porId['p1'], containsAll([PessoaTipo.lider, PessoaTipo.membro, PessoaTipo.voluntario]));
+      expect(porId['p2'], [PessoaTipo.visitante]);
+      expect(porId['p3'], [PessoaTipo.visitante]);
+    });
+
+    test('update faz PUT parcial só com os campos do formulário', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'PUT /pessoas/p2': (_) => (200, {'id': 'p2', 'nome': 'Ana', 'funcoes': ['MEMBRO']}),
+      });
+
+      await fake.run(
+        () => PessoaService(api).update(
+          'p2',
+          nome: 'Ana',
+          telefone: '11999',
+          email: 'ana@x.com',
+          whatsapp: '',
+        ),
+      );
+
+      expect(fake.log, ['PUT /pessoas/p2']);
+      expect(fake.corpo(0), {
+        'nome': 'Ana',
+        'telefone': '11999',
+        'email': 'ana@x.com',
+        'whatsapp': '',
+      });
+    });
+
+    test('update omite campos não informados', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'PUT /pessoas/p2': (_) => (200, {'id': 'p2', 'nome': 'Ana'}),
+      });
+
+      await fake.run(() => PessoaService(api).update('p2', nome: 'Ana'));
+
+      expect(fake.corpo(0), {'nome': 'Ana'});
     });
 
     test('create envia servicoId quando informado', () async {
@@ -350,6 +461,37 @@ void main() {
       await fake.run(() => PessoaService(api).create(nome: 'Ana'));
 
       expect((fake.corpo(0) as Map).containsKey('servicoId'), isFalse);
+    });
+  });
+  group('MinisterioService', () {
+    test('vincularPessoa faz POST /voluntarios com pessoa e serviço', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /voluntarios': (_) => (201, {'id': 'ps1', 'pessoaId': 'p5', 'servicoId': 's1a'}),
+      });
+
+      await fake.run(
+        () => MinisterioService(api).vincularPessoa(pessoaId: 'p5', servicoId: 's1a'),
+      );
+
+      expect(fake.log, ['POST /voluntarios']);
+      expect(fake.corpo(0), {'pessoaId': 'p5', 'servicoId': 's1a'});
+    });
+
+    test('vincularPessoa repassa o erro do servidor', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /voluntarios': (_) => (400, {'message': 'A pessoa já está vinculada a este serviço'}),
+      });
+
+      expect(
+        () => fake.run(
+          () => MinisterioService(api).vincularPessoa(pessoaId: 'p5', servicoId: 's1a'),
+        ),
+        throwsA(
+          isA<Exception>().having((e) => e.toString(), 'mensagem', contains('já está vinculada')),
+        ),
+      );
     });
   });
 }

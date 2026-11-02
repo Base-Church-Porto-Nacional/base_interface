@@ -1,21 +1,42 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/models.dart';
 import '../services/auth_service.dart';
 
-class AuthProvider extends ChangeNotifier {
+class AuthProvider extends ChangeNotifier with WidgetsBindingObserver {
   AuthProvider(this._authService) {
     user = _authService.getStoredUser();
-    // Sessão persistida no formato antigo (sem `permissoes`): busca /me agora;
-    // enquanto isso o usuário fica sem permissões (fail-closed).
-    if (user?.permissoesAusentes ?? false) {
+    // Sempre revalida a sessão armazenada em /me: papéis/permissões podem ter
+    // mudado desde o último uso (e sessões antigas não têm `permissoes`, ficando
+    // fail-closed até a resposta).
+    if (user != null) {
       unawaited(recarregarMe());
     }
   }
 
   final AuthService _authService;
+  bool _disposed = false;
+
+  /// Ao voltar para o app, revalida as permissões (registrado em `app.dart`).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && user != null) {
+      unawaited(recarregarMe());
+    }
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   AuthUser? user;
   bool isLoading = false;
