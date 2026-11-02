@@ -6,8 +6,6 @@ const mockIgrejaMatriz = Igreja(
   tipo: IgrejaTipo.matriz,
   pastorPessoaId: 'p1',
   pastorNome: 'Ana Costa',
-  adminUsuarioId: 'u1',
-  adminNome: 'Ana Costa',
   ativo: true,
 );
 
@@ -18,8 +16,6 @@ const mockIgrejaFilial = Igreja(
   igrejaMatrizId: 'i1',
   pastorPessoaId: 'p8',
   pastorNome: 'Pedro Alves',
-  adminUsuarioId: 'u2',
-  adminNome: 'Luciana Rocha',
   ativo: true,
 );
 

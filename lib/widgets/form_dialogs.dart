@@ -441,16 +441,56 @@ class FilialFormDialog extends StatefulWidget {
 
 class _FilialFormDialogState extends State<FilialFormDialog> {
   final _nome = TextEditingController();
-  final _adminNome = TextEditingController();
-  final _adminEmail = TextEditingController();
+  final _pastorNome = TextEditingController();
+  final _pastorEmail = TextEditingController();
+  final _pastorWhatsapp = TextEditingController();
   String? _pastorId;
+  bool _novaPessoa = false;
+  String? _erro;
+
+  @override
+  void initState() {
+    super.initState();
+    _novaPessoa = widget.pessoas.isEmpty;
+  }
 
   @override
   void dispose() {
     _nome.dispose();
-    _adminNome.dispose();
-    _adminEmail.dispose();
+    _pastorNome.dispose();
+    _pastorEmail.dispose();
+    _pastorWhatsapp.dispose();
     super.dispose();
+  }
+
+  void _criar() {
+    if (_nome.text.trim().isEmpty) return;
+    if (!_novaPessoa) {
+      if (_pastorId == null) return;
+      Pessoa? pastor;
+      for (final p in widget.pessoas) {
+        if (p.id == _pastorId) pastor = p;
+      }
+      Navigator.pop(context, {
+        'nome': _nome.text.trim(),
+        'pastorPessoaId': _pastorId,
+        'pastorNome': pastor?.nome ?? '',
+      });
+      return;
+    }
+    final email = _pastorEmail.text.trim();
+    final whatsapp = _pastorWhatsapp.text.trim();
+    if (_pastorNome.text.trim().isEmpty) return;
+    if (email.isEmpty && whatsapp.isEmpty) {
+      setState(() => _erro = 'Informe e-mail ou WhatsApp.');
+      return;
+    }
+    Navigator.pop(context, {
+      'nome': _nome.text.trim(),
+      'pastorNome': _pastorNome.text.trim(),
+      if (email.isNotEmpty) 'pastorEmail': email,
+      if (whatsapp.isNotEmpty) 'pastorWhatsapp': whatsapp,
+    });
   }
 
   @override
@@ -466,52 +506,98 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
               decoration: const InputDecoration(labelText: 'Nome da filial *'),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _pastorId,
-              decoration: const InputDecoration(labelText: 'Pastor *'),
-              items: [
-                for (final p in widget.pessoas)
-                  DropdownMenuItem(value: p.id, child: Text(p.nome)),
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(value: false, label: Text('Pessoa já cadastrada')),
+                ButtonSegment(value: true, label: Text('Nova pessoa')),
               ],
-              onChanged: (v) => setState(() => _pastorId = v),
+              selected: {_novaPessoa},
+              onSelectionChanged: (v) => setState(() {
+                _novaPessoa = v.first;
+                _erro = null;
+              }),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _adminNome,
-              decoration: const InputDecoration(labelText: 'Nome do admin *'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _adminEmail,
-              decoration: const InputDecoration(labelText: 'E-mail do admin *'),
-              keyboardType: TextInputType.emailAddress,
-            ),
+            if (!_novaPessoa)
+              DropdownButtonFormField<String>(
+                initialValue: _pastorId,
+                decoration: const InputDecoration(labelText: 'Pastor *'),
+                items: [
+                  for (final p in widget.pessoas)
+                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
+                ],
+                onChanged: (v) => setState(() => _pastorId = v),
+              )
+            else ...[
+              TextField(
+                controller: _pastorNome,
+                decoration: const InputDecoration(labelText: 'Nome do pastor *'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _pastorEmail,
+                decoration: const InputDecoration(labelText: 'E-mail'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _pastorWhatsapp,
+                decoration: const InputDecoration(labelText: 'WhatsApp'),
+                keyboardType: TextInputType.phone,
+              ),
+              if (_erro != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    _erro!,
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                ),
+            ],
           ],
         ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        FilledButton(onPressed: _criar, child: const Text('Criar')),
+      ],
+    );
+  }
+}
+
+/// Escolha do novo pastor entre as pessoas da própria igreja.
+class TrocarPastorDialog extends StatefulWidget {
+  const TrocarPastorDialog({super.key, required this.pessoas, this.atualId});
+
+  final List<Pessoa> pessoas;
+  final String? atualId;
+
+  @override
+  State<TrocarPastorDialog> createState() => _TrocarPastorDialogState();
+}
+
+class _TrocarPastorDialogState extends State<TrocarPastorDialog> {
+  String? _id;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Trocar pastor'),
+      content: DropdownButtonFormField<String>(
+        initialValue: _id,
+        decoration: const InputDecoration(labelText: 'Novo pastor *'),
+        items: [
+          for (final p in widget.pessoas)
+            if (p.id != widget.atualId)
+              DropdownMenuItem(value: p.id, child: Text(p.nome)),
+        ],
+        onChanged: (v) => setState(() => _id = v),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
         FilledButton(
-          onPressed: () {
-            if (_nome.text.trim().isEmpty ||
-                _pastorId == null ||
-                _adminNome.text.trim().isEmpty ||
-                _adminEmail.text.trim().isEmpty) {
-              return;
-            }
-            Pessoa? pastor;
-            for (final p in widget.pessoas) {
-              if (p.id == _pastorId) pastor = p;
-            }
-            Navigator.pop(context, {
-              'nome': _nome.text.trim(),
-              'pastorPessoaId': _pastorId,
-              'pastorNome': pastor?.nome ?? '',
-              'adminNome': _adminNome.text.trim(),
-              'adminEmail': _adminEmail.text.trim(),
-            });
-          },
-          child: const Text('Criar'),
+          onPressed: _id == null ? null : () => Navigator.pop(context, _id),
+          child: const Text('Trocar'),
         ),
       ],
     );

@@ -28,8 +28,6 @@ class Igreja {
     required this.tipo,
     required this.pastorPessoaId,
     required this.pastorNome,
-    required this.adminUsuarioId,
-    required this.adminNome,
     required this.ativo,
     this.igrejaMatrizId,
   });
@@ -40,8 +38,6 @@ class Igreja {
   final String? igrejaMatrizId;
   final String pastorPessoaId;
   final String pastorNome;
-  final String adminUsuarioId;
-  final String adminNome;
   final bool ativo;
 
   bool get isMatriz => tipo == IgrejaTipo.matriz;
@@ -1551,8 +1547,6 @@ Igreja _igrejaFromJson(Map<String, dynamic> json) {
     tipo: _igrejaTipoFromString(json['tipo'] as String? ?? 'FILIAL'),
     pastorPessoaId: json['pastorPessoaId'] as String? ?? '',
     pastorNome: json['pastorNome'] as String? ?? '',
-    adminUsuarioId: json['adminUsuarioId'] as String? ?? '',
-    adminNome: json['adminNome'] as String? ?? '',
     ativo: json['ativo'] as bool? ?? true,
     igrejaMatrizId: json['igrejaMatrizId'] as String?,
   );
@@ -1564,8 +1558,6 @@ Map<String, dynamic> _igrejaToJson(Igreja i) => {
   'tipo': _igrejaTipoToString(i.tipo),
   'pastorPessoaId': i.pastorPessoaId,
   'pastorNome': i.pastorNome,
-  'adminUsuarioId': i.adminUsuarioId,
-  'adminNome': i.adminNome,
   'ativo': i.ativo,
   'igrejaMatrizId': i.igrejaMatrizId,
 };

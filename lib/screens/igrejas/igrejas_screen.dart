@@ -9,6 +9,7 @@ import '../../services/igreja_service.dart';
 import '../../services/pessoa_service.dart';
 import '../../widgets/common.dart';
 import '../../widgets/form_dialogs.dart';
+import '../../widgets/link_acesso_dialog.dart';
 
 class IgrejasScreen extends StatefulWidget {
   const IgrejasScreen({super.key});
@@ -62,17 +63,27 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
     );
     if (result == null || !mounted) return;
     try {
-      await context.read<IgrejaService>().createFilial(
+      final r = await context.read<IgrejaService>().criarFilial(
             matrizId: matriz.id,
             nome: result['nome'] as String,
-            pastorPessoaId: result['pastorPessoaId'] as String,
-            pastorNome: result['pastorNome'] as String,
-            adminNome: result['adminNome'] as String,
-            adminEmail: result['adminEmail'] as String,
+            pastorPessoaId: result['pastorPessoaId'] as String?,
+            pastorNome: result['pastorNome'] as String?,
+            pastorEmail: result['pastorEmail'] as String?,
+            pastorWhatsapp: result['pastorWhatsapp'] as String?,
           );
       if (!mounted) return;
       await context.read<IgrejaContext>().reload(context.read<AuthProvider>().user);
       _load();
+      final convite = r.convite;
+      if (convite != null && mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (_) => LinkAcessoDialog(
+            link: convite.link,
+            enviadoWhatsapp: convite.enviadoWhatsapp,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -87,7 +98,7 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
       children: [
         PageHeader(
           title: 'Gestão Igreja',
-          description: 'Matriz e filiais. Cada igreja tem um pastor e um admin.',
+          description: 'Matriz e filiais. Cada igreja tem um pastor.',
           actions: [
             if (context.watch<AuthProvider>().user case final u?
                 when u.isMatriz && u.permissoes.tem(Capacidade.filialCriar))
@@ -104,7 +115,7 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
               padding: const EdgeInsets.only(bottom: 8),
               child: MobileListTile(
                 title: i.nome,
-                subtitle: 'Pastor: ${i.pastorNome} · Admin: ${i.adminNome}',
+                subtitle: 'Pastor: ${i.pastorNome}',
                 trailing: StatusBadge(
                   label: igrejaTipoLabel(i.tipo).toUpperCase(),
                   success: i.isMatriz,

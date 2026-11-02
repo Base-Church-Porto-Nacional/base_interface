@@ -1,6 +1,11 @@
 import '../models/models.dart';
 import 'api_client.dart';
 
+typedef ResultadoPastor = ({
+  Igreja igreja,
+  ({String link, bool enviadoWhatsapp})? convite,
+});
+
 class IgrejaService {
   IgrejaService(this._api);
 
@@ -21,36 +26,58 @@ class IgrejaService {
     return _map(json);
   }
 
-  Future<Igreja> createFilial({
+  Future<ResultadoPastor> criarFilial({
     required String matrizId,
     required String nome,
-    required String pastorPessoaId,
-    required String pastorNome,
-    required String adminNome,
-    required String adminEmail,
+    String? pastorPessoaId,
+    String? pastorNome,
+    String? pastorEmail,
+    String? pastorWhatsapp,
   }) async {
+    final pastor = pastorPessoaId != null
+        ? {'pessoaId': pastorPessoaId}
+        : {
+            'nome': pastorNome,
+            'email': ?pastorEmail,
+            'whatsapp': ?pastorWhatsapp,
+          };
     final json = await _api.post('/igrejas/$matrizId/filiais', {
       'nome': nome,
-      'pastorPessoaId': pastorPessoaId,
-      'adminNome': adminNome,
-      'adminEmail': adminEmail,
+      'pastor': pastor,
     }) as Map<String, dynamic>;
-    return _map(json);
+    return _resultado(json);
+  }
+
+  Future<ResultadoPastor> trocarPastor(String igrejaId, String pessoaId) async {
+    final json = await _api.put('/igrejas/$igrejaId/pastor', {
+      'pessoaId': pessoaId,
+    }) as Map<String, dynamic>;
+    return _resultado(json);
   }
 
   Future<Igreja> update(
     String id, {
     required String nome,
-    required String pastorPessoaId,
-    required String pastorNome,
     required bool ativo,
   }) async {
     final json = await _api.put('/igrejas/$id', {
       'nome': nome,
-      'pastorPessoaId': pastorPessoaId,
       'ativo': ativo,
     }) as Map<String, dynamic>;
     return _map(json);
+  }
+
+  ResultadoPastor _resultado(Map<String, dynamic> json) {
+    final c = json['convite'] as Map<String, dynamic>?;
+    return (
+      igreja: _map(json['igreja'] as Map<String, dynamic>),
+      convite: c == null
+          ? null
+          : (
+              link: c['link'] as String,
+              enviadoWhatsapp: c['enviadoWhatsapp'] as bool? ?? false,
+            ),
+    );
   }
 
   Igreja _map(Map<String, dynamic> json) {
@@ -63,8 +90,6 @@ class IgrejaService {
       igrejaMatrizId: json['igrejaMatrizId'] as String?,
       pastorPessoaId: json['pastorPessoaId'] as String? ?? '',
       pastorNome: json['pastorNome'] as String? ?? '',
-      adminUsuarioId: json['adminUsuarioId'] as String? ?? '',
-      adminNome: json['adminNome'] as String? ?? '',
       ativo: json['ativo'] as bool? ?? true,
     );
   }

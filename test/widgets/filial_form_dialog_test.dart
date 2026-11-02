@@ -1,11 +1,7 @@
-import 'package:base_church/services/igreja_service.dart';
+import 'package:base_church/models/models.dart';
 import 'package:base_church/widgets/form_dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../helpers/fake_api.dart';
-
-import 'package:base_church/models/models.dart';
 
 const _pastor = Pessoa(
   id: 'p1',
@@ -19,30 +15,42 @@ const _pastor = Pessoa(
   igrejaId: 'i1',
 );
 
-void main() {
-  testWidgets('novaFilialNaoPedeUsuarioDoAdmin', (tester) async {
-    Map<String, dynamic>? resultado;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: TextButton(
-              onPressed: () async {
-                resultado = await showDialog<Map<String, dynamic>>(
+Future<Map<String, dynamic>?> _abrir(
+  WidgetTester tester,
+  void Function(Map<String, dynamic>?) onResult,
+) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: TextButton(
+            onPressed: () async {
+              onResult(
+                await showDialog<Map<String, dynamic>>(
                   context: context,
                   builder: (_) => FilialFormDialog(pessoas: const [_pastor]),
-                );
-              },
-              child: const Text('abrir'),
-            ),
+                ),
+              );
+            },
+            child: const Text('abrir'),
           ),
         ),
       ),
-    );
-    await tester.tap(find.text('abrir'));
-    await tester.pumpAndSettle();
+    ),
+  );
+  await tester.tap(find.text('abrir'));
+  await tester.pumpAndSettle();
+  return null;
+}
 
-    expect(find.text('Usuário do admin *'), findsNothing);
+void main() {
+  testWidgets('semCamposDeAdmin', (tester) async {
+    Map<String, dynamic>? resultado;
+    await _abrir(tester, (r) => resultado = r);
+
+    expect(find.text('Nome do admin *'), findsNothing);
+    expect(find.text('E-mail do admin *'), findsNothing);
+    expect(find.textContaining('senha', findRichText: true), findsNothing);
 
     await tester.enterText(
       find.widgetWithText(TextField, 'Nome da filial *'),
@@ -52,41 +60,46 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ana Costa').last);
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Criar'));
+    await tester.pumpAndSettle();
+
+    expect(resultado, isNotNull);
+    expect(resultado!['pastorPessoaId'], 'p1');
+    expect(resultado!.containsKey('adminEmail'), isFalse);
+  });
+
+  testWidgets('novaPessoaExigeEmailOuWhatsapp', (tester) async {
+    Map<String, dynamic>? resultado;
+    await _abrir(tester, (r) => resultado = r);
+
     await tester.enterText(
-      find.widgetWithText(TextField, 'Nome do admin *'),
+      find.widgetWithText(TextField, 'Nome da filial *'),
+      'Filial Norte',
+    );
+    await tester.tap(find.text('Nova pessoa'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Nome do pastor *'),
       'Carlos',
     );
+    await tester.tap(find.text('Criar'));
+    await tester.pumpAndSettle();
+
+    // sem e-mail nem WhatsApp: o diálogo continua aberto
+    expect(find.text('Nova filial'), findsOneWidget);
+    expect(find.text('Informe e-mail ou WhatsApp.'), findsOneWidget);
+    expect(resultado, isNull);
+
     await tester.enterText(
-      find.widgetWithText(TextField, 'E-mail do admin *'),
+      find.widgetWithText(TextField, 'E-mail'),
       'carlos@x.com',
     );
     await tester.tap(find.text('Criar'));
     await tester.pumpAndSettle();
 
     expect(resultado, isNotNull);
-    expect(resultado!['adminEmail'], 'carlos@x.com');
-    expect(resultado!.containsKey('adminUsername'), isFalse);
-  });
-
-  test('createFilialNaoEnviaAdminUsername', () async {
-    final fake = FakeApi({
-      'POST /igrejas/i1/filiais': (_) =>
-          (201, {'id': 'i9', 'nome': 'Filial Norte', 'tipo': 'FILIAL'}),
-    });
-    final api = await apiClientDeTeste();
-    await fake.run(
-      () => IgrejaService(api).createFilial(
-        matrizId: 'i1',
-        nome: 'Filial Norte',
-        pastorPessoaId: 'p1',
-        pastorNome: 'Ana',
-        adminNome: 'Carlos',
-        adminEmail: 'carlos@x.com',
-      ),
-    );
-
-    final corpo = fake.corpo(0) as Map<String, dynamic>;
-    expect(corpo.containsKey('adminUsername'), isFalse);
-    expect(corpo['adminEmail'], 'carlos@x.com');
+    expect(resultado!['pastorNome'], 'Carlos');
+    expect(resultado!['pastorEmail'], 'carlos@x.com');
+    expect(resultado!['pastorPessoaId'], isNull);
   });
 }

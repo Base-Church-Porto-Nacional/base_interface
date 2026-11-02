@@ -4,6 +4,7 @@ import 'package:base_church/services/api_client.dart';
 import 'package:base_church/services/auth_service.dart';
 import 'package:base_church/services/dashboard_service.dart';
 import 'package:base_church/services/disponibilidade_service.dart';
+import 'package:base_church/services/igreja_service.dart';
 import 'package:base_church/services/ministerio_service.dart';
 import 'package:base_church/services/pessoa_service.dart';
 import 'package:base_church/services/usuario_service.dart';
@@ -647,6 +648,84 @@ void main() {
       expect(fake.log, ['POST /auth/esqueci-senha']);
       expect(fake.corpo(0), {'identificador': 'ana@base.church'});
       expect(fake.chamadas.first.headers.containsKey('Authorization'), isFalse);
+    });
+  });
+
+  group('IgrejaService (filial e pastor)', () {
+    const resposta = {
+      'igreja': {
+        'id': 'i9',
+        'nome': 'Filial Norte',
+        'tipo': 'FILIAL',
+        'igrejaMatrizId': 'i1',
+        'pastorPessoaId': 'p1',
+        'pastorNome': 'Ana',
+        'ativo': true,
+      },
+      'convite': {'link': 'https://app/definir?t=abc', 'enviadoWhatsapp': false},
+    };
+
+    test('criarFilialComPessoaExistente', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({'POST /igrejas/i1/filiais': (_) => (201, resposta)});
+
+      final r = await fake.run(
+        () => IgrejaService(api).criarFilial(
+          matrizId: 'i1',
+          nome: 'Filial Norte',
+          pastorPessoaId: 'p1',
+        ),
+      );
+
+      expect(fake.corpo(0), {
+        'nome': 'Filial Norte',
+        'pastor': {'pessoaId': 'p1'},
+      });
+      expect(r.igreja.id, 'i9');
+      expect(r.convite?.link, 'https://app/definir?t=abc');
+      expect(r.convite?.enviadoWhatsapp, isFalse);
+    });
+
+    test('criarFilialComPessoaNova', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /igrejas/i1/filiais': (_) => (201, {'igreja': resposta['igreja'], 'convite': null}),
+      });
+
+      final r = await fake.run(
+        () => IgrejaService(api).criarFilial(
+          matrizId: 'i1',
+          nome: 'Filial Norte',
+          pastorNome: 'Carlos',
+          pastorEmail: 'carlos@x.com',
+        ),
+      );
+
+      expect(fake.corpo(0), {
+        'nome': 'Filial Norte',
+        'pastor': {'nome': 'Carlos', 'email': 'carlos@x.com'},
+      });
+      expect(r.convite, isNull);
+    });
+
+    test('trocarPastorFazPut', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({'PUT /igrejas/i9/pastor': (_) => (200, resposta)});
+
+      final r = await fake.run(() => IgrejaService(api).trocarPastor('i9', 'p2'));
+
+      expect(fake.log, ['PUT /igrejas/i9/pastor']);
+      expect(fake.corpo(0), {'pessoaId': 'p2'});
+      expect(r.convite?.link, 'https://app/definir?t=abc');
+    });
+
+    test('updateEnviaSoNomeEAtivo', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({'PUT /igrejas/i9': (_) => (200, resposta['igreja'])});
+
+      await fake.run(() => IgrejaService(api).update('i9', nome: 'N', ativo: true));
+
+      expect(fake.corpo(0), {'nome': 'N', 'ativo': true});
     });
   });
 }

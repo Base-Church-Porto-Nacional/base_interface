@@ -116,8 +116,6 @@ class AuthService {
                   : IgrejaTipo.filial,
               pastorPessoaId: e['pastorPessoaId'] as String? ?? '',
               pastorNome: e['pastorNome'] as String? ?? '',
-              adminUsuarioId: e['adminUsuarioId'] as String? ?? '',
-              adminNome: e['adminNome'] as String? ?? '',
               ativo: e['ativo'] as bool? ?? true,
               igrejaMatrizId: e['igrejaMatrizId'] as String?,
             ),
