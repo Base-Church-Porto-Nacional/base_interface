@@ -59,6 +59,7 @@ abstract final class AppTheme {
       brightness: brightness,
       extensions: [c],
       scaffoldBackgroundColor: c.background,
+      canvasColor: c.surfaceOverlay,
       focusColor: c.focus,
       colorScheme: ColorScheme(
         brightness: brightness,
@@ -94,6 +95,18 @@ abstract final class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: c.surfaceOverlay,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(c.surfaceOverlay),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: c.surfaceOverlay,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius8,
+          side: BorderSide(color: c.border),
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

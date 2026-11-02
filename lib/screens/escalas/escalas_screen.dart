@@ -8,7 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/escala_service.dart';
 import '../../services/ministerio_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
@@ -174,7 +174,7 @@ class _EscalasScreenState extends State<EscalasScreen> {
                             icon: const Icon(Icons.edit_outlined, size: 16),
                             label: const Text('Editar'),
                             style: TextButton.styleFrom(
-                              foregroundColor: AppColors.black,
+                              foregroundColor: context.brand.textPrimary,
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               visualDensity: VisualDensity.compact,
                             ),

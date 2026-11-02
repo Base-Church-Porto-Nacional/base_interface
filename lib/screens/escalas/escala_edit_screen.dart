@@ -6,7 +6,7 @@ import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/escala_service.dart';
 import '../../services/ministerio_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
@@ -505,7 +505,7 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
                       icon: const Icon(Icons.check, size: 16),
                       label: const Text('Confirmar'),
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.success,
+                        foregroundColor: context.brand.success,
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         visualDensity: VisualDensity.compact,
                       ),
@@ -515,7 +515,7 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
                       icon: const Icon(Icons.swap_horiz, size: 16),
                       label: const Text('Substituir'),
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.black,
+                        foregroundColor: context.brand.textPrimary,
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         visualDensity: VisualDensity.compact,
                       ),
@@ -539,7 +539,7 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
                     IconButton(
                       onPressed: _nestedLoading ? null : () => _removerVoluntario(v),
                       icon: const Icon(Icons.delete_outline, size: 20),
-                      color: AppColors.danger,
+                      color: context.brand.danger,
                       visualDensity: VisualDensity.compact,
                       tooltip: 'Remover designação',
                     ),

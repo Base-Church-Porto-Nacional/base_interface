@@ -7,7 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/escala_service.dart';
 import '../../services/ministerio_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
@@ -464,10 +464,10 @@ class _CandidatosSheet extends StatelessWidget {
                                   ? c.analiseDia!.motivosIndisponibilidade.first
                                   : 'Indisponível'),
                           trailing: (c.analiseDia?.disponivel ?? true)
-                              ? const Icon(Icons.check_circle_outline,
-                                  color: AppColors.success)
-                              : const Icon(Icons.cancel_outlined,
-                                  color: AppColors.danger),
+                              ? Icon(Icons.check_circle_outline,
+                                  color: context.brand.success)
+                              : Icon(Icons.cancel_outlined,
+                                  color: context.brand.danger),
                           onTap: () {
                             if (c.analiseDia?.disponivel ?? true) {
                               Navigator.pop(context, c);

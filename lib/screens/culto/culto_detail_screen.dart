@@ -9,7 +9,7 @@ import '../../services/api_client.dart';
 import '../../services/culto_service.dart';
 import '../../services/ministerio_service.dart';
 import '../../services/pessoa_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
@@ -547,8 +547,8 @@ Text(
                 style: TextStyle(
                   fontSize: 12,
                   color: _culto!.status == CultoStatus.realizado
-                      ? AppColors.success
-                      : AppColors.textMuted,
+                      ? context.brand.success
+                      : context.brand.textMuted,
                 ),
               ),
             if (canManage) ...[

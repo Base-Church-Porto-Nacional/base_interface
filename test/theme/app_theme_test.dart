@@ -30,6 +30,13 @@ void main() {
     expect(light.colorScheme.primary, const Color(0xFF000000));
   });
 
+  test('canvas e menus em superficie overlay', () {
+    expect(light.canvasColor, BrandColors.light.surfaceOverlay);
+    expect(dark.canvasColor, BrandColors.dark.surfaceOverlay);
+    expect(light.popupMenuTheme.color, BrandColors.light.surfaceOverlay);
+    expect(dark.popupMenuTheme.color, BrandColors.dark.surfaceOverlay);
+  });
+
   test('tipografia de marca', () {
     expect(AppTypography.hero.fontFamily, 'Archivo');
     expect(AppTypography.hero.fontSize, 36);
