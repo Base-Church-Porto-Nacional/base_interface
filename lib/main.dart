@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'app.dart';
 import 'config/app_config.dart';
 
 void main() {
+  // URLs sem "#" na web: o backend envia links ${url-base}/acesso/{token}, e o nginx
+  // devolve o index.html para qualquer caminho. No-op em iOS/Android.
+  usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
   final erro = AppConfig.erroDeConfiguracao;
   if (erro != null) {
