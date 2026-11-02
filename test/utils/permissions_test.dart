@@ -129,9 +129,9 @@ void main() {
       expect(isGestao(mockUserContador), isFalse);
     });
 
-    test('canCreateUsuario exige contasGerir; podeEnviarAniversarios exige configurar', () {
-      expect(canCreateUsuario(mockUser), isTrue);
-      expect(canCreateUsuario(mockUserLider), isFalse);
+    test('podeGerirContas exige contasGerir; podeEnviarAniversarios exige configurar', () {
+      expect(podeGerirContas(mockUser), isTrue);
+      expect(podeGerirContas(mockUserLider), isFalse);
       expect(podeEnviarAniversarios(mockUserSecretaria), isTrue);
       expect(podeEnviarAniversarios(mockUserLider), isFalse);
       expect(podeEnviarAniversarios(null), isFalse);

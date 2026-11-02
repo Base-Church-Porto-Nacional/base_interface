@@ -234,6 +234,7 @@ class Pessoa {
     this.whatsapp = '',
     this.jornada = const [],
     this.usuarioId,
+    this.acessoStatus,
     this.papeis = const [],
   });
 
@@ -253,6 +254,9 @@ class Pessoa {
   final List<JornadaEtapa> jornada;
   final String igrejaId;
   final String? usuarioId;
+
+  /// null (sem conta), CONVIDADO, ATIVO ou DESATIVADO.
+  final String? acessoStatus;
   final List<String> papeis;
 
   bool get temUsuario => usuarioId != null && usuarioId!.isNotEmpty;
@@ -286,6 +290,7 @@ class Pessoa {
       jornada: jornada,
       igrejaId: igrejaId,
       usuarioId: usuarioId ?? this.usuarioId,
+      acessoStatus: acessoStatus,
       papeis: papeis,
     );
   }
@@ -519,7 +524,7 @@ class UsuarioConta {
     required this.igrejaId,
     required this.igrejaNome,
     required this.papeis,
-    required this.ativo,
+    required this.status,
     this.pessoaId,
     this.pessoaNome,
   });
@@ -532,7 +537,8 @@ class UsuarioConta {
   final String igrejaId;
   final String igrejaNome;
   final List<String> papeis;
-  final bool ativo;
+  /// CONVIDADO, ATIVO ou DESATIVADO.
+  final String status;
 }
 
 class EscalaItem {

@@ -90,7 +90,6 @@ void main() {
 
     test('não acessa gestão de pessoas, usuários nem configurações', () {
       expect(canAccessPath(mockUserContador, '/membros/pessoas'), isFalse);
-      expect(canAccessPath(mockUserContador, '/usuarios'), isFalse);
       expect(
         canAccessPath(mockUserContador, '/configuracoes/mensagem-aniversario'),
         isFalse,
@@ -108,20 +107,14 @@ void main() {
   });
 
   group('administração', () {
-    test('membroNaoAcessaUsuarios; secretaria gere contas mas não cria filial', () {
-      expect(canAccessPath(membro, '/usuarios'), isFalse);
-      expect(canAccessPath(secretaria, '/usuarios'), isTrue);
+    test('secretaria gere contas mas não cria filial; tela de usuários não existe mais', () {
       expect(canAccessPath(secretaria, '/igrejas'), isTrue); // gestão
       expect(canAccessPath(admin, '/igrejas'), isTrue);
-      expect(canAccessPath(admin, '/usuarios'), isTrue);
       expect(canAccessPath(pastorFilial, '/igrejas'), isTrue);
-      expect(canAccessPath(pastorFilial, '/usuarios'), isTrue);
 
       for (final path in [
         '/igrejas',
         '/igrejas/i1',
-        '/usuarios',
-        '/usuarios/u1',
       ]) {
         expect(canAccessPath(lider, path), isFalse, reason: 'líder em $path');
         expect(canAccessPath(membro, path), isFalse, reason: 'membro em $path');
@@ -212,8 +205,8 @@ void main() {
       expect(canCreateMinisterio(lider), isFalse);
       expect(canCreateMinisterio(null), isFalse);
 
-      expect(canCreateUsuario(admin), isTrue);
-      expect(canCreateUsuario(lider), isFalse);
+      expect(podeGerirContas(admin), isTrue);
+      expect(podeGerirContas(lider), isFalse);
 
       expect(canCreateBaseMinisterial(pastorFilial), isTrue);
       expect(canCreateBaseMinisterial(lider), isFalse);
@@ -305,7 +298,7 @@ void main() {
 
     test('pastor vê tudo', () {
       expect(labels(admin), containsAll([
-        'Gestão Igreja', 'Usuários', 'Configurações', 'Meu serviço',
+        'Gestão Igreja', 'Configurações', 'Meu serviço',
         'Pessoas', 'Voluntariado',
       ]));
     });
@@ -313,19 +306,20 @@ void main() {
     test('membro vê só o básico', () {
       final l = labels(membro);
       expect(l, contains('Meu serviço'));
-      for (final x in ['Gestão Igreja', 'Usuários', 'Configurações', 'Voluntariado']) {
+      for (final x in ['Gestão Igreja', 'Configurações', 'Voluntariado']) {
         expect(l, isNot(contains(x)));
       }
     });
 
-    test('líder vê Pessoas e Voluntariado mas não Usuários', () {
+    test('líder vê Pessoas e Voluntariado mas não Configurações', () {
       final l = labels(lider);
       expect(l, containsAll(['Pessoas', 'Voluntariado']));
-      expect(l, isNot(contains('Usuários')));
+      expect(l, isNot(contains('Configurações')));
     });
 
-    test('secretaria vê Usuários e Configurações', () {
-      expect(labels(secretaria), containsAll(['Usuários', 'Configurações']));
+    test('secretaria vê Configurações e não há mais item Usuários', () {
+      expect(labels(secretaria), contains('Configurações'));
+      expect(labels(secretaria), isNot(contains('Usuários')));
     });
   });
 }

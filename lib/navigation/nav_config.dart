@@ -73,11 +73,6 @@ final mainNav = [
     ],
   ),
   NavItem(
-    label: 'Usuários',
-    path: '/usuarios',
-    visivel: (u) => u.permissoes.tem(Capacidade.contasGerir),
-  ),
-  NavItem(
     label: 'Configurações',
     path: '/configuracoes/mensagem-aniversario',
     visivel: (u) => u.permissoes.tem(Capacidade.configurar),
@@ -108,4 +103,5 @@ const pessoaFiltros = [
   ('VOLUNTARIO', 'Voluntários'),
   ('LIDER', 'Líderes'),
   ('PASTOR', 'Pastores'),
+  ('COM_ACESSO', 'Com acesso'),
 ];

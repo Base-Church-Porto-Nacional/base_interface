@@ -32,7 +32,6 @@ import '../screens/pessoas/pessoas_screen.dart';
 import '../screens/pequenos_grupos/small_group_detail_screen.dart';
 import '../screens/pequenos_grupos/small_groups_screen.dart';
 import '../screens/shell/app_shell.dart';
-import '../screens/usuarios/usuarios_screen.dart';
 import '../screens/voluntariado/relatorios_screen.dart';
 import '../screens/voluntariado/voluntarios_screen.dart';
 import '../utils/route_access.dart';
@@ -182,10 +181,6 @@ GoRouter createRouter(AuthProvider auth) {
           GoRoute(
             path: '/cultos',
             builder: (_, _) => const CronogramaScreen(),
-          ),
-          GoRoute(
-            path: '/usuarios',
-            builder: (_, _) => const UsuariosScreen(),
           ),
           GoRoute(
             path: '/meu-servico',

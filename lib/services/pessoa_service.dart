@@ -138,6 +138,7 @@ class PessoaService {
       dataCadastro: json['dataCadastro'] as String? ?? '',
       igrejaId: json['igrejaId'] as String? ?? '',
       usuarioId: json['usuarioId'] as String?,
+      acessoStatus: json['acessoStatus'] as String?,
       papeis: papeis,
     );
   }

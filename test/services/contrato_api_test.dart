@@ -251,29 +251,76 @@ void main() {
       'papeis': ['SECRETARIA', 'CONTADOR'],
     };
 
-    test('createFromPessoa não envia papéis nem consulta /papeis', () async {
+    const linkJson = {'link': 'https://app.base.church/acesso/tok', 'enviadoWhatsapp': true};
+
+    test('convidarFazPost em /pessoas/{id}/convite e devolve o link', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({'POST /pessoas/p9/convite': (_) => (200, linkJson)});
+
+      final r = await fake.run(() => UsuarioService(api).convidar('p9'));
+
+      expect(fake.log, ['POST /pessoas/p9/convite']);
+      expect(r.link, 'https://app.base.church/acesso/tok');
+      expect(r.enviadoWhatsapp, isTrue);
+    });
+
+    test('convidar propaga a mensagem do servidor em 409/422', () async {
       final api = await apiClientDeTeste();
       final fake = FakeApi({
-        'POST /pessoas/p9/usuario': (_) => (201, usuarioJson),
+        'POST /pessoas/p9/convite': (_) => (
+          422,
+          {'message': 'Cadastre e-mail ou WhatsApp antes de convidar'},
+        ),
       });
 
-      await fake.run(
-        () => UsuarioService(api).createFromPessoa(
-          pessoaId: 'p9',
-          username: 'recepcao',
-          email: 'r@base.church',
-          senha: 's',
-          igrejaId: 'filial',
+      await expectLater(
+        fake.run(() => UsuarioService(api).convidar('p9')),
+        throwsA(
+          isA<ApiException>()
+              .having((e) => e.status, 'status', 422)
+              .having((e) => e.message, 'message', contains('Cadastre e-mail')),
         ),
       );
+    });
 
-      expect(fake.log, ['POST /pessoas/p9/usuario']);
-      expect(fake.corpo(0), {
-        'username': 'recepcao',
-        'email': 'r@base.church',
-        'senha': 's',
-        'igrejaId': 'filial',
+    test('gerarRedefinicaoFazPost em /usuarios/{id}/redefinicao-senha', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /usuarios/u9/redefinicao-senha': (_) => (
+          200,
+          {'link': 'l', 'enviadoWhatsapp': false},
+        ),
       });
+
+      final r = await fake.run(() => UsuarioService(api).gerarRedefinicao('u9'));
+
+      expect(fake.log, ['POST /usuarios/u9/redefinicao-senha']);
+      expect(r.link, 'l');
+      expect(r.enviadoWhatsapp, isFalse);
+    });
+
+    test('desativarFazPost em /usuarios/{id}/desativar e mapeia status', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /usuarios/u9/desativar': (_) => (200, {...usuarioJson, 'status': 'DESATIVADO'}),
+      });
+
+      final conta = await fake.run(() => UsuarioService(api).desativar('u9'));
+
+      expect(fake.log, ['POST /usuarios/u9/desativar']);
+      expect(conta.status, 'DESATIVADO');
+    });
+
+    test('reativarFazPost em /usuarios/{id}/reativar', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /usuarios/u9/reativar': (_) => (200, {...usuarioJson, 'status': 'ATIVO'}),
+      });
+
+      final conta = await fake.run(() => UsuarioService(api).reativar('u9'));
+
+      expect(fake.log, ['POST /usuarios/u9/reativar']);
+      expect(conta.status, 'ATIVO');
     });
 
     test('mapeia e-mail e telefone da conta', () async {
@@ -413,6 +460,43 @@ void main() {
       expect(porId['p1'], containsAll([PessoaTipo.lider, PessoaTipo.membro, PessoaTipo.voluntario]));
       expect(porId['p2'], [PessoaTipo.visitante]);
       expect(porId['p3'], [PessoaTipo.visitante]);
+    });
+
+    test('pessoaMapeiaAcessoStatus', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'GET /pessoas': (_) => (
+          200,
+          [
+            {'id': 'p1', 'nome': 'Ana', 'usuarioId': 'u1', 'acessoStatus': 'CONVIDADO'},
+            {'id': 'p2', 'nome': 'Bia'},
+          ],
+        ),
+      });
+
+      final page = await fake.run(() => PessoaService(api).list(size: 10));
+      final porId = {for (final p in page.content) p.id: p.acessoStatus};
+
+      expect(porId, {'p1': 'CONVIDADO', 'p2': null});
+    });
+
+    test('filtro COM_ACESSO mantém só pessoas com acessoStatus', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'GET /pessoas': (_) => (
+          200,
+          [
+            {'id': 'p1', 'nome': 'Ana', 'usuarioId': 'u1', 'acessoStatus': 'ATIVO'},
+            {'id': 'p2', 'nome': 'Bia'},
+          ],
+        ),
+      });
+
+      final page = await fake.run(
+        () => PessoaService(api).list(size: 10, filtro: 'COM_ACESSO'),
+      );
+
+      expect(page.content.map((p) => p.id), ['p1']);
     });
 
     test('update faz PUT parcial só com os campos do formulário', () async {

@@ -8,6 +8,7 @@ import '../../services/usuario_service.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/route_access.dart';
+import '../../widgets/acesso_app_card.dart';
 import '../../widgets/common.dart';
 import '../../widgets/detail_widgets.dart';
 import '../../widgets/form_dialogs.dart';
@@ -58,37 +59,16 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
     }
   }
 
-  Future<void> _criarUsuario() async {
-    final p = _pessoa;
-    if (p == null || p.temUsuario) return;
-    if (!canCreateUsuario(context.read<AuthProvider>().user)) return;
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (_) => UsuarioFormDialog(
-        pessoaNome: p.nome,
-        email: p.email,
-      ),
-    );
-    if (result == null || !mounted) return;
+  /// Depois de qualquer ação de acesso: recarrega a pessoa sem trocar a tela
+  /// por um spinner e, se a conta é a do próprio usuário, as permissões.
+  Future<void> _aposAcesso() async {
+    final auth = context.read<AuthProvider>();
+    final usuarioId = _pessoa?.usuarioId;
     try {
-      await context.read<UsuarioService>().createFromPessoa(
-            pessoaId: p.id,
-            username: result['username'] as String,
-            email: result['email'] as String,
-            senha: result['senha'] as String,
-            igrejaId: p.igrejaId,
-          );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuário criado. A pessoa já pode acompanhar escalas e eventos.')),
-        );
-        _load();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
-    }
+      final p = await context.read<PessoaService>().getById(widget.pessoaId);
+      if (mounted) setState(() => _pessoa = p);
+    } catch (_) {}
+    if (usuarioId != null && usuarioId == auth.user?.id) await auth.recarregarMe();
   }
 
   Future<void> _gerirPapeis() async {
@@ -134,7 +114,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Papéis atualizados.')),
       );
-      _load();
+      _aposAcesso();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -193,6 +173,13 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
         _buildHero(p),
+        const SizedBox(height: 16),
+        AcessoAppCard(
+          pessoa: p,
+          user: context.watch<AuthProvider>().user,
+          onAlterado: _aposAcesso,
+          onPapeis: _podeGerirPapeis(p) ? _gerirPapeis : null,
+        ),
         const SizedBox(height: 20),
         SectionTabBar(
           tabs: const ['Perfil', 'Jornada', 'Histórico'],
@@ -212,15 +199,18 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
     );
   }
 
+  bool _podeGerirPapeis(Pessoa p) {
+    final user = context.read<AuthProvider>().user;
+    return p.temUsuario &&
+        user != null &&
+        (user.permissoes.tem(Capacidade.papeisGestaoAtribuir) ||
+            user.permissoes.tem(Capacidade.papeisCustomGerir));
+  }
+
   Widget _buildHero(Pessoa p) {
     final papeis = p.papeisExibiveis.map(papelLabel).join(' · ');
     final user = context.watch<AuthProvider>().user;
     final podeEditar = canCadastrarPessoas(user);
-    final podeCriarConta = canCreateUsuario(user) && !p.temUsuario;
-    final podePapeis = p.temUsuario &&
-        user != null &&
-        (user.permissoes.tem(Capacidade.papeisGestaoAtribuir) ||
-            user.permissoes.tem(Capacidade.papeisCustomGerir));
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,7 +243,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
           ),
         ),
         const SizedBox(width: 12),
-        if (podeEditar || podeCriarConta || podePapeis)
+        if (podeEditar)
           Column(
             children: [
               if (podeEditar)
@@ -267,32 +257,6 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
                   ),
                   child: const Text('Editar'),
                 ),
-              if (podePapeis) ...[
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: _gerirPapeis,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(0, 36),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  child: const Text('Papéis'),
-                ),
-              ],
-              if (podeCriarConta) ...[
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: _criarUsuario,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(0, 36),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  child: const Text('Criar usuário'),
-                ),
-              ],
             ],
           ),
       ],
@@ -314,7 +278,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
           ),
         ),
         DetailInfoRow('Cadastro', formatDate(p.dataCadastro)),
-        DetailInfoRow('Usuário', p.temUsuario ? 'Sim' : 'Não'),
+        DetailInfoRow('Acesso ao app', acessoStatusLabel(p.acessoStatus)),
         if (p.ministerios.isNotEmpty)
           DetailInfoRow('Ministérios', p.ministerios.join(', ')),
       ],

@@ -27,6 +27,7 @@ class MembrosScreen extends StatefulWidget {
 class _MembrosScreenState extends State<MembrosScreen> {
   List<Pessoa> _items = [];
   String _search = '';
+  bool _comAcesso = false;
   bool _loading = true;
   String? _error;
   Timer? _debounce;
@@ -55,7 +56,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
     });
     try {
       final response = await context.read<PessoaService>().list(
-            filtro: 'MEMBRO',
+            filtro: _comAcesso ? 'COM_ACESSO' : 'MEMBRO',
             search: _search,
             size: 50,
             igrejaId: context.read<IgrejaContext>().selectedIgrejaId,
@@ -154,7 +155,19 @@ class _MembrosScreenState extends State<MembrosScreen> {
                   _scheduleLoad();
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilterChip(
+                  label: const Text('Com acesso'),
+                  selected: _comAcesso,
+                  onSelected: (v) {
+                    setState(() => _comAcesso = v);
+                    _load();
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
               if (_loading)
                 const LoadingView()
               else if (_error != null)

@@ -28,9 +28,6 @@ bool canAccessPath(AuthUser? user, String path) {
   if (path.startsWith('/igrejas')) {
     return _temCap(user, Capacidade.filialCriar) || isGestao(user);
   }
-  if (path.startsWith('/usuarios')) {
-    return _temCap(user, Capacidade.contasGerir);
-  }
 
   if (path.startsWith('/membros/pessoa/')) {
     final id = path.substring('/membros/pessoa/'.length).split('/').first;
@@ -79,7 +76,13 @@ bool canCreateMinisterio(AuthUser? user) =>
 bool canCreateBaseMinisterial(AuthUser? user) =>
     _temCap(user, Capacidade.ministeriosGerir);
 
-bool canCreateUsuario(AuthUser? user) => _temCap(user, Capacidade.contasGerir);
+/// Redefinir senha, desativar e reativar contas.
+bool podeGerirContas(AuthUser? user) => _temCap(user, Capacidade.contasGerir);
+
+/// Convidar/reenviar: gestão de contas, ou líder (o servidor confere se a
+/// pessoa está no escopo dele; mesma regra de quem edita contato de pessoa).
+bool podeConvidar(AuthUser? user) =>
+    podeGerirContas(user) || canCadastrarPessoas(user);
 
 bool canCreateCronograma(AuthUser? user) => isGestao(user);
 

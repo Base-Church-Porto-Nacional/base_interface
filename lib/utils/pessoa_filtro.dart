@@ -27,6 +27,8 @@ bool pessoaMatchesFiltro(Pessoa pessoa, String? filtro) {
   }
 
   switch (value) {
+    case 'COM_ACESSO':
+      return pessoa.acessoStatus != null;
     case 'BATIZADO':
       return etapaConcluida(pessoa, 'batiz');
     case 'ACEITOU_JESUS':

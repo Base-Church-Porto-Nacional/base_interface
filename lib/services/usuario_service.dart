@@ -1,6 +1,13 @@
 import '../models/models.dart';
 import 'api_client.dart';
 
+class LinkAcesso {
+  const LinkAcesso({required this.link, required this.enviadoWhatsapp});
+
+  final String link;
+  final bool enviadoWhatsapp;
+}
+
 class UsuarioService {
   UsuarioService(this._api);
 
@@ -12,21 +19,33 @@ class UsuarioService {
     return list.map((e) => _map(e as Map<String, dynamic>)).toList();
   }
 
-  Future<UsuarioConta> createFromPessoa({
-    required String pessoaId,
-    required String username,
-    required String email,
-    required String senha,
-    required String igrejaId,
-  }) async {
-    final json = await _api.post('/pessoas/$pessoaId/usuario', {
-      'username': username,
-      'email': email,
-      'senha': senha,
-      'igrejaId': igrejaId,
-    }) as Map<String, dynamic>;
+  /// Cria a conta CONVIDADO (ou reenvia o convite) e devolve o link de acesso.
+  Future<LinkAcesso> convidar(String pessoaId) async {
+    final json = await _api.post('/pessoas/$pessoaId/convite', {}) as Map<String, dynamic>;
+    return _link(json);
+  }
+
+  /// Gera link de redefinição de senha (válido por 1 hora) de conta ATIVA.
+  Future<LinkAcesso> gerarRedefinicao(String usuarioId) async {
+    final json = await _api.post('/usuarios/$usuarioId/redefinicao-senha', {})
+        as Map<String, dynamic>;
+    return _link(json);
+  }
+
+  Future<UsuarioConta> desativar(String usuarioId) async {
+    final json = await _api.post('/usuarios/$usuarioId/desativar', {}) as Map<String, dynamic>;
     return _map(json);
   }
+
+  Future<UsuarioConta> reativar(String usuarioId) async {
+    final json = await _api.post('/usuarios/$usuarioId/reativar', {}) as Map<String, dynamic>;
+    return _map(json);
+  }
+
+  LinkAcesso _link(Map<String, dynamic> json) => LinkAcesso(
+        link: json['link'] as String,
+        enviadoWhatsapp: json['enviadoWhatsapp'] as bool? ?? false,
+      );
 
   /// Substitui os papéis do usuário. PASTOR/SECRETARIA exigem
   /// `papeisGestaoAtribuir`; papéis customizados exigem `papeisCustomGerir`.
@@ -74,7 +93,7 @@ class UsuarioService {
       papeis: (json['papeis'] as List<dynamic>? ?? [])
           .map((p) => p as String)
           .toList(),
-      ativo: json['ativo'] as bool? ?? true,
+      status: json['status'] as String? ?? 'ATIVO',
     );
   }
 }
