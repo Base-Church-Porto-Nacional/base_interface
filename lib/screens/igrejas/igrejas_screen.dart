@@ -46,6 +46,12 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
     }
   }
 
+  /// Abre o detalhe e, na volta, recarrega a lista (o pastor pode ter mudado).
+  Future<void> _abrir(Igreja i) async {
+    await context.push('/igrejas/${i.id}');
+    if (mounted) _load();
+  }
+
   Future<void> _novaFilial() async {
     final user = context.read<AuthProvider>().user;
     if (user == null || !user.isMatriz) return;
@@ -56,10 +62,15 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
     }
     if (matriz == null) return;
     final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: matriz.id);
+    // O titular da matriz e o próprio usuário não podem ser transferidos.
+    final excluir = {
+      if (matriz.pastorPessoaId.isNotEmpty) matriz.pastorPessoaId,
+      ?user.pessoaId,
+    };
     if (!mounted) return;
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (_) => FilialFormDialog(pessoas: pessoas.content),
+      builder: (_) => FilialFormDialog(pessoas: pessoas.content, excluirIds: excluir),
     );
     if (result == null || !mounted) return;
     try {
@@ -120,10 +131,10 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
                   label: igrejaTipoLabel(i.tipo).toUpperCase(),
                   success: i.isMatriz,
                 ),
-                onTap: () => context.push('/igrejas/${i.id}'),
+                onTap: () => _abrir(i),
                 actions: [
                   OutlinedButton(
-                    onPressed: () => context.push('/igrejas/${i.id}'),
+                    onPressed: () => _abrir(i),
                     child: const Text('Abrir'),
                   ),
                 ],

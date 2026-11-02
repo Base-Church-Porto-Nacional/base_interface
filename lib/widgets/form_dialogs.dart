@@ -431,9 +431,13 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
 }
 
 class FilialFormDialog extends StatefulWidget {
-  const FilialFormDialog({super.key, required this.pessoas});
+  const FilialFormDialog({super.key, required this.pessoas, this.excluirIds = const {}});
 
   final List<Pessoa> pessoas;
+
+  /// Pessoas que não podem ser escolhidas (pastor titular da matriz, o próprio
+  /// usuário): o servidor recusaria a transferência.
+  final Set<String> excluirIds;
 
   @override
   State<FilialFormDialog> createState() => _FilialFormDialogState();
@@ -448,10 +452,16 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
   bool _novaPessoa = false;
   String? _erro;
 
+  /// Só pessoas ativas e elegíveis (inativas e excluídas o servidor recusa).
+  late final List<Pessoa> _elegiveis = [
+    for (final p in widget.pessoas)
+      if (p.status == PessoaStatus.ativo && !widget.excluirIds.contains(p.id)) p,
+  ];
+
   @override
   void initState() {
     super.initState();
-    _novaPessoa = widget.pessoas.isEmpty;
+    _novaPessoa = _elegiveis.isEmpty;
   }
 
   @override
@@ -467,14 +477,9 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
     if (_nome.text.trim().isEmpty) return;
     if (!_novaPessoa) {
       if (_pastorId == null) return;
-      Pessoa? pastor;
-      for (final p in widget.pessoas) {
-        if (p.id == _pastorId) pastor = p;
-      }
       Navigator.pop(context, {
         'nome': _nome.text.trim(),
         'pastorPessoaId': _pastorId,
-        'pastorNome': pastor?.nome ?? '',
       });
       return;
     }
@@ -523,7 +528,7 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
                 initialValue: _pastorId,
                 decoration: const InputDecoration(labelText: 'Pastor *'),
                 items: [
-                  for (final p in widget.pessoas)
+                  for (final p in _elegiveis)
                     DropdownMenuItem(value: p.id, child: Text(p.nome)),
                 ],
                 onChanged: (v) => setState(() => _pastorId = v),
@@ -565,7 +570,7 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
   }
 }
 
-/// Escolha do novo pastor entre as pessoas da própria igreja.
+/// Escolha do novo pastor entre as pessoas ativas da própria igreja (sem o atual).
 class TrocarPastorDialog extends StatefulWidget {
   const TrocarPastorDialog({super.key, required this.pessoas, this.atualId});
 
@@ -588,7 +593,7 @@ class _TrocarPastorDialogState extends State<TrocarPastorDialog> {
         decoration: const InputDecoration(labelText: 'Novo pastor *'),
         items: [
           for (final p in widget.pessoas)
-            if (p.id != widget.atualId)
+            if (p.id != widget.atualId && p.status == PessoaStatus.ativo)
               DropdownMenuItem(value: p.id, child: Text(p.nome)),
         ],
         onChanged: (v) => setState(() => _id = v),
