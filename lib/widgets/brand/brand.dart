@@ -1,5 +1,6 @@
 export 'ambient_background.dart';
 export 'brand_card.dart';
+export 'brand_headline.dart';
 export 'brand_mark.dart';
 export 'brand_seal.dart';
 export 'focus_ring.dart';

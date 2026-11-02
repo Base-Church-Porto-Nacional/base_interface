@@ -60,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            BrandHeadline(
               'BEM-VINDO',
               style: AppTypography.hero.copyWith(color: brand.textPrimary),
             ),

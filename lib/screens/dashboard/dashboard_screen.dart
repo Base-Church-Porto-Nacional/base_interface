@@ -207,11 +207,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 4),
           ],
-          Text(
+          BrandHeadline(
             saudacao(DateTime.now(), nome),
             style: AppTypography.hero.copyWith(color: brand.textPrimary),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            compactSize: 28,
           ),
         ],
       ),

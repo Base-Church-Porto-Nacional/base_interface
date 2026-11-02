@@ -1,12 +1,15 @@
 import 'package:base_church/theme/brand_assets.dart';
+import 'package:base_church/theme/app_typography.dart';
 import 'package:base_church/theme/brand_colors.dart';
 import 'package:base_church/widgets/brand/brand.dart';
 import 'package:base_church/widgets/common.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/pump.dart';
+import '../helpers/text_lines.dart';
 
 final _ring = find.descendant(
   of: find.byType(BrandSeal),
@@ -81,6 +84,57 @@ void main() {
     );
     expect(find.text('ESCALAS · NOVEMBRO'), findsOneWidget);
     expect(find.text('ESCALAS'), findsOneWidget);
+  });
+
+  for (final (largura, escala) in [(360.0, 1.0), (390.0, 1.0), (360.0, 2.0)]) {
+    testWidgets('PageHeader nao parte palavra em ${largura}px x$escala', (
+      t,
+    ) async {
+      await pumpBrand(
+        t,
+        const Padding(
+          padding: EdgeInsets.all(16),
+          child: PageHeader(title: 'Aniversariantes do dia'),
+        ),
+        size: Size(largura, 800),
+        textScale: escala,
+      );
+      expect(t.takeException(), isNull);
+      expectSemPalavraPartida(t, 'ANIVERSARIANTES DO DIA');
+    });
+  }
+
+  testWidgets('PageHeader usa titulo compacto abaixo de 600px', (t) async {
+    await pumpBrand(t, const PageHeader(title: 'Escalas'));
+    final rp = t.renderObject<RenderParagraph>(find.text('ESCALAS'));
+    expect((rp.text as TextSpan).style!.fontSize, 22);
+    await pumpBrand(
+      t,
+      const PageHeader(title: 'Escalas'),
+      size: const Size(1024, 800),
+    );
+    final largo = t.renderObject<RenderParagraph>(find.text('ESCALAS'));
+    expect((largo.text as TextSpan).style!.fontSize, 28);
+  });
+
+  testWidgets('saudacao hero nao parte palavra em 360px', (t) async {
+    await pumpBrand(
+      t,
+      Padding(
+        padding: const EdgeInsets.all(16),
+        child: BrandHeadline(
+          'BOA TARDE, MAXIMILIANO',
+          style: AppTypography.hero,
+          compactSize: 28,
+        ),
+      ),
+      size: const Size(360, 800),
+    );
+    expectSemPalavraPartida(t, 'BOA TARDE, MAXIMILIANO');
+    final rp = t.renderObject<RenderParagraph>(
+      find.text('BOA TARDE, MAXIMILIANO'),
+    );
+    expect((rp.text as TextSpan).style!.fontSize, greaterThanOrEqualTo(12));
   });
 
   testWidgets('StatTile mostra label e value', (t) async {

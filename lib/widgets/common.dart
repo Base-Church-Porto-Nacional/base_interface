@@ -42,13 +42,12 @@ class PageHeader extends StatelessWidget {
             const SizedBox(height: 4),
           ],
           if (title != null)
-            Text(
+            BrandHeadline(
               title!.toUpperCase(),
               style: AppTypography.pageTitle.copyWith(
                 color: context.brand.textPrimary,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              compactSize: 22,
             ),
           if (description != null) ...[
             const SizedBox(height: 4),

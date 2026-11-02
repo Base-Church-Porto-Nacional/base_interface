@@ -102,4 +102,15 @@ void main() {
     expect(find.byType(StatTile), findsNothing);
     expect(find.textContaining('ANA'), findsOneWidget);
   });
+
+  testWidgets('saudacao usa BrandHeadline', (t) async {
+    await _montar(t, _rotasOk, size: const Size(360, 800));
+    expect(
+      find.ancestor(
+        of: find.textContaining('ANA'),
+        matching: find.byType(BrandHeadline),
+      ),
+      findsOneWidget,
+    );
+  });
 }
