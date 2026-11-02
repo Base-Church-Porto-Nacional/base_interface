@@ -81,4 +81,13 @@ void main() {
     );
     await t.pump(const Duration(milliseconds: 100));
   });
+
+  testWidgets('painel estreito nao pula quando o teclado abre', (t) async {
+    await _montar(t);
+    final antes = t.getSize(find.byType(SpotlightBlock)).height;
+    t.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(t.view.resetViewInsets);
+    await t.pump();
+    expect(t.getSize(find.byType(SpotlightBlock)).height, antes);
+  });
 }

@@ -121,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (constraints.maxWidth >= 900) {
             return _wide(context);
           }
-          return _narrow(context, constraints);
+          return _narrow(context);
         },
       ),
     );
@@ -171,10 +171,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _narrow(BuildContext context, BoxConstraints constraints) {
+  Widget _narrow(BuildContext context) {
     const overlap = 48.0;
     final top = MediaQuery.paddingOf(context).top;
-    final panel = (constraints.maxHeight * 0.4).clamp(280.0, 420.0);
+    final panel = (MediaQuery.sizeOf(context).height * 0.4).clamp(280.0, 420.0);
 
     return AmbientBackground(
       child: SingleChildScrollView(

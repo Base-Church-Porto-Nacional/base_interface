@@ -80,7 +80,10 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/brand/
+    - assets/brand/selo.svg
+    - assets/brand/selo_anel.svg
+    - assets/brand/b.svg
+    - assets/brand/grain.png
 
   fonts:
     - family: Archivo

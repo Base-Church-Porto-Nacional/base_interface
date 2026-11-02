@@ -30,4 +30,19 @@ void main() {
       expect(text.contains('<image'), isFalse, reason: path);
     }
   });
+
+  test('arquivos oficiais nao entram no bundle', () async {
+    for (final path in [
+      'assets/brand/logo_base_church.pdf',
+      'assets/brand/logo_branca.png',
+      'assets/brand/logo_preta.png',
+      'assets/brand/app_icon.png',
+    ]) {
+      await expectLater(
+        () => rootBundle.load(path),
+        throwsA(anything),
+        reason: path,
+      );
+    }
+  });
 }

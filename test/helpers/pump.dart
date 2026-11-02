@@ -13,7 +13,7 @@ T _quiet<T>(T Function() body) => runZoned(
 ThemeData? _light;
 ThemeData? _dark;
 
-ThemeData _theme(Brightness brightness) {
+ThemeData brandTheme(Brightness brightness) {
   GoogleFonts.config.allowRuntimeFetching = false;
   if (brightness == Brightness.dark) {
     final theme = _dark ?? _quiet<ThemeData>(() => AppTheme.dark);
@@ -40,7 +40,7 @@ Future<void> pumpBrand(
   await t.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: _theme(brightness),
+      theme: brandTheme(brightness),
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(
           disableAnimations: disableAnimations,

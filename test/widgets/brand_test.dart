@@ -31,6 +31,29 @@ void main() {
     expect(find.byType(BackdropFilter), findsNothing);
   });
 
+  for (final (nome, brightness, c) in [
+    ('claro', Brightness.light, BrandColors.light),
+    ('escuro', Brightness.dark, BrandColors.dark),
+  ]) {
+    testWidgets('GlassSurface solido usa borderStrong ($nome)', (t) async {
+      await pumpBrand(
+        t,
+        const GlassSurface(child: Text('x')),
+        highContrast: true,
+        brightness: brightness,
+      );
+      final box = t.widget<DecoratedBox>(
+        find.descendant(
+          of: find.byType(GlassSurface),
+          matching: find.byType(DecoratedBox),
+        ),
+      );
+      final deco = box.decoration as BoxDecoration;
+      expect(deco.color, c.surfaceOverlay);
+      expect((deco.border as Border).top.color, c.borderStrong);
+    });
+  }
+
   testWidgets('BrandSeal gira so com animacao habilitada', (t) async {
     await pumpBrand(t, const Center(child: BrandSeal(spinning: true)));
     final animated = t.widget<RotationTransition>(_ring);

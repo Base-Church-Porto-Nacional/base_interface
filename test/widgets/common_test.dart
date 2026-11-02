@@ -101,4 +101,36 @@ void main() {
     final anel = t.getRect(find.byKey(FocusRing.ringKey));
     expect(anel, card.inflate(4));
   });
+
+  testWidgets('confirmDialog herda superficie e raio do dialogTheme', (
+    t,
+  ) async {
+    await pumpBrand(
+      t,
+      Builder(
+        builder: (context) => TextButton(
+          onPressed: () => confirmDialog(context, title: 'T', message: 'M'),
+          child: const Text('abrir'),
+        ),
+      ),
+    );
+    await t.tap(find.text('abrir'));
+    await t.pumpAndSettle();
+    final dialog = t.widget<AlertDialog>(find.byType(AlertDialog));
+    expect(dialog.backgroundColor, isNull);
+    expect(dialog.shape, isNull);
+    final material = t.widget<Material>(
+      find
+          .descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    expect(material.color, BrandColors.light.surfaceOverlay);
+    expect(
+      material.shape,
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    );
+  });
 }

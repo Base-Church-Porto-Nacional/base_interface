@@ -50,8 +50,6 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: context.brand.surfaceOverlay,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(widget.title),
       content: SingleChildScrollView(
         child: Column(
@@ -169,8 +167,6 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: context.brand.surfaceOverlay,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(widget.title),
       content: SingleChildScrollView(
         child: Column(
@@ -338,8 +334,6 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: context.brand.surfaceOverlay,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(widget.title),
       content: SingleChildScrollView(
         child: Column(
@@ -444,8 +438,6 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: context.brand.surfaceOverlay,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Text('Nova filial'),
       content: SingleChildScrollView(
         child: Column(
@@ -561,8 +553,6 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: context.brand.surfaceOverlay,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text('Criar usuário — ${widget.pessoaNome}'),
       content: SingleChildScrollView(
         child: Column(
@@ -692,8 +682,6 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: context.brand.surfaceOverlay,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(widget.title),
       content: SingleChildScrollView(
         child: Column(

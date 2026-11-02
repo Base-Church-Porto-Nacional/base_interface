@@ -1,25 +1,16 @@
-import 'dart:async';
-
-import 'package:base_church/theme/app_theme.dart';
 import 'package:base_church/theme/app_typography.dart';
 import 'package:base_church/theme/brand_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../helpers/contrast.dart';
-
-T _quiet<T>(T Function() body) => runZoned(
-  body,
-  zoneSpecification: ZoneSpecification(print: (_, _, _, _) {}),
-);
+import '../helpers/pump.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  GoogleFonts.config.allowRuntimeFetching = false;
 
-  final light = _quiet(() => AppTheme.light);
-  final dark = _quiet(() => AppTheme.dark);
+  final light = brandTheme(Brightness.light);
+  final dark = brandTheme(Brightness.dark);
 
   test('extensao de marca nos dois temas', () {
     expect(light.extension<BrandColors>(), BrandColors.light);

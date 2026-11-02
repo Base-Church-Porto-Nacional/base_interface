@@ -25,21 +25,26 @@ class GlassSurface extends StatelessWidget {
     final solid = MediaQuery.highContrastOf(context);
     final borderRadius = BorderRadius.circular(radius);
 
-    Widget face = CustomPaint(
-      painter: _GlassFacePainter(
-        radius: radius,
-        dark: brightness == Brightness.dark,
-        solid: solid,
-        solidColor: context.brand.surfaceOverlay,
-      ),
-      child: Padding(padding: padding, child: child),
-    );
-    if (!solid) {
-      face = BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: face,
-      );
-    }
+    final content = Padding(padding: padding, child: child);
+    final Widget face = solid
+        ? DecoratedBox(
+            decoration: BoxDecoration(
+              color: context.brand.surfaceOverlay,
+              borderRadius: borderRadius,
+              border: Border.all(color: context.brand.borderStrong),
+            ),
+            child: content,
+          )
+        : BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: CustomPaint(
+              painter: _GlassFacePainter(
+                radius: radius,
+                dark: brightness == Brightness.dark,
+              ),
+              child: content,
+            ),
+          );
 
     return CustomPaint(
       painter: _OuterShadowPainter(
@@ -91,17 +96,10 @@ class _OuterShadowPainter extends CustomPainter {
 }
 
 class _GlassFacePainter extends CustomPainter {
-  _GlassFacePainter({
-    required this.radius,
-    required this.dark,
-    required this.solid,
-    required this.solidColor,
-  });
+  _GlassFacePainter({required this.radius, required this.dark});
 
   final double radius;
   final bool dark;
-  final bool solid;
-  final Color solidColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -109,31 +107,25 @@ class _GlassFacePainter extends CustomPainter {
     final outer = RRect.fromRectAndRadius(rect, Radius.circular(radius));
     final inner = outer.deflate(1);
 
-    final fill = solid
-        ? solidColor
-        : dark
-        ? const Color(0x8C141414)
-        : const Color(0xB3FFFFFF);
+    final fill = dark ? const Color(0x8C141414) : const Color(0xB3FFFFFF);
     canvas.drawRRect(outer, Paint()..color = fill);
 
-    if (!solid) {
-      final glowRect = Rect.fromLTWH(0, 0, size.width, size.height / 3);
-      canvas.save();
-      canvas.clipRRect(outer);
-      canvas.drawRect(
-        glowRect,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(dark ? 0x0FFFFFFF : 0x4DFFFFFF),
-              const Color(0x00FFFFFF),
-            ],
-          ).createShader(glowRect),
-      );
-      canvas.restore();
-    }
+    final glowRect = Rect.fromLTWH(0, 0, size.width, size.height / 3);
+    canvas.save();
+    canvas.clipRRect(outer);
+    canvas.drawRect(
+      glowRect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(dark ? 0x0FFFFFFF : 0x4DFFFFFF),
+            const Color(0x00FFFFFF),
+          ],
+        ).createShader(glowRect),
+    );
+    canvas.restore();
 
     final top = dark ? const Color(0x24FFFFFF) : const Color(0xCCFFFFFF);
     final bottom = dark ? const Color(0x0AFFFFFF) : const Color(0x33FFFFFF);
@@ -151,8 +143,5 @@ class _GlassFacePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_GlassFacePainter old) =>
-      old.radius != radius ||
-      old.dark != dark ||
-      old.solid != solid ||
-      old.solidColor != solidColor;
+      old.radius != radius || old.dark != dark;
 }

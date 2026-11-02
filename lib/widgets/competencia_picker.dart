@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../theme/brand_colors.dart';
 import '../utils/format.dart';
 
 List<int> anosCompetencia(int selecionado) {
@@ -26,8 +25,6 @@ Future<String?> pickCompetencia(BuildContext context, String atual) async {
     context: context,
     builder: (ctx) {
       return AlertDialog(
-        backgroundColor: ctx.brand.surfaceOverlay,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Competência'),
         content: StatefulBuilder(
           builder: (context, setLocal) {

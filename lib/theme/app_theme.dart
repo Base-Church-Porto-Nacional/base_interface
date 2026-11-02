@@ -89,14 +89,6 @@ abstract final class AppTheme {
         outlineVariant: c.border,
       ),
       textTheme: textTheme,
-      appBarTheme: AppBarTheme(
-        backgroundColor: c.inverse,
-        foregroundColor: c.onInverse,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        titleTextStyle: textTheme.titleMedium?.copyWith(color: c.onInverse),
-      ),
       cardTheme: CardThemeData(
         color: c.surface,
         elevation: 0,
