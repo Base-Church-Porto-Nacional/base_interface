@@ -1,4 +1,3 @@
-import 'package:base_church/models/models.dart';
 import 'package:base_church/providers/auth_provider.dart';
 import 'package:base_church/providers/igreja_context.dart';
 import 'package:base_church/screens/dashboard/dashboard_screen.dart';
