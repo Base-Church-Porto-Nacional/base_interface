@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/export_service.dart';
-import '../theme/app_colors.dart';
+import '../theme/brand_colors.dart';
 import 'common.dart';
 
 class ExportMenu extends StatefulWidget {
@@ -46,7 +46,13 @@ class _ExportMenuState extends State<ExportMenu> {
 
   @override
   Widget build(BuildContext context) {
+    final brand = context.brand;
     return PopupMenuButton<ExportFormato>(
+      color: brand.surfaceOverlay,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: brand.border),
+      ),
       enabled: !_exporting,
       tooltip: 'Exportar',
       onSelected: _export,
@@ -57,7 +63,10 @@ class _ExportMenuState extends State<ExportMenu> {
             child: StatefulBuilder(
               builder: (context, setLocal) => CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Exportar histórico?', style: TextStyle(fontSize: 14)),
+                title: Text(
+                  'Exportar histórico?',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
                 value: _incluirHistorico,
                 onChanged: (v) {
                   setLocal(() => _incluirHistorico = v ?? false);
@@ -76,7 +85,7 @@ class _ExportMenuState extends State<ExportMenu> {
         height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.borderStrong),
+          border: Border.all(color: brand.borderStrong),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(

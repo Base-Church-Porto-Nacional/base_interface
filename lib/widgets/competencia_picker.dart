@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/brand_colors.dart';
 import '../utils/format.dart';
 
 List<int> anosCompetencia(int selecionado) {
@@ -13,7 +14,9 @@ List<int> anosCompetencia(int selecionado) {
   final now = DateTime.now();
   final parts = competencia.split('-');
   final year = int.tryParse(parts[0]) ?? now.year;
-  final month = parts.length > 1 ? int.tryParse(parts[1]) ?? now.month : now.month;
+  final month = parts.length > 1
+      ? int.tryParse(parts[1]) ?? now.month
+      : now.month;
   return (year, month);
 }
 
@@ -23,6 +26,8 @@ Future<String?> pickCompetencia(BuildContext context, String atual) async {
     context: context,
     builder: (ctx) {
       return AlertDialog(
+        backgroundColor: ctx.brand.surfaceOverlay,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Competência'),
         content: StatefulBuilder(
           builder: (context, setLocal) {
@@ -56,7 +61,10 @@ Future<String?> pickCompetencia(BuildContext context, String atual) async {
           },
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, (year, month)),
             child: const Text('Aplicar'),

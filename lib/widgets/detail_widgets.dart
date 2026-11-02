@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/brand_colors.dart';
+import 'brand/brand.dart';
 import '../utils/format.dart';
 
 class SectionTabBar extends StatelessWidget {
@@ -18,8 +19,10 @@ class SectionTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: context.brand.border, width: 1),
+        ),
       ),
       child: Row(
         children: [
@@ -60,7 +63,9 @@ class _TabItem extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: selected ? AppColors.black : Colors.transparent,
+                color: selected
+                    ? context.brand.textPrimary
+                    : Colors.transparent,
                 width: 2,
               ),
             ),
@@ -68,10 +73,12 @@ class _TabItem extends StatelessWidget {
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontSize: 14,
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-              color: selected ? AppColors.black : AppColors.textMuted,
+              color: selected
+                  ? context.brand.textPrimary
+                  : context.brand.textMuted,
             ),
           ),
         ),
@@ -87,7 +94,8 @@ class DetailInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return BrandCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           for (var i = 0; i < rows.length; i++) ...[
@@ -100,9 +108,8 @@ class DetailInfoCard extends StatelessWidget {
                     width: 96,
                     child: Text(
                       rows[i].label,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(fontWeight: FontWeight.w500),
                     ),
                   ),
                   Expanded(
@@ -144,20 +151,18 @@ class EmptyStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
-          children: [
-            Icon(icon, size: 28, color: AppColors.textMuted),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
+    return BrandCard(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: Column(
+        children: [
+          Icon(icon, size: 28, color: context.brand.textMuted),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
       ),
     );
   }
@@ -175,21 +180,20 @@ class PersonAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppColors.gray50,
+        color: context.brand.surfaceRaised,
         borderRadius: BorderRadius.circular(size / 2),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.brand.border),
       ),
       alignment: Alignment.center,
       child: Text(
         initials(name),
-        style: TextStyle(
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
           fontSize: size * 0.32,
           fontWeight: FontWeight.w600,
-          color: AppColors.black,
+          color: context.brand.textPrimary,
           letterSpacing: -0.5,
         ),
       ),
     );
   }
-
 }

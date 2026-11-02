@@ -48,14 +48,13 @@ class _BrandCardState extends State<BrandCard> {
         child: InkWell(
           borderRadius: radius,
           onTap: widget.onTap,
-          onHover: (v) => setState(() => _hovered = v),
           onHighlightChanged: (v) => setState(() => _pressed = v),
           child: content,
         ),
       );
     }
 
-    return AnimatedContainer(
+    final visual = AnimatedContainer(
       duration: duration,
       curve: Curves.easeOut,
       transform: Matrix4.translationValues(0, dy, 0),
@@ -72,6 +71,13 @@ class _BrandCardState extends State<BrandCard> {
         radius.topLeft.x,
       ),
       child: content,
+    );
+
+    if (!interactive) return visual;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: visual,
     );
   }
 }

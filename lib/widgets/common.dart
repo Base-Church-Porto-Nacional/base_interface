@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/brand_colors.dart';
+import 'brand/brand.dart';
 
 class PageHeader extends StatelessWidget {
   const PageHeader({
@@ -70,29 +70,26 @@ class PageHeader extends StatelessWidget {
 }
 
 class StatusBadge extends StatelessWidget {
-  const StatusBadge({
-    super.key,
-    required this.label,
-    this.success = false,
-  });
+  const StatusBadge({super.key, required this.label, this.success = false});
 
   final String label;
   final bool success;
 
   @override
   Widget build(BuildContext context) {
+    final brand = context.brand;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: success ? AppColors.successBg : AppColors.gray50,
-        borderRadius: BorderRadius.circular(4),
+        color: success ? brand.successBg : brand.surfaceRaised,
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
           fontSize: 11,
           fontWeight: FontWeight.w500,
-          color: success ? AppColors.success : AppColors.textSecondary,
+          color: success ? brand.success : brand.textSecondary,
         ),
       ),
     );
@@ -119,57 +116,113 @@ class MobileListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: 14,
-                          ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 4),
-                      Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
-                    ],
-                    if (badges != null && badges!.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Wrap(spacing: 4, runSpacing: 4, children: [
-                        for (final b in badges!) StatusBadge(label: b),
-                      ]),
-                    ],
-                    if (actions != null && actions!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Wrap(spacing: 4, children: actions!),
-                    ],
-                  ],
+    return BrandCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontSize: 14),
                 ),
-              ),
-              if (trailing != null) trailing!,
-            ],
+                if (subtitle != null) ...[
+                  const SizedBox(height: 4),
+                  Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
+                ],
+                if (badges != null && badges!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [for (final b in badges!) StatusBadge(label: b)],
+                  ),
+                ],
+                if (actions != null && actions!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 4, children: actions!),
+                ],
+              ],
+            ),
           ),
-        ),
+          if (trailing != null) trailing!,
+        ],
       ),
     );
   }
 }
 
-class LoadingView extends StatelessWidget {
+class LoadingView extends StatefulWidget {
   const LoadingView({super.key});
 
   @override
+  State<LoadingView> createState() => _LoadingViewState();
+}
+
+class _LoadingViewState extends State<LoadingView>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.stop();
+      _controller.value = 0;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(child: CircularProgressIndicator());
+    final brand = context.brand;
+    return Semantics(
+      label: 'Carregando',
+      child: ExcludeSemantics(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            final color = Color.lerp(
+              brand.surfaceRaised,
+              brand.border,
+              Curves.easeInOut.transform(_controller.value),
+            );
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  for (var i = 0; i < 3; i++) ...[
+                    if (i > 0) const SizedBox(height: 12),
+                    Container(
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }
 
@@ -187,10 +240,15 @@ class ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Icon(Icons.error_outline, size: 32, color: context.brand.danger),
+            const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center),
             if (onRetry != null) ...[
               const SizedBox(height: 12),
-              OutlinedButton(onPressed: onRetry, child: const Text('Tentar novamente')),
+              OutlinedButton(
+                onPressed: onRetry,
+                child: const Text('Tentar novamente'),
+              ),
             ],
           ],
         ),
@@ -200,22 +258,40 @@ class ErrorView extends StatelessWidget {
 }
 
 class EmptyView extends StatelessWidget {
-  const EmptyView({super.key, required this.message});
+  const EmptyView({super.key, required this.message, this.action});
 
   final String message;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
+    final brand = context.brand;
     return Padding(
       padding: const EdgeInsets.all(24),
-      child: Center(child: Text(message)),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BrandMark(size: 48, color: brand.textMuted),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: brand.textSecondary),
+            ),
+            if (action != null) ...[const SizedBox(height: 16), action!],
+          ],
+        ),
+      ),
     );
   }
 }
 
 void showSnack(BuildContext context, Object message) {
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$message')));
+  ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text('$message')));
 }
 
 Future<bool> confirmDialog(
@@ -228,13 +304,21 @@ Future<bool> confirmDialog(
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
+      backgroundColor: ctx.brand.surfaceOverlay,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(title),
       content: Text(message),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           style: destructive
-              ? FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error)
+              ? FilledButton.styleFrom(
+                  backgroundColor: ctx.brand.danger,
+                  foregroundColor: ctx.brand.onPrimary,
+                )
               : null,
           onPressed: () => Navigator.pop(ctx, true),
           child: Text(confirmLabel),
