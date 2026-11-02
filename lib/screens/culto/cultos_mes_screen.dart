@@ -7,7 +7,7 @@ import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/culto_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
@@ -148,17 +148,17 @@ class _CultosMesScreenState extends State<CultosMesScreen> {
               ),
               if (sugereGerar)
                 Card(
-                  color: AppColors.successBg,
+                  color: context.brand.successBg,
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        const Icon(Icons.auto_awesome, color: AppColors.success),
+                        Icon(Icons.auto_awesome, color: context.brand.success),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'O próximo mês ainda não tem cultos. Rode a automação para gerar.',
-                            style: const TextStyle(color: AppColors.success),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.brand.success),
                           ),
                         ),
                       ],
@@ -222,12 +222,12 @@ class _CultosMesScreenState extends State<CultosMesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.borderStrong),
+        border: Border.all(color: context.brand.borderStrong),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
       ),
     );
   }

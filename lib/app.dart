@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/auth_provider.dart';
 import 'providers/igreja_context.dart';
 import 'router/app_router.dart';
+import 'screens/splash/splash_screen.dart';
 import 'services/aniversario_service.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
@@ -94,7 +95,9 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
     if (router == null || providers == null) {
       return MaterialApp(
         theme: AppTheme.light,
-        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.system,
+        home: const SplashScreen(),
       );
     }
 
@@ -103,6 +106,8 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
       child: MaterialApp.router(
         title: 'Base Church',
         theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.system,
         routerConfig: router,
       ),
     );

@@ -5,7 +5,7 @@ import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/mensagem_aniversario_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 import '../../utils/route_access.dart';
 import '../../widgets/common.dart';
 import '../../widgets/filter_search.dart';
@@ -234,9 +234,9 @@ class _MensagemAniversarioScreenState extends State<MensagemAniversarioScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.gray50,
+                color: context.brand.surfaceRaised,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: context.brand.border),
               ),
               child: vazia
                   ? Text(

@@ -4,20 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../navigation/nav_config.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 
 class FilterMenu extends StatelessWidget {
-  const FilterMenu({
-    super.key,
-    required this.value,
-    required this.onChanged,
-  });
+  const FilterMenu({super.key, required this.value, required this.onChanged});
 
   final String value;
   final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
+    final brand = context.brand;
     final active = value != 'TODOS';
 
     return PopupMenuButton<String>(
@@ -28,16 +25,16 @@ class FilterMenu extends StatelessWidget {
           PopupMenuItem(value: value, child: Text(label)),
       ],
       child: Container(
-        width: 44,
-        height: 44,
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
-          color: active ? AppColors.black : AppColors.white,
-          border: Border.all(color: AppColors.borderStrong),
-          borderRadius: BorderRadius.circular(4),
+          color: active ? brand.primary : brand.surface,
+          border: Border.all(color: brand.borderStrong),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           Icons.filter_list,
-          color: active ? AppColors.white : AppColors.black,
+          color: active ? brand.onPrimary : brand.textPrimary,
           size: 20,
         ),
       ),
@@ -88,11 +85,7 @@ class _SearchFieldState extends State<SearchField> {
 }
 
 class SectionTabs extends StatelessWidget {
-  const SectionTabs({
-    super.key,
-    required this.tabs,
-    required this.currentPath,
-  });
+  const SectionTabs({super.key, required this.tabs, required this.currentPath});
 
   final List<(String path, String label)> tabs;
   final String currentPath;
@@ -135,17 +128,19 @@ class _TabChip extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: selected ? AppColors.black : Colors.transparent,
+              color: selected ? context.brand.textPrimary : Colors.transparent,
               width: 2,
             ),
           ),
         ),
         child: Text(
           label,
-          style: TextStyle(
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: selected ? AppColors.black : AppColors.textMuted,
+            color: selected
+                ? context.brand.textPrimary
+                : context.brand.textMuted,
           ),
         ),
       ),
