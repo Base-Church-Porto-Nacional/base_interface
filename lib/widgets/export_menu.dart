@@ -48,11 +48,6 @@ class _ExportMenuState extends State<ExportMenu> {
   Widget build(BuildContext context) {
     final brand = context.brand;
     return PopupMenuButton<ExportFormato>(
-      color: brand.surfaceOverlay,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: brand.border),
-      ),
       enabled: !_exporting,
       tooltip: 'Exportar',
       onSelected: _export,
@@ -82,7 +77,7 @@ class _ExportMenuState extends State<ExportMenu> {
         const PopupMenuItem(value: ExportFormato.xlsx, child: Text('Excel')),
       ],
       child: Container(
-        height: 40,
+        height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           border: Border.all(color: brand.borderStrong),

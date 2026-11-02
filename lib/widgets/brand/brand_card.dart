@@ -2,6 +2,8 @@ import 'package:base_church/theme/app_elevation.dart';
 import 'package:base_church/theme/brand_colors.dart';
 import 'package:flutter/material.dart';
 
+import 'focus_ring.dart';
+
 class BrandCard extends StatefulWidget {
   const BrandCard({
     super.key,
@@ -21,6 +23,7 @@ class BrandCard extends StatefulWidget {
 class _BrandCardState extends State<BrandCard> {
   bool _hovered = false;
   bool _pressed = false;
+  bool _focused = false;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +52,7 @@ class _BrandCardState extends State<BrandCard> {
           borderRadius: radius,
           onTap: widget.onTap,
           onHighlightChanged: (v) => setState(() => _pressed = v),
+          onFocusChange: (v) => setState(() => _focused = v),
           child: content,
         ),
       );
@@ -77,7 +81,7 @@ class _BrandCardState extends State<BrandCard> {
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: visual,
+      child: FocusRing(focused: _focused, borderRadius: radius, child: visual),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:base_church/theme/brand_colors.dart';
 import 'package:base_church/widgets/brand/brand.dart';
 import 'package:base_church/widgets/common.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/pump.dart';
@@ -76,5 +77,28 @@ void main() {
       expect(dy(), -2.0, reason: 'pump $i');
     }
     await gesture.removePointer();
+  });
+
+  testWidgets('BrandCard focado mostra anel de foco', (t) async {
+    await pumpBrand(
+      t,
+      Center(
+        child: BrandCard(onTap: () {}, child: const Text('card')),
+      ),
+    );
+    final ring = find.byWidgetPredicate((w) => w is FocusRing && w.focused);
+    expect(ring, findsNothing);
+    await t.sendKeyEvent(LogicalKeyboardKey.tab);
+    await t.pump();
+    expect(ring, findsOneWidget);
+    final box = t.widget<DecoratedBox>(
+      find.descendant(of: ring, matching: find.byKey(FocusRing.ringKey)),
+    );
+    final border = (box.decoration as BoxDecoration).border as Border;
+    expect(border.top.color, BrandColors.light.focus);
+    expect(border.top.width, 2);
+    final card = t.getRect(find.byType(BrandCard));
+    final anel = t.getRect(find.byKey(FocusRing.ringKey));
+    expect(anel, card.inflate(4));
   });
 }

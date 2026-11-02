@@ -19,23 +19,18 @@ class FilterMenu extends StatelessWidget {
 
     return PopupMenuButton<String>(
       tooltip: 'Filtros',
-      color: brand.surfaceOverlay,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: brand.border),
-      ),
       onSelected: onChanged,
       itemBuilder: (_) => [
         for (final (value, label) in pessoaFiltros)
           PopupMenuItem(value: value, child: Text(label)),
       ],
       child: Container(
-        width: 44,
-        height: 44,
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
           color: active ? brand.primary : brand.surface,
           border: Border.all(color: brand.borderStrong),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           Icons.filter_list,

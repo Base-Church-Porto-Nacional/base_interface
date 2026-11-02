@@ -176,9 +176,8 @@ abstract final class AppTheme {
               : c.surfaceRaised,
         ),
         trackOutlineColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected)
-              ? c.primary
-              : c.textMuted,
+          (states) =>
+              states.contains(WidgetState.selected) ? c.primary : c.textMuted,
         ),
       ),
       dividerTheme: DividerThemeData(color: c.border, thickness: 1),
