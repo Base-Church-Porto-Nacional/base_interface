@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/igreja_context.dart';
 import '../../services/igreja_service.dart';
 import '../../services/pessoa_service.dart';
 import '../../widgets/common.dart';
@@ -49,11 +50,17 @@ class _IgrejaDetailScreenState extends State<IgrejaDetailScreen> {
     final u = context.read<AuthProvider>().user;
     if (u == null) return false;
     if (u.isMatriz && u.permissoes.tem(Capacidade.filialCriar)) return true;
-    return u.pessoaId != null && u.pessoaId == i.pastorPessoaId;
+    // Titular só enquanto ainda for PASTOR ali (mesma regra do servidor).
+    return u.pessoaId != null &&
+        u.pessoaId == i.pastorPessoaId &&
+        u.permissoes.tem(Capacidade.papeisGestaoAtribuir);
   }
 
   Future<void> _trocarPastor(Igreja i) async {
     final messenger = ScaffoldMessenger.of(context);
+    final auth = context.read<AuthProvider>();
+    final igrejaContext = context.read<IgrejaContext>();
+    final eraTitular = auth.user?.pessoaId != null && auth.user?.pessoaId == i.pastorPessoaId;
     try {
       final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: i.id);
       if (!mounted) return;
@@ -74,6 +81,22 @@ class _IgrejaDetailScreenState extends State<IgrejaDetailScreen> {
             enviadoWhatsapp: convite.enviadoWhatsapp,
           ),
         );
+      }
+      if (r.anteriorMantevePastor) {
+        messenger.showSnackBar(const SnackBar(
+          content: Text('O pastor anterior mantém o papel PASTOR até você removê-lo em Papéis.'),
+        ));
+      }
+      // Pastor (nome) mudou: o seletor de igrejas e a lista precisam do novo.
+      await igrejaContext.reload(auth.user);
+      if (eraTitular) {
+        // As permissões de quem deixou de ser titular podem ter mudado. Se o
+        // PASTOR saiu, os tokens foram invalidados e o /me cai no fluxo de
+        // sessão expirada — por isso o aviso vem antes.
+        messenger.showSnackBar(const SnackBar(
+          content: Text('Você não é mais o pastor desta igreja.'),
+        ));
+        await auth.recarregarMe();
       }
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('$e')));

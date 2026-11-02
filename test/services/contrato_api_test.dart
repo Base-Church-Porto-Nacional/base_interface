@@ -717,6 +717,22 @@ void main() {
       expect(fake.log, ['PUT /igrejas/i9/pastor']);
       expect(fake.corpo(0), {'pessoaId': 'p2'});
       expect(r.convite?.link, 'https://app/definir?t=abc');
+      expect(r.anteriorMantevePastor, isFalse);
+    });
+
+    test('trocarPastorLeAnteriorMantevePastor', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'PUT /igrejas/i9/pastor': (_) => (
+          200,
+          {'igreja': resposta['igreja'], 'convite': null, 'anteriorMantevePastor': true},
+        ),
+      });
+
+      final r = await fake.run(() => IgrejaService(api).trocarPastor('i9', 'p2'));
+
+      expect(r.anteriorMantevePastor, isTrue);
+      expect(r.convite, isNull);
     });
 
     test('updateEnviaSoNomeEAtivo', () async {

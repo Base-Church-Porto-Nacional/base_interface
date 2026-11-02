@@ -6,6 +6,14 @@ typedef ResultadoPastor = ({
   ({String link, bool enviadoWhatsapp})? convite,
 });
 
+/// Resposta da troca de pastor. `anteriorMantevePastor`: o novo ainda não está
+/// ativo, então o anterior ficou com o papel PASTOR (remover depois em Papéis).
+typedef PastorTrocado = ({
+  Igreja igreja,
+  ({String link, bool enviadoWhatsapp})? convite,
+  bool anteriorMantevePastor,
+});
+
 class IgrejaService {
   IgrejaService(this._api);
 
@@ -48,11 +56,16 @@ class IgrejaService {
     return _resultado(json);
   }
 
-  Future<ResultadoPastor> trocarPastor(String igrejaId, String pessoaId) async {
+  Future<PastorTrocado> trocarPastor(String igrejaId, String pessoaId) async {
     final json = await _api.put('/igrejas/$igrejaId/pastor', {
       'pessoaId': pessoaId,
     }) as Map<String, dynamic>;
-    return _resultado(json);
+    final r = _resultado(json);
+    return (
+      igreja: r.igreja,
+      convite: r.convite,
+      anteriorMantevePastor: json['anteriorMantevePastor'] as bool? ?? false,
+    );
   }
 
   Future<Igreja> update(
