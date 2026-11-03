@@ -701,6 +701,22 @@ void main() {
       expect(r.igreja.id, 'i9');
       expect(r.convite?.link, 'https://app/definir?t=abc');
       expect(r.convite?.enviadoWhatsapp, isFalse);
+      // resposta sem o campo (servidor antigo) vale 0
+      expect(r.participacoesAjustadas, 0);
+    });
+
+    test('criarFilialLeParticipacoesAjustadas', () async {
+      final api = await apiClientDeTeste();
+      final fake = FakeApi({
+        'POST /igrejas/i1/filiais': (_) =>
+            (201, {...resposta, 'participacoesAjustadas': 3}),
+      });
+
+      final r = await fake.run(
+        () => IgrejaService(api).criarFilial(matrizId: 'i1', nome: 'Filial Norte', pastorPessoaId: 'p1'),
+      );
+
+      expect(r.participacoesAjustadas, 3);
     });
 
     test('criarFilialComPessoaNova', () async {

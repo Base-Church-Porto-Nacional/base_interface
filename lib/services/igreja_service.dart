@@ -6,6 +6,15 @@ typedef ResultadoPastor = ({
   ({String link, bool enviadoWhatsapp})? convite,
 });
 
+/// Resposta da criação de filial. `participacoesAjustadas`: quantas
+/// participações futuras do pastor transferido (escalas, cultos, cronograma)
+/// foram ajustadas na igreja de origem.
+typedef FilialCriada = ({
+  Igreja igreja,
+  ({String link, bool enviadoWhatsapp})? convite,
+  int participacoesAjustadas,
+});
+
 /// Resposta da troca de pastor. `anteriorMantevePastor`: o novo ainda não está
 /// ativo, então o anterior ficou com o papel PASTOR (remover depois em Papéis).
 typedef PastorTrocado = ({
@@ -34,7 +43,7 @@ class IgrejaService {
     return _map(json);
   }
 
-  Future<ResultadoPastor> criarFilial({
+  Future<FilialCriada> criarFilial({
     required String matrizId,
     required String nome,
     String? pastorPessoaId,
@@ -53,7 +62,12 @@ class IgrejaService {
       'nome': nome,
       'pastor': pastor,
     }) as Map<String, dynamic>;
-    return _resultado(json);
+    final r = _resultado(json);
+    return (
+      igreja: r.igreja,
+      convite: r.convite,
+      participacoesAjustadas: (json['participacoesAjustadas'] as num?)?.toInt() ?? 0,
+    );
   }
 
   Future<PastorTrocado> trocarPastor(String igrejaId, String pessoaId) async {

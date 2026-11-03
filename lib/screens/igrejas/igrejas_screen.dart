@@ -84,8 +84,19 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
             pastorWhatsapp: result['pastorWhatsapp'] as String?,
           );
       if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
       await context.read<IgrejaContext>().reload(context.read<AuthProvider>().user);
       _load();
+      final ajustadas = r.participacoesAjustadas;
+      if (ajustadas > 0) {
+        messenger.showSnackBar(SnackBar(
+          content: Text(
+            ajustadas == 1
+                ? '1 participação futura do pastor na igreja anterior foi ajustada (escala, culto ou cronograma).'
+                : '$ajustadas participações futuras do pastor na igreja anterior foram ajustadas (escalas, cultos e cronograma).',
+          ),
+        ));
+      }
       final convite = r.convite;
       if (convite != null && mounted) {
         await showDialog<void>(
