@@ -186,4 +186,66 @@ void main() {
     final campo = tester.widget<TextField>(find.widgetWithText(TextField, 'Pastor *'));
     expect(campo.enabled, isFalse);
   });
+
+  testWidgets('textoSemEscolhaSomeAoSairDoCampo', (tester) async {
+    String? escolhido = 'x';
+    await _montar(
+      tester,
+      [_pessoa('p1', 'Ana Costa')],
+      (id) => escolhido = id,
+      permitirVazio: false,
+    );
+
+    await tester.enterText(find.widgetWithText(TextField, 'Pastor *'), 'Jo');
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextField, 'Outro campo'));
+    await tester.pumpAndSettle();
+
+    // nada foi escolhido: o campo não pode parecer preenchido
+    expect(find.widgetWithText(TextField, 'Jo'), findsNothing);
+    expect(escolhido, 'x');
+  });
+
+  testWidgets('textoEditadoSomeAoSairQuandoPermiteVazio', (tester) async {
+    String? escolhido;
+    await _montar(tester, [_pessoa('p1', 'Maria Souza')], (id) => escolhido = id, inicialId: 'p1');
+
+    await tester.enterText(find.widgetWithText(TextField, 'Pastor *'), 'Mari');
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextField, 'Outro campo'));
+    await tester.pumpAndSettle();
+
+    expect(escolhido, isNull);
+    expect(find.widgetWithText(TextField, 'Mari'), findsNothing);
+  });
+
+  testWidgets('trocarAPessoaInicialAtualizaOCampo', (tester) async {
+    final pessoas = [_pessoa('p1', 'Ana Costa'), _pessoa('p2', 'Bruno')];
+    Widget tela(String id) => MaterialApp(
+      home: Scaffold(
+        body: SeletorPessoa(pessoas: pessoas, label: 'Pastor *', inicialId: id, onChanged: (_) {}),
+      ),
+    );
+    await tester.pumpWidget(tela('p1'));
+    expect(find.widgetWithText(TextField, 'Ana Costa'), findsOneWidget);
+
+    await tester.pumpWidget(tela('p2'));
+    expect(find.widgetWithText(TextField, 'Bruno'), findsOneWidget);
+  });
+
+  testWidgets('mostraErroInformado', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SeletorPessoa(
+            pessoas: const [],
+            label: 'Líder *',
+            errorText: 'Escolha o líder.',
+            onChanged: (_) {},
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Escolha o líder.'), findsOneWidget);
+  });
 }

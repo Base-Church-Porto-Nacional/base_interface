@@ -284,4 +284,20 @@ void main() {
     expect(resultado!['liderPessoaId'], isNull);
     expect(resultado!['coordenadorPessoaId'], 'p2');
   });
+
+  testWidgets('pequenoGrupoSemLiderAvisa', (tester) async {
+    Map<String, dynamic>? resultado;
+    await _abrirDialogo<Map<String, dynamic>>(
+      tester,
+      SmallGroupFormDialog(pessoas: [_pastor]),
+      (r) => resultado = r,
+    );
+
+    await tester.enterText(find.widgetWithText(TextField, 'Nome *'), 'Célula Centro');
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+
+    expect(resultado, isNull);
+    expect(find.text('Escolha o líder.'), findsOneWidget);
+  });
 }

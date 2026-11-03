@@ -800,6 +800,7 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
   late bool _ativo;
   late DiaSemana _diaSemana;
   String? _liderId;
+  String? _erroLider;
   late int _nota;
 
   @override
@@ -857,7 +858,11 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
                 pessoas: widget.pessoas,
                 label: 'Líder *',
                 inicialId: _liderId,
-                onChanged: (v) => setState(() => _liderId = v),
+                errorText: _erroLider,
+                onChanged: (v) => setState(() {
+                  _liderId = v;
+                  if (v != null) _erroLider = null;
+                }),
               ),
               const SizedBox(height: 12),
             ],
@@ -899,7 +904,11 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
         FilledButton(
           onPressed: () {
-            if (_nome.text.trim().isEmpty || _liderId == null) return;
+            if (_nome.text.trim().isEmpty) return;
+            if (_liderId == null) {
+              setState(() => _erroLider = 'Escolha o líder.');
+              return;
+            }
             Pessoa? lider;
             for (final p in widget.pessoas) {
               if (p.id == _liderId) lider = p;

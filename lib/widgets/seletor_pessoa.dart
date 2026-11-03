@@ -25,6 +25,7 @@ class SeletorPessoa extends StatefulWidget {
     this.enabled = true,
     this.permitirVazio = true,
     this.helperText = 'Digite parte do nome',
+    this.errorText,
     this.maxSugestoes = 8,
   });
 
@@ -36,6 +37,7 @@ class SeletorPessoa extends StatefulWidget {
   final bool enabled;
   final bool permitirVazio;
   final String? helperText;
+  final String? errorText;
   final int maxSugestoes;
 
   @override
@@ -57,22 +59,28 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
   @override
   void initState() {
     super.initState();
+    _aplicarInicial();
+    _focusNode.addListener(_aoMudarFoco);
+  }
+
+  void _aplicarInicial() {
     final id = widget.inicialId;
+    Pessoa? inicial;
     if (id != null) {
-      Pessoa? inicial;
       for (final p in widget.pessoas) {
         if (p.id == id) inicial = p;
       }
-      _nomeEscolhido = inicial?.nome ?? widget.inicialNome;
-      _controller.text = _nomeEscolhido ?? '';
     }
-    _focusNode.addListener(_aoMudarFoco);
+    _nomeEscolhido = id == null ? null : (inicial?.nome ?? widget.inicialNome);
+    _controller.text = _nomeEscolhido ?? '';
   }
 
   @override
   void didUpdateWidget(SeletorPessoa oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.pessoas, widget.pessoas)) _ordenadas = _ordenar(widget.pessoas);
+    // O dono trocou o valor (ex.: outro encontro): mostra o novo.
+    if (oldWidget.inicialId != widget.inicialId && !_focusNode.hasFocus) _aplicarInicial();
   }
 
   @override
@@ -83,10 +91,12 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
     super.dispose();
   }
 
+  /// Ao sair do campo, ele mostra só o que está de fato escolhido: o nome da
+  /// pessoa ou nada. Texto digitado sem escolha não pode parecer preenchido.
   void _aoMudarFoco() {
-    if (_focusNode.hasFocus || widget.permitirVazio) return;
-    final nome = _nomeEscolhido;
-    if (nome != null && _controller.text != nome) _controller.text = nome;
+    if (_focusNode.hasFocus) return;
+    final esperado = _nomeEscolhido ?? '';
+    if (_controller.text != esperado) _controller.text = esperado;
   }
 
   Iterable<Pessoa> _sugestoes(TextEditingValue valor) {
@@ -127,7 +137,8 @@ class _SeletorPessoaState extends State<SeletorPessoa> {
         decoration: InputDecoration(
           labelText: widget.label,
           helperText: widget.enabled ? widget.helperText : null,
-          suffixIcon: const Icon(Icons.search),
+          errorText: widget.errorText,
+          suffixIcon: widget.enabled ? const Icon(Icons.search) : null,
         ),
         onChanged: _aoDigitar,
         onSubmitted: (_) => onSubmitted(),
