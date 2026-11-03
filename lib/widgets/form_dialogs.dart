@@ -531,6 +531,8 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
               onSelectionChanged: (v) => setState(() {
                 _novaPessoa = v.first;
                 _erro = null;
+                // O seletor é recriado vazio: a escolha anterior não vale mais.
+                _pastorId = null;
               }),
             ),
             const SizedBox(height: 12),

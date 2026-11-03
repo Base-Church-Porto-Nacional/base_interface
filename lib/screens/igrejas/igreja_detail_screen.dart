@@ -99,8 +99,12 @@ class _IgrejaDetailScreenState extends State<IgrejaDetailScreen> {
     // A troca já foi feita: recarregar contexto e /me não deve esconder o aviso.
     // Se o PASTOR saiu, os tokens foram invalidados e o /me cai no fluxo de
     // sessão expirada — por isso o aviso vem antes.
-    await igrejaContext.reload(auth.user);
-    if (eraTitular) await auth.recarregarMe();
+    try {
+      await igrejaContext.reload(auth.user);
+      if (eraTitular) await auth.recarregarMe();
+    } catch (_) {
+      // A troca já foi feita e avisada; a próxima navegação recarrega.
+    }
   }
 
   @override

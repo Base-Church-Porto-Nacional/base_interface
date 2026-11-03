@@ -231,4 +231,29 @@ void main() {
     expect(resultado, isNull);
     expect(find.text('Escolha o serviço.'), findsOneWidget);
   });
+
+  testWidgets('trocarDeModoDescartaOPastorEscolhido', (tester) async {
+    Map<String, dynamic>? resultado;
+    await _abrir(tester, (r) => resultado = r);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Nome da filial *'),
+      'Filial Norte',
+    );
+    await tester.enterText(find.widgetWithText(TextField, 'Pastor *'), 'Ana');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ana Costa').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Nova pessoa'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pessoa já cadastrada'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Criar'));
+    await tester.pumpAndSettle();
+
+    // o campo voltou vazio: não pode criar com um pastor que a pessoa não vê
+    expect(resultado, isNull);
+    expect(find.text('Nova filial'), findsOneWidget);
+  });
 }

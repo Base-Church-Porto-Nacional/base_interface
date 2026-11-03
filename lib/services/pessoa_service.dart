@@ -15,8 +15,21 @@ class PessoaService {
     String filtro = 'TODOS',
     String? igrejaId,
   }) async {
-    var mapped = await listarTodas(igrejaId: igrejaId);
+    final mapped = filtrar(
+      await listarTodas(igrejaId: igrejaId),
+      search: search,
+      filtro: filtro,
+    );
+    return paginate(mapped, page: page, size: size);
+  }
 
+  /// Busca (nome, e-mail, telefone) e filtro de tipo sobre uma lista já carregada.
+  static List<Pessoa> filtrar(
+    List<Pessoa> pessoas, {
+    String search = '',
+    String filtro = 'TODOS',
+  }) {
+    var mapped = pessoas;
     final q = search.trim().toLowerCase();
     if (q.isNotEmpty) {
       mapped = mapped
@@ -31,7 +44,7 @@ class PessoaService {
     if (filtro != 'TODOS') {
       mapped = mapped.where((p) => pessoaMatchesFiltro(p, filtro)).toList();
     }
-    return paginate(mapped, page: page, size: size);
+    return mapped;
   }
 
   /// Todas as pessoas visíveis (da igreja informada ou de toda a rede do

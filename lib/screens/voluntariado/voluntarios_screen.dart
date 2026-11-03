@@ -55,11 +55,9 @@ class _VoluntariosScreenState extends State<VoluntariosScreen> {
       _error = null;
     });
     try {
-      final pessoas = await pessoaService.list(
-        filtro: 'TODOS',
+      final pessoas = PessoaService.filtrar(
+        await pessoaService.listarTodas(igrejaId: igrejaId),
         search: _search,
-        size: 100,
-        igrejaId: igrejaId,
       );
       final ministerios = await ministerioService.list(igrejaId: igrejaId);
       final bases = await baseMinisterialService.list(igrejaId: igrejaId);
@@ -71,7 +69,7 @@ class _VoluntariosScreenState extends State<VoluntariosScreen> {
       };
       if (mounted) {
         setState(() {
-          _pessoas = pessoas.content;
+          _pessoas = pessoas;
           _gestorIds = gestorIds;
         });
       }
