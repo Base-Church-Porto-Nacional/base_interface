@@ -12,6 +12,7 @@ import '../../services/pessoa_service.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
+import '../../widgets/seletor_pessoa.dart';
 
 class EscalaFormScreen extends StatefulWidget {
   const EscalaFormScreen({super.key, this.competencia});
@@ -397,31 +398,23 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
                   ),
                 ],
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _supervisorId,
-                  decoration: const InputDecoration(
-                    labelText: 'Supervisor',
-                    helperText: 'Padrão: pastor da igreja',
-                  ),
-                  items: [
-                    for (final p in _pessoas)
-                      DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                  ],
-                  onChanged: (v) => setState(() => _supervisorId = v),
+                SeletorPessoa(
+                  pessoas: _pessoas,
+                  label: 'Supervisor',
+                  helperText: 'Padrão: pastor da igreja',
+                  inicialId: _supervisorId,
+                  permitirVazio: false,
+                  onChanged: (v) => setState(() => _supervisorId = v ?? _supervisorId),
                 ),
                 if (_tipo == EscalaTipo.culto || _tipo == EscalaTipo.pregador) ...[
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: _pregadorId,
-                    decoration: const InputDecoration(
-                      labelText: 'Pregador',
-                      helperText: 'Padrão: pastor da igreja',
-                    ),
-                    items: [
-                      for (final p in _pessoas)
-                        DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                    ],
-                    onChanged: (v) => setState(() => _pregadorId = v),
+                  SeletorPessoa(
+                    pessoas: _pessoas,
+                    label: 'Pregador',
+                    helperText: 'Padrão: pastor da igreja',
+                    inicialId: _pregadorId,
+                    permitirVazio: false,
+                    onChanged: (v) => setState(() => _pregadorId = v ?? _pregadorId),
                   ),
                 ],
                 const SizedBox(height: 12),

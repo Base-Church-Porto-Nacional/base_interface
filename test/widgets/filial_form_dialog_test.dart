@@ -256,4 +256,32 @@ void main() {
     expect(resultado, isNull);
     expect(find.text('Nova filial'), findsOneWidget);
   });
+
+  testWidgets('ministerioMostraLiderAtualEDeixaApagar', (tester) async {
+    Map<String, dynamic>? resultado;
+    await _abrirDialogo<Map<String, dynamic>>(
+      tester,
+      MinisterioFormDialog(
+        initialNome: 'Louvor',
+        initialLiderId: 'p1',
+        pessoas: [_pastor, _pessoa('p2', 'Bruno Lima')],
+      ),
+      (r) => resultado = r,
+    );
+
+    expect(find.widgetWithText(TextField, 'Ana Costa'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Líder espiritual'), '');
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'Coordenador'), 'Bru');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bruno Lima').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+
+    expect(resultado, isNotNull);
+    expect(resultado!['liderPessoaId'], isNull);
+    expect(resultado!['coordenadorPessoaId'], 'p2');
+  });
 }

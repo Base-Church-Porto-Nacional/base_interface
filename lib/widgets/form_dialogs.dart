@@ -236,29 +236,19 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
               const SizedBox(height: 12),
             ],
             if (widget.pessoas.isNotEmpty) ...[
-              DropdownButtonFormField<String>(
-                initialValue: _liderId ?? '',
-                decoration: const InputDecoration(labelText: 'Líder espiritual'),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final p in widget.pessoas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) => setState(() => _liderId = (v == null || v.isEmpty) ? null : v),
+              SeletorPessoa(
+                pessoas: widget.pessoas,
+                label: 'Líder espiritual',
+                inicialId: _liderId,
+                onChanged: (v) => setState(() => _liderId = v),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _coordenadorId ?? '',
-                decoration: const InputDecoration(
-                  labelText: 'Coordenador',
-                  helperText: 'Serviço ficção do ministério, não é um papel.',
-                ),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final p in widget.pessoas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) => setState(() => _coordenadorId = (v == null || v.isEmpty) ? null : v),
+              SeletorPessoa(
+                pessoas: widget.pessoas,
+                label: 'Coordenador',
+                helperText: 'Serviço ficção do ministério, não é um papel.',
+                inicialId: _coordenadorId,
+                onChanged: (v) => setState(() => _coordenadorId = v),
               ),
               const SizedBox(height: 12),
             ],
@@ -374,27 +364,18 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
             ),
             const SizedBox(height: 12),
             if (widget.pessoas.isNotEmpty) ...[
-              DropdownButtonFormField<String>(
-                initialValue: _liderId ?? '',
-                decoration: const InputDecoration(labelText: 'Líder'),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final p in widget.pessoas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) => setState(() => _liderId = (v == null || v.isEmpty) ? null : v),
+              SeletorPessoa(
+                pessoas: widget.pessoas,
+                label: 'Líder',
+                inicialId: _liderId,
+                onChanged: (v) => setState(() => _liderId = v),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _coordenadorId ?? '',
-                decoration: const InputDecoration(labelText: 'Coordenador'),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final p in widget.pessoas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) =>
-                    setState(() => _coordenadorId = (v == null || v.isEmpty) ? null : v),
+              SeletorPessoa(
+                pessoas: widget.pessoas,
+                label: 'Coordenador',
+                inicialId: _coordenadorId,
+                onChanged: (v) => setState(() => _coordenadorId = v),
               ),
               const SizedBox(height: 12),
             ],
@@ -872,16 +853,11 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
             ),
             const SizedBox(height: 12),
             if (widget.pessoas.isNotEmpty) ...[
-              DropdownButtonFormField<String>(
-                initialValue: _liderId ?? '',
-                decoration: const InputDecoration(labelText: 'Líder *'),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final p in widget.pessoas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) =>
-                    setState(() => _liderId = (v == null || v.isEmpty) ? null : v),
+              SeletorPessoa(
+                pessoas: widget.pessoas,
+                label: 'Líder *',
+                inicialId: _liderId,
+                onChanged: (v) => setState(() => _liderId = v),
               ),
               const SizedBox(height: 12),
             ],

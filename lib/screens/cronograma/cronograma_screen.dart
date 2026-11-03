@@ -10,6 +10,7 @@ import '../../utils/format.dart';
 import '../../utils/route_access.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common.dart';
+import '../../widgets/seletor_pessoa.dart';
 import '../../widgets/filter_search.dart';
 
 class CronogramaScreen extends StatefulWidget {
@@ -105,16 +106,12 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
                       decoration: const InputDecoration(labelText: 'Local'),
                     ),
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: supervisorId,
-                      decoration: const InputDecoration(
-                        labelText: 'Supervisor',
-                        helperText: 'Padrão: pastor da igreja',
-                      ),
-                      items: [
-                        for (final p in pessoas)
-                          DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                      ],
+                    SeletorPessoa(
+                      pessoas: pessoas,
+                      label: 'Supervisor',
+                      helperText: 'Padrão: pastor da igreja',
+                      inicialId: supervisorId,
+                      permitirVazio: false,
                       onChanged: (v) => setLocal(() => supervisorId = v ?? supervisorId),
                     ),
                   ],

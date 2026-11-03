@@ -18,13 +18,30 @@ Pessoa _pessoa(String id, String nome, {String email = '', String telefone = ''}
 Future<void> _montar(
   WidgetTester tester,
   List<Pessoa> pessoas,
-  void Function(String?) onChanged,
-) async {
+  void Function(String?) onChanged, {
+  String? inicialId,
+  String? inicialNome,
+  bool enabled = true,
+  bool permitirVazio = true,
+}) async {
   await tester.pumpWidget(
     MaterialApp(
       home: Scaffold(
         body: SingleChildScrollView(
-          child: SeletorPessoa(pessoas: pessoas, label: 'Pastor *', onChanged: onChanged),
+          child: Column(
+            children: [
+              SeletorPessoa(
+                pessoas: pessoas,
+                label: 'Pastor *',
+                onChanged: onChanged,
+                inicialId: inicialId,
+                inicialNome: inicialNome,
+                enabled: enabled,
+                permitirVazio: permitirVazio,
+              ),
+              const TextField(decoration: InputDecoration(labelText: 'Outro campo')),
+            ],
+          ),
         ),
       ),
     ),
@@ -114,5 +131,59 @@ void main() {
     final bruno = tester.getTopLeft(find.text('Bruno')).dy;
     final carla = tester.getTopLeft(find.text('Carla')).dy;
     expect(ana < bruno && bruno < carla, isTrue);
+  });
+
+  testWidgets('comecaComAPessoaInicial', (tester) async {
+    await _montar(tester, [_pessoa('p1', 'Ana Costa'), _pessoa('p2', 'Bruno')], (_) {}, inicialId: 'p2');
+
+    expect(find.widgetWithText(TextField, 'Bruno'), findsOneWidget);
+  });
+
+  testWidgets('inicialForaDaListaUsaONomeInformado', (tester) async {
+    await _montar(
+      tester,
+      [_pessoa('p1', 'Ana Costa')],
+      (_) {},
+      inicialId: 'px',
+      inicialNome: 'Pregador de fora',
+    );
+
+    expect(find.widgetWithText(TextField, 'Pregador de fora'), findsOneWidget);
+  });
+
+  testWidgets('apagarOTextoLimpaQuandoPermiteVazio', (tester) async {
+    String? escolhido = 'p1';
+    await _montar(tester, [_pessoa('p1', 'Ana Costa')], (id) => escolhido = id, inicialId: 'p1');
+
+    await tester.enterText(find.widgetWithText(TextField, 'Pastor *'), '');
+    await tester.pumpAndSettle();
+
+    expect(escolhido, isNull);
+  });
+
+  testWidgets('semVazioVoltaAoEscolhidoAoSairDoCampo', (tester) async {
+    final chamadas = <String?>[];
+    await _montar(
+      tester,
+      [_pessoa('p1', 'Ana Costa'), _pessoa('p2', 'Bruno')],
+      chamadas.add,
+      inicialId: 'p1',
+      permitirVazio: false,
+    );
+
+    await tester.enterText(find.widgetWithText(TextField, 'Pastor *'), 'Br');
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextField, 'Outro campo'));
+    await tester.pumpAndSettle();
+
+    expect(chamadas, isEmpty);
+    expect(find.widgetWithText(TextField, 'Ana Costa'), findsOneWidget);
+  });
+
+  testWidgets('desabilitadoNaoDeixaEditar', (tester) async {
+    await _montar(tester, [_pessoa('p1', 'Ana Costa')], (_) {}, inicialId: 'p1', enabled: false);
+
+    final campo = tester.widget<TextField>(find.widgetWithText(TextField, 'Pastor *'));
+    expect(campo.enabled, isFalse);
   });
 }
