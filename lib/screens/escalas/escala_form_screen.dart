@@ -77,13 +77,13 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
     });
     try {
       final results = await Future.wait([
-        context.read<PessoaService>().list(size: 100, igrejaId: igrejaId),
+        context.read<PessoaService>().listarTodas(igrejaId: igrejaId),
         context.read<MinisterioService>().list(igrejaId: igrejaId),
         context.read<EscalaService>().list(igrejaId: igrejaId, competencia: _competencia),
         context.read<CronogramaService>().list(igrejaId: igrejaId),
       ]);
       if (!mounted) return;
-      final pessoas = (results[0] as PageResponse<Pessoa>).content;
+      final pessoas = results[0] as List<Pessoa>;
       final ministerios = results[1] as List<Ministerio>;
       final escalas = results[2] as List<Escala>;
       final eventos = (results[3] as List<CultoEvento>)

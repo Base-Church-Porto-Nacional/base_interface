@@ -45,7 +45,7 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
     if (!canCreateCronograma(context.read<AuthProvider>().user)) return;
     final igreja = context.read<IgrejaContext>().selected;
     if (igreja == null) return;
-    final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: igreja.id);
+    final pessoas = await context.read<PessoaService>().listarTodas(igrejaId: igreja.id);
     if (!mounted) return;
 
     final titulo = TextEditingController(text: 'Culto de domingo');
@@ -112,7 +112,7 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
                         helperText: 'Padrão: pastor da igreja',
                       ),
                       items: [
-                        for (final p in pessoas.content)
+                        for (final p in pessoas)
                           DropdownMenuItem(value: p.id, child: Text(p.nome)),
                       ],
                       onChanged: (v) => setLocal(() => supervisorId = v ?? supervisorId),
@@ -132,7 +132,7 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
 
     if (saved != true || !mounted) return;
     Pessoa? supervisor;
-    for (final p in pessoas.content) {
+    for (final p in pessoas) {
       if (p.id == supervisorId) supervisor = p;
     }
     try {

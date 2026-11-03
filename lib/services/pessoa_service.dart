@@ -15,10 +15,7 @@ class PessoaService {
     String filtro = 'TODOS',
     String? igrejaId,
   }) async {
-
-    final query = igrejaId == null ? null : {'igrejaId': igrejaId};
-    final list = await _api.get('/pessoas', query: query) as List<dynamic>;
-    var mapped = list.map((e) => _mapPessoa(e as Map<String, dynamic>)).toList();
+    var mapped = await listarTodas(igrejaId: igrejaId);
 
     final q = search.trim().toLowerCase();
     if (q.isNotEmpty) {
@@ -35,6 +32,14 @@ class PessoaService {
       mapped = mapped.where((p) => pessoaMatchesFiltro(p, filtro)).toList();
     }
     return paginate(mapped, page: page, size: size);
+  }
+
+  /// Todas as pessoas visíveis (da igreja informada ou de toda a rede do
+  /// usuário), sem paginação — para seletores com busca.
+  Future<List<Pessoa>> listarTodas({String? igrejaId}) async {
+    final query = igrejaId == null ? null : {'igrejaId': igrejaId};
+    final list = await _api.get('/pessoas', query: query) as List<dynamic>;
+    return list.map((e) => _mapPessoa(e as Map<String, dynamic>)).toList();
   }
 
   /// Busca leve por nome (mín. 2 caracteres, máx. 20 resultados no servidor).

@@ -91,7 +91,7 @@ void main() {
       find.widgetWithText(TextField, 'Nome da filial *'),
       'Filial Norte',
     );
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.enterText(find.widgetWithText(TextField, 'Pastor *'), 'Ana');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ana Costa').last);
     await tester.pumpAndSettle();
@@ -119,7 +119,8 @@ void main() {
       (_) {},
     );
 
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    // sem digitar, a busca já lista as elegíveis
+    await tester.tap(find.widgetWithText(TextField, 'Pastor *'));
     await tester.pumpAndSettle();
 
     expect(find.text('Ana Costa'), findsWidgets);
@@ -154,7 +155,7 @@ void main() {
       (r) => escolhido = r,
     );
 
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.tap(find.widgetWithText(TextField, 'Novo pastor *'));
     await tester.pumpAndSettle();
 
     expect(find.text('Bia Inativa'), findsNothing);
@@ -199,5 +200,35 @@ void main() {
     expect(resultado!['pastorNome'], 'Carlos');
     expect(resultado!['pastorEmail'], 'carlos@x.com');
     expect(resultado!['pastorPessoaId'], isNull);
+  });
+
+  testWidgets('liderSemServicoNaoConsegueSalvar', (tester) async {
+    await _abrirDialogo<Map<String, String>>(
+      tester,
+      const PessoaFormDialog(servicos: []),
+      (_) {},
+    );
+
+    final salvar = tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Salvar'));
+    expect(salvar.onPressed, isNull);
+    expect(find.text('Você não lidera nenhum serviço para vincular a pessoa.'), findsOneWidget);
+  });
+
+  testWidgets('liderSemEscolherServicoVeAviso', (tester) async {
+    Map<String, String>? resultado;
+    await _abrirDialogo<Map<String, String>>(
+      tester,
+      const PessoaFormDialog(
+        servicos: [Servico(id: 's1', ministerioId: 'm1', nome: 'Recepção', ficcao: false, ativo: true)],
+      ),
+      (r) => resultado = r,
+    );
+
+    await tester.enterText(find.widgetWithText(TextField, 'Nome *'), 'Rafa');
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+
+    expect(resultado, isNull);
+    expect(find.text('Escolha o serviço.'), findsOneWidget);
   });
 }

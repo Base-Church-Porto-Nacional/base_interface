@@ -26,9 +26,10 @@ const _novoPastor = Pessoa(
 );
 
 class _IgrejaServiceFake extends IgrejaService {
-  _IgrejaServiceFake(super.api, {this.anteriorMantevePastor = false});
+  _IgrejaServiceFake(super.api, {this.anteriorMantevePastor = false, this.falharListagem = false});
 
   final bool anteriorMantevePastor;
+  final bool falharListagem;
   int listagens = 0;
 
   @override
@@ -37,6 +38,7 @@ class _IgrejaServiceFake extends IgrejaService {
   @override
   Future<List<Igreja>> listVisiveis(AuthUser user) async {
     listagens++;
+    if (falharListagem && listagens > 1) throw Exception('sem rede');
     return mockIgrejas;
   }
 
@@ -60,19 +62,7 @@ class _PessoaServiceFake extends PessoaService {
   _PessoaServiceFake(super.api);
 
   @override
-  Future<PageResponse<Pessoa>> list({
-    int page = 0,
-    int size = 20,
-    String search = '',
-    String filtro = 'TODOS',
-    String? igrejaId,
-  }) async => const PageResponse(
-    content: [_novoPastor],
-    totalElements: 1,
-    totalPages: 1,
-    page: 0,
-    size: 100,
-  );
+  Future<List<Pessoa>> listarTodas({String? igrejaId}) async => const [_novoPastor];
 }
 
 class _AuthServiceFake extends AuthService {
@@ -97,13 +87,18 @@ Future<_Tela> _abrir(
   WidgetTester tester,
   AuthUser user, {
   bool anteriorMantevePastor = false,
+  bool falharListagem = false,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   final api = ApiClient(prefs);
   final authService = _AuthServiceFake(api, prefs);
   final auth = AuthProvider(authService)..user = user;
-  final igrejas = _IgrejaServiceFake(api, anteriorMantevePastor: anteriorMantevePastor);
+  final igrejas = _IgrejaServiceFake(
+    api,
+    anteriorMantevePastor: anteriorMantevePastor,
+    falharListagem: falharListagem,
+  );
   await tester.pumpWidget(
     MultiProvider(
       providers: [
@@ -124,7 +119,7 @@ Future<_Tela> _abrir(
 Future<void> _trocarPara(WidgetTester tester, String nome) async {
   await tester.tap(find.text('Trocar pastor'));
   await tester.pumpAndSettle();
-  await tester.tap(find.byType(DropdownButtonFormField<String>));
+  await tester.enterText(find.widgetWithText(TextField, 'Novo pastor *'), nome);
   await tester.pumpAndSettle();
   await tester.tap(find.text(nome).last);
   await tester.pumpAndSettle();
@@ -211,6 +206,38 @@ void main() {
     final tela = await _abrir(
       tester,
       _user(tipo: IgrejaTipo.filial, pessoaId: 'p8', caps: {Capacidade.papeisGestaoAtribuir}),
+    );
+
+    await _trocarPara(tester, 'Ana Costa');
+
+    expect(find.text('Você não é mais o pastor desta igreja.'), findsOneWidget);
+    expect(tela.auth.recargas, 1);
+  });
+
+  testWidgets('titularQueMantemPastorRecebeUmAvisoSo', (tester) async {
+    final tela = await _abrir(
+      tester,
+      _user(tipo: IgrejaTipo.filial, pessoaId: 'p8', caps: {Capacidade.papeisGestaoAtribuir}),
+      anteriorMantevePastor: true,
+    );
+
+    await _trocarPara(tester, 'Ana Costa');
+
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(
+      find.text(
+        'Você deixou de ser o pastor titular, mas mantém o papel PASTOR até ele ser removido em Papéis.',
+      ),
+      findsOneWidget,
+    );
+    expect(tela.auth.recargas, 1);
+  });
+
+  testWidgets('falhaAoRecarregarAListaNaoEscondeOAvisoDoTitular', (tester) async {
+    final tela = await _abrir(
+      tester,
+      _user(tipo: IgrejaTipo.filial, pessoaId: 'p8', caps: {Capacidade.papeisGestaoAtribuir}),
+      falharListagem: true,
     );
 
     await _trocarPara(tester, 'Ana Costa');

@@ -46,12 +46,19 @@ class AuthService {
       me = await _api.get('/me') as Map<String, dynamic>;
     } catch (_) {}
 
-    final user = _montarUsuario(
-      me,
-      id: (login['usuarioId'] ?? me['id']) as String,
-      nome: me['nome'] as String? ?? '',
-      email: me['email'] as String? ?? '',
-    );
+    final AuthUser user;
+    try {
+      user = _montarUsuario(
+        me,
+        id: (login['usuarioId'] ?? me['id']) as String,
+        nome: me['nome'] as String? ?? '',
+        email: me['email'] as String? ?? '',
+      );
+    } catch (_) {
+      // Sem usuário montado não há sessão: não deixa o token gravado sozinho.
+      await _api.setToken(null);
+      rethrow;
+    }
 
     await _prefs.setString(_userKey, jsonEncode(user.toJson()));
     return user;

@@ -58,8 +58,8 @@ class _SmallGroupDetailScreenState extends State<SmallGroupDetailScreen> {
 
   Future<List<Pessoa>> _pessoasFromService() async {
     final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;
-    final response = await context.read<PessoaService>().list(size: 100, igrejaId: igrejaId);
-    return response.content;
+    final response = await context.read<PessoaService>().listarTodas(igrejaId: igrejaId);
+    return response;
   }
 
   Future<void> _refresh() async {

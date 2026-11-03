@@ -64,7 +64,7 @@ class _MinisteriosScreenState extends State<MinisteriosScreen> {
       return;
     }
     final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;
-    final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: igrejaId);
+    final pessoas = await context.read<PessoaService>().listarTodas(igrejaId: igrejaId);
     if (!mounted) return;
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -77,7 +77,7 @@ class _MinisteriosScreenState extends State<MinisteriosScreen> {
         initialLiderId: editing?.liderPessoaId,
         initialCoordenadorId: editing?.coordenadorPessoaId,
         initialBaseMinisterialId: editing?.baseMinisterialId,
-        pessoas: pessoas.content,
+        pessoas: pessoas,
         bases: _bases,
       ),
     );
@@ -126,7 +126,7 @@ class _MinisteriosScreenState extends State<MinisteriosScreen> {
     if (editing == null && !canCreateBaseMinisterial(user)) return;
     if (editing != null && !podeGerenciarBaseMinisterial(user, editing)) return;
     final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;
-    final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: igrejaId);
+    final pessoas = await context.read<PessoaService>().listarTodas(igrejaId: igrejaId);
     if (!mounted) return;
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -137,7 +137,7 @@ class _MinisteriosScreenState extends State<MinisteriosScreen> {
         initialAtivo: editing?.ativo ?? true,
         initialLiderId: editing?.liderPessoaId,
         initialCoordenadorId: editing?.coordenadorPessoaId,
-        pessoas: pessoas.content,
+        pessoas: pessoas,
       ),
     );
     if (result == null || !mounted) return;

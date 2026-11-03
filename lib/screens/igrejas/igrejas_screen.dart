@@ -61,7 +61,8 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
       if (i.isMatriz) matriz = i;
     }
     if (matriz == null) return;
-    final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: matriz.id);
+    // Toda a rede visível: o servidor transfere pessoas da matriz ou de outra filial.
+    final pessoas = await context.read<PessoaService>().listarTodas();
     // O titular da matriz e o próprio usuário não podem ser transferidos.
     final excluir = {
       if (matriz.pastorPessoaId.isNotEmpty) matriz.pastorPessoaId,
@@ -70,7 +71,7 @@ class _IgrejasScreenState extends State<IgrejasScreen> {
     if (!mounted) return;
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (_) => FilialFormDialog(pessoas: pessoas.content, excluirIds: excluir),
+      builder: (_) => FilialFormDialog(pessoas: pessoas, excluirIds: excluir),
     );
     if (result == null || !mounted) return;
     try {

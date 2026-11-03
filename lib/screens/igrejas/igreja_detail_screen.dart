@@ -61,46 +61,46 @@ class _IgrejaDetailScreenState extends State<IgrejaDetailScreen> {
     final auth = context.read<AuthProvider>();
     final igrejaContext = context.read<IgrejaContext>();
     final eraTitular = auth.user?.pessoaId != null && auth.user?.pessoaId == i.pastorPessoaId;
+    final PastorTrocado r;
     try {
-      final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: i.id);
+      final pessoas = await context.read<PessoaService>().listarTodas(igrejaId: i.id);
       if (!mounted) return;
       final id = await showDialog<String>(
         context: context,
-        builder: (_) => TrocarPastorDialog(pessoas: pessoas.content, atualId: i.pastorPessoaId),
+        builder: (_) => TrocarPastorDialog(pessoas: pessoas, atualId: i.pastorPessoaId),
       );
       if (id == null || !mounted) return;
-      final r = await context.read<IgrejaService>().trocarPastor(i.id, id);
-      if (!mounted) return;
-      setState(() => _igreja = r.igreja);
-      final convite = r.convite;
-      if (convite != null) {
-        await showDialog<void>(
-          context: context,
-          builder: (_) => LinkAcessoDialog(
-            link: convite.link,
-            enviadoWhatsapp: convite.enviadoWhatsapp,
-          ),
-        );
-      }
-      if (r.anteriorMantevePastor) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text('O pastor anterior mantém o papel PASTOR até você removê-lo em Papéis.'),
-        ));
-      }
-      // Pastor (nome) mudou: o seletor de igrejas e a lista precisam do novo.
-      await igrejaContext.reload(auth.user);
-      if (eraTitular) {
-        // As permissões de quem deixou de ser titular podem ter mudado. Se o
-        // PASTOR saiu, os tokens foram invalidados e o /me cai no fluxo de
-        // sessão expirada — por isso o aviso vem antes.
-        messenger.showSnackBar(const SnackBar(
-          content: Text('Você não é mais o pastor desta igreja.'),
-        ));
-        await auth.recarregarMe();
-      }
+      r = await context.read<IgrejaService>().trocarPastor(i.id, id);
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('$e')));
+      return;
     }
+    if (!mounted) return;
+    setState(() => _igreja = r.igreja);
+    final convite = r.convite;
+    if (convite != null) {
+      await showDialog<void>(
+        context: context,
+        builder: (_) => LinkAcessoDialog(
+          link: convite.link,
+          enviadoWhatsapp: convite.enviadoWhatsapp,
+        ),
+      );
+    }
+    // Um aviso só, com o que mudou para quem trocou e para o anterior.
+    final aviso = switch ((eraTitular, r.anteriorMantevePastor)) {
+      (true, true) =>
+        'Você deixou de ser o pastor titular, mas mantém o papel PASTOR até ele ser removido em Papéis.',
+      (true, false) => 'Você não é mais o pastor desta igreja.',
+      (false, true) => 'O pastor anterior mantém o papel PASTOR até você removê-lo em Papéis.',
+      (false, false) => null,
+    };
+    if (aviso != null) messenger.showSnackBar(SnackBar(content: Text(aviso)));
+    // A troca já foi feita: recarregar contexto e /me não deve esconder o aviso.
+    // Se o PASTOR saiu, os tokens foram invalidados e o /me cai no fluxo de
+    // sessão expirada — por isso o aviso vem antes.
+    await igrejaContext.reload(auth.user);
+    if (eraTitular) await auth.recarregarMe();
   }
 
   @override

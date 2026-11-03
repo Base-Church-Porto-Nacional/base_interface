@@ -65,7 +65,7 @@ class _MinisterioDetailScreenState extends State<MinisterioDetailScreen> {
     final m = _ministerio;
     if (m == null) return;
     final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;
-    final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: igrejaId);
+    final pessoas = await context.read<PessoaService>().listarTodas(igrejaId: igrejaId);
     if (!mounted) return;
 
     final result = await showDialog<Map<String, dynamic>>(
@@ -78,7 +78,7 @@ class _MinisterioDetailScreenState extends State<MinisterioDetailScreen> {
         initialTipo: m.tipo,
         initialLiderId: m.liderPessoaId,
         initialCoordenadorId: m.coordenadorPessoaId,
-        pessoas: pessoas.content,
+        pessoas: pessoas,
       ),
     );
     if (result == null || !mounted) return;

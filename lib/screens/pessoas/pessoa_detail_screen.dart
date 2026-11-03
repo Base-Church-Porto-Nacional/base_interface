@@ -67,7 +67,14 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
     try {
       final p = await context.read<PessoaService>().getById(widget.pessoaId);
       if (mounted) setState(() => _pessoa = p);
-    } catch (_) {}
+    } catch (e) {
+      // A ação já foi feita; só a atualização da tela falhou.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ação feita, mas não foi possível atualizar a tela: $e')),
+        );
+      }
+    }
     if (usuarioId != null && usuarioId == auth.user?.id) await auth.recarregarMe();
   }
 

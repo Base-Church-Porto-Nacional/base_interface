@@ -100,7 +100,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
             ),
         context.read<CultoService>().getRelatorio(widget.cultoId),
         context.read<MinisterioService>().list(igrejaId: _igrejaId()),
-        context.read<PessoaService>().list(size: 100, igrejaId: _igrejaId()),
+        context.read<PessoaService>().listarTodas(igrejaId: _igrejaId()),
       ]);
       if (!mounted) return;
       final culto = results[0] as Culto;
@@ -108,7 +108,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
       final conteudo = conteudoOuNulo ?? CultoConteudo(cultoId: widget.cultoId);
       final relatorio = results[2] as CultoRelatorio;
       final ministerios = results[3] as List<Ministerio>;
-      final pessoas = (results[4] as PageResponse<Pessoa>).content;
+      final pessoas = results[4] as List<Pessoa>;
       setState(() {
         _culto = culto;
         _conteudo = conteudo;

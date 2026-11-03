@@ -37,12 +37,12 @@ class _CategoriasCultoScreenState extends State<CategoriasCultoScreen> {
     try {
       final results = await Future.wait([
         context.read<CategoriaCultoService>().list(igrejaId: igrejaId),
-        context.read<PessoaService>().list(size: 100, igrejaId: igrejaId),
+        context.read<PessoaService>().listarTodas(igrejaId: igrejaId),
       ]);
       if (!mounted) return;
       setState(() {
         _categorias = results[0] as List<CategoriaCulto>;
-        _pessoas = (results[1] as PageResponse<Pessoa>).content;
+        _pessoas = results[1] as List<Pessoa>;
       });
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());

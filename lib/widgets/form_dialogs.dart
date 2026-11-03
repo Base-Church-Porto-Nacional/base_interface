@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/models.dart';
+import 'seletor_pessoa.dart';
 
 class PessoaFormDialog extends StatefulWidget {
   const PessoaFormDialog({
@@ -36,6 +37,7 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
   late final TextEditingController _email;
   late final TextEditingController _whatsapp;
   String? _servicoId;
+  String? _erroServico;
 
   @override
   void initState() {
@@ -97,12 +99,15 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
                 DropdownButtonFormField<String>(
                   initialValue: _servicoId,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Serviço *'),
+                  decoration: InputDecoration(labelText: 'Serviço *', errorText: _erroServico),
                   items: [
                     for (final sv in widget.servicos!)
                       DropdownMenuItem(value: sv.id, child: Text(sv.nome)),
                   ],
-                  onChanged: (v) => setState(() => _servicoId = v),
+                  onChanged: (v) => setState(() {
+                    _servicoId = v;
+                    _erroServico = null;
+                  }),
                 ),
             ],
           ],
@@ -111,9 +116,15 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
         FilledButton(
-          onPressed: () {
+          // Líder sem nenhum serviço não tem onde vincular a pessoa.
+          onPressed: widget.servicos != null && widget.servicos!.isEmpty
+              ? null
+              : () {
             if (_nome.text.trim().isEmpty) return;
-            if (widget.servicos != null && _servicoId == null) return;
+            if (widget.servicos != null && _servicoId == null) {
+              setState(() => _erroServico = 'Escolha o serviço.');
+              return;
+            }
             Navigator.pop(context, {
               'nome': _nome.text.trim(),
               'telefone': _telefone.text.trim(),
@@ -524,13 +535,9 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
             ),
             const SizedBox(height: 12),
             if (!_novaPessoa)
-              DropdownButtonFormField<String>(
-                initialValue: _pastorId,
-                decoration: const InputDecoration(labelText: 'Pastor *'),
-                items: [
-                  for (final p in _elegiveis)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
+              SeletorPessoa(
+                pessoas: _elegiveis,
+                label: 'Pastor *',
                 onChanged: (v) => setState(() => _pastorId = v),
               )
             else ...[
@@ -584,19 +591,22 @@ class TrocarPastorDialog extends StatefulWidget {
 class _TrocarPastorDialogState extends State<TrocarPastorDialog> {
   String? _id;
 
+  late final List<Pessoa> _elegiveis = [
+    for (final p in widget.pessoas)
+      if (p.id != widget.atualId && p.status == PessoaStatus.ativo) p,
+  ];
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Trocar pastor'),
-      content: DropdownButtonFormField<String>(
-        initialValue: _id,
-        decoration: const InputDecoration(labelText: 'Novo pastor *'),
-        items: [
-          for (final p in widget.pessoas)
-            if (p.id != widget.atualId && p.status == PessoaStatus.ativo)
-              DropdownMenuItem(value: p.id, child: Text(p.nome)),
-        ],
-        onChanged: (v) => setState(() => _id = v),
+      content: SizedBox(
+        width: 400,
+        child: SeletorPessoa(
+          pessoas: _elegiveis,
+          label: 'Novo pastor *',
+          onChanged: (v) => setState(() => _id = v),
+        ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),

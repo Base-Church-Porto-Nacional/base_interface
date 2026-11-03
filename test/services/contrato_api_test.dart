@@ -80,6 +80,23 @@ void main() {
       expect(AuthService(api, prefs).getStoredUser()?.nome, 'Ana Costa');
     });
 
+    test('loginQueNaoMontaUsuarioNaoDeixaSessaoPelaMetade', () async {
+      final api = await apiClientDeTeste(token: null);
+      final prefs = await SharedPreferences.getInstance();
+      final fake = FakeApi({
+        // resposta sem usuarioId e /me falhando: não dá para montar o usuário
+        'POST /auth/login': (_) => (200, {'token': 'jwt', 'tipo': 'Bearer'}),
+        'GET /me': (_) => (500, {'message': 'erro'}),
+      });
+
+      await expectLater(
+        fake.run(() => AuthService(api, prefs).login('ana@base.church', 'segredo')),
+        throwsA(anything),
+      );
+      expect(api.token, isNull);
+      expect(AuthService(api, prefs).getStoredUser(), isNull);
+    });
+
     test('senha errada repassa a mensagem do backend', () async {
       final api = await apiClientDeTeste(token: null);
       final prefs = await SharedPreferences.getInstance();

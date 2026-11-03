@@ -58,7 +58,7 @@ class _SmallGroupsScreenState extends State<SmallGroupsScreen> {
       return;
     }
     final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;
-    final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: igrejaId);
+    final pessoas = await context.read<PessoaService>().listarTodas(igrejaId: igrejaId);
     if (!mounted) return;
 
     final result = await showDialog<Map<String, dynamic>>(
@@ -71,7 +71,7 @@ class _SmallGroupsScreenState extends State<SmallGroupsScreen> {
         initialDiaSemana: editing?.diaSemana ?? DiaSemana.domingo,
         initialLiderId: editing?.liderPessoaId,
         initialNota: editing?.nota ?? 0,
-        pessoas: pessoas.content,
+        pessoas: pessoas,
       ),
     );
     if (result == null || !mounted) return;
