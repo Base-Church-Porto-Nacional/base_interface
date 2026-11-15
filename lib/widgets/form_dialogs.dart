@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/models.dart';
-import 'seletor_pessoa.dart';
+import '../theme/brand_colors.dart';
 
 class PessoaFormDialog extends StatefulWidget {
   const PessoaFormDialog({
@@ -114,7 +114,10 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           // Líder sem nenhum serviço não tem onde vincular a pessoa.
           onPressed: widget.servicos != null && widget.servicos!.isEmpty
@@ -216,39 +219,63 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
               decoration: const InputDecoration(labelText: 'Tipo'),
               items: [
                 for (final t in MinisterioTipo.values)
-                  DropdownMenuItem(value: t, child: Text(ministerioTipoLabel(t))),
+                  DropdownMenuItem(
+                    value: t,
+                    child: Text(ministerioTipoLabel(t)),
+                  ),
               ],
-              onChanged: (v) => setState(() => _tipo = v ?? MinisterioTipo.geral),
+              onChanged: (v) =>
+                  setState(() => _tipo = v ?? MinisterioTipo.geral),
             ),
             const SizedBox(height: 12),
             if (widget.bases.isNotEmpty) ...[
               DropdownButtonFormField<String>(
                 initialValue: _baseMinisterialId ?? '',
-                decoration: const InputDecoration(labelText: 'Base ministerial'),
+                decoration: const InputDecoration(
+                  labelText: 'Base ministerial',
+                ),
                 items: [
                   const DropdownMenuItem(value: '', child: Text('—')),
                   for (final b in widget.bases)
                     DropdownMenuItem(value: b.id, child: Text(b.nome)),
                 ],
-                onChanged: (v) =>
-                    setState(() => _baseMinisterialId = (v == null || v.isEmpty) ? null : v),
+                onChanged: (v) => setState(
+                  () =>
+                      _baseMinisterialId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
             ],
             if (widget.pessoas.isNotEmpty) ...[
-              SeletorPessoa(
-                pessoas: widget.pessoas,
-                label: 'Líder espiritual',
-                inicialId: _liderId,
-                onChanged: (v) => setState(() => _liderId = v),
+              DropdownButtonFormField<String>(
+                initialValue: _liderId ?? '',
+                decoration: const InputDecoration(
+                  labelText: 'Líder espiritual',
+                ),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('—')),
+                  for (final p in widget.pessoas)
+                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
+                ],
+                onChanged: (v) => setState(
+                  () => _liderId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
-              SeletorPessoa(
-                pessoas: widget.pessoas,
-                label: 'Coordenador',
-                helperText: 'Serviço ficção do ministério, não é um papel.',
-                inicialId: _coordenadorId,
-                onChanged: (v) => setState(() => _coordenadorId = v),
+              DropdownButtonFormField<String>(
+                initialValue: _coordenadorId ?? '',
+                decoration: const InputDecoration(
+                  labelText: 'Coordenador',
+                  helperText: 'Serviço ficção do ministério, não é um papel.',
+                ),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('—')),
+                  for (final p in widget.pessoas)
+                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
+                ],
+                onChanged: (v) => setState(
+                  () => _coordenadorId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
             ],
@@ -268,7 +295,10 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty) return;
@@ -310,7 +340,8 @@ class BaseMinisterialFormDialog extends StatefulWidget {
   final String title;
 
   @override
-  State<BaseMinisterialFormDialog> createState() => _BaseMinisterialFormDialogState();
+  State<BaseMinisterialFormDialog> createState() =>
+      _BaseMinisterialFormDialogState();
 }
 
 class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
@@ -351,18 +382,30 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
             ),
             const SizedBox(height: 12),
             if (widget.pessoas.isNotEmpty) ...[
-              SeletorPessoa(
-                pessoas: widget.pessoas,
-                label: 'Líder',
-                inicialId: _liderId,
-                onChanged: (v) => setState(() => _liderId = v),
+              DropdownButtonFormField<String>(
+                initialValue: _liderId ?? '',
+                decoration: const InputDecoration(labelText: 'Líder'),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('—')),
+                  for (final p in widget.pessoas)
+                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
+                ],
+                onChanged: (v) => setState(
+                  () => _liderId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
-              SeletorPessoa(
-                pessoas: widget.pessoas,
-                label: 'Coordenador',
-                inicialId: _coordenadorId,
-                onChanged: (v) => setState(() => _coordenadorId = v),
+              DropdownButtonFormField<String>(
+                initialValue: _coordenadorId ?? '',
+                decoration: const InputDecoration(labelText: 'Coordenador'),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('—')),
+                  for (final p in widget.pessoas)
+                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
+                ],
+                onChanged: (v) => setState(
+                  () => _coordenadorId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
             ],
@@ -382,7 +425,10 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty) return;
@@ -496,82 +542,26 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
               }),
             ),
             const SizedBox(height: 12),
-            if (!_novaPessoa)
-              SeletorPessoa(
-                pessoas: _elegiveis,
-                label: 'Pastor *',
-                onChanged: (v) => setState(() => _pastorId = v),
-              )
-            else ...[
-              TextField(
-                controller: _pastorNome,
-                decoration: const InputDecoration(labelText: 'Nome do pastor *'),
+            TextField(
+              controller: _adminEmail,
+              decoration: const InputDecoration(labelText: 'E-mail do admin *'),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _adminUsername,
+              decoration: const InputDecoration(
+                labelText: 'Usuário do admin *',
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _pastorEmail,
-                decoration: const InputDecoration(labelText: 'E-mail'),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _pastorWhatsapp,
-                decoration: const InputDecoration(labelText: 'WhatsApp'),
-                keyboardType: TextInputType.phone,
-              ),
-              if (_erro != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    _erro!,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
-                  ),
-                ),
-            ],
+            ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-        FilledButton(onPressed: _criar, child: const Text('Criar')),
-      ],
-    );
-  }
-}
-
-/// Escolha do novo pastor entre as pessoas ativas da própria igreja (sem o atual).
-class TrocarPastorDialog extends StatefulWidget {
-  const TrocarPastorDialog({super.key, required this.pessoas, this.atualId});
-
-  final List<Pessoa> pessoas;
-  final String? atualId;
-
-  @override
-  State<TrocarPastorDialog> createState() => _TrocarPastorDialogState();
-}
-
-class _TrocarPastorDialogState extends State<TrocarPastorDialog> {
-  String? _id;
-
-  late final List<Pessoa> _elegiveis = [
-    for (final p in widget.pessoas)
-      if (p.id != widget.atualId && p.status == PessoaStatus.ativo) p,
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Trocar pastor'),
-      content: SizedBox(
-        width: 400,
-        child: SeletorPessoa(
-          pessoas: _elegiveis,
-          label: 'Novo pastor *',
-          onChanged: (v) => setState(() => _id = v),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
         ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
         FilledButton(
           onPressed: _id == null ? null : () => Navigator.pop(context, _id),
           child: const Text('Trocar'),
@@ -726,7 +716,10 @@ class _PapeisDialogState extends State<PapeisDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: itens.isEmpty
               ? null
@@ -823,7 +816,8 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
                 for (final d in DiaSemana.values)
                   DropdownMenuItem(value: d, child: Text(diaSemanaLabel(d))),
               ],
-              onChanged: (v) => setState(() => _diaSemana = v ?? DiaSemana.domingo),
+              onChanged: (v) =>
+                  setState(() => _diaSemana = v ?? DiaSemana.domingo),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -833,15 +827,17 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
             ),
             const SizedBox(height: 12),
             if (widget.pessoas.isNotEmpty) ...[
-              SeletorPessoa(
-                pessoas: widget.pessoas,
-                label: 'Líder *',
-                inicialId: _liderId,
-                errorText: _erroLider,
-                onChanged: (v) => setState(() {
-                  _liderId = v;
-                  if (v != null) _erroLider = null;
-                }),
+              DropdownButtonFormField<String>(
+                initialValue: _liderId ?? '',
+                decoration: const InputDecoration(labelText: 'Líder *'),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('—')),
+                  for (final p in widget.pessoas)
+                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
+                ],
+                onChanged: (v) => setState(
+                  () => _liderId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
             ],
@@ -856,7 +852,7 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
                       padding: const EdgeInsets.symmetric(horizontal: 2),
                       child: Icon(
                         i <= _nota ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
+                        color: context.brand.warning,
                         size: 28,
                       ),
                     ),
@@ -880,7 +876,10 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty) return;

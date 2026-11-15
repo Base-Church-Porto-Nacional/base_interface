@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/escala_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
@@ -253,13 +253,13 @@ class _EscalaDetailScreenState extends State<EscalaDetailScreen> {
                             'Edição pós-lançamento',
                             'A escala voltará para EDITANDO. Você poderá ajustar designações e lançar novamente.',
                           ),
-                  style: OutlinedButton.styleFrom(foregroundColor: AppColors.danger),
+                  style: OutlinedButton.styleFrom(foregroundColor: context.brand.danger),
                   icon: const Icon(Icons.edit, size: 18),
                   label: const Text('Voltar para edição'),
                 ),
               OutlinedButton.icon(
                 onPressed: _actionLoading ? null : _excluir,
-                style: OutlinedButton.styleFrom(foregroundColor: AppColors.danger),
+                style: OutlinedButton.styleFrom(foregroundColor: context.brand.danger),
                 icon: const Icon(Icons.delete_outline, size: 18),
                 label: const Text('Excluir'),
               ),

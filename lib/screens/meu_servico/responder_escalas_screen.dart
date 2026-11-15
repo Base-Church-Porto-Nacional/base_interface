@@ -6,7 +6,7 @@ import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/escala_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../widgets/common.dart';
 import '../../widgets/escala_status_badge.dart';
@@ -204,7 +204,7 @@ class _ResponderEscalasScreenState extends State<ResponderEscalasScreen> {
                     icon: const Icon(Icons.check, size: 16),
                     label: const Text('Confirmar'),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.success,
+                      foregroundColor: context.brand.success,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       visualDensity: VisualDensity.compact,
                     ),
@@ -216,7 +216,7 @@ class _ResponderEscalasScreenState extends State<ResponderEscalasScreen> {
                     icon: const Icon(Icons.close, size: 16),
                     label: const Text('Recusar'),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.danger,
+                      foregroundColor: context.brand.danger,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       visualDensity: VisualDensity.compact,
                     ),

@@ -98,3 +98,15 @@ String initials(String name) {
   if (parts.length == 1) return parts.first[0].toUpperCase();
   return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
 }
+
+String saudacao(DateTime agora, String nome) {
+  final hora = agora.hour;
+  final periodo = hora >= 5 && hora < 12
+      ? 'BOM DIA'
+      : hora >= 12 && hora < 18
+      ? 'BOA TARDE'
+      : 'BOA NOITE';
+  final primeiro = nome.trim().split(RegExp(r'\s+')).first;
+  if (primeiro.isEmpty) return periodo;
+  return '$periodo, ${primeiro.toUpperCase()}';
+}
