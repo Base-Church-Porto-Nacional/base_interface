@@ -1,4 +1,3 @@
-enum Role { admin, pastor, lider, voluntario, membro, contador }
 
 enum PessoaStatus { ativo, inativo }
 
@@ -29,8 +28,6 @@ class Igreja {
     required this.tipo,
     required this.pastorPessoaId,
     required this.pastorNome,
-    required this.adminUsuarioId,
-    required this.adminNome,
     required this.ativo,
     this.igrejaMatrizId,
   });
@@ -41,8 +38,6 @@ class Igreja {
   final String? igrejaMatrizId;
   final String pastorPessoaId;
   final String pastorNome;
-  final String adminUsuarioId;
-  final String adminNome;
   final bool ativo;
 
   bool get isMatriz => tipo == IgrejaTipo.matriz;
@@ -54,8 +49,6 @@ class Igreja {
       tipo: igrejaTipoFromString(json['tipo'] as String?),
       pastorPessoaId: json['pastorPessoaId'] as String? ?? '',
       pastorNome: json['pastorNome'] as String? ?? '',
-      adminUsuarioId: json['adminUsuarioId'] as String? ?? '',
-      adminNome: json['adminNome'] as String? ?? '',
       ativo: json['ativo'] as bool? ?? true,
       igrejaMatrizId: json['igrejaMatrizId'] as String?,
     );
@@ -67,11 +60,94 @@ class Igreja {
         'tipo': _enumToApi(tipo),
         'pastorPessoaId': pastorPessoaId,
         'pastorNome': pastorNome,
-        'adminUsuarioId': adminUsuarioId,
-        'adminNome': adminNome,
         'ativo': ativo,
         'igrejaMatrizId': igrejaMatrizId,
       };
+}
+
+/// Capacidades calculadas pelo servidor (espelha o enum do backend).
+/// O nome em Dart é camelCase; no JSON vem SCREAMING_SNAKE.
+enum Capacidade {
+  configurar,
+  contasGerir,
+  cultoContagem,
+  cultoConteudoEditar,
+  dadosPastoraisEditar,
+  escalasGerir,
+  exportar,
+  filialCriar,
+  ministeriosGerir,
+  papeisCustomGerir,
+  papeisGestaoAtribuir,
+  pessoasGerir,
+  pessoasVerTodas,
+  relatoriosVer;
+
+  /// 'PESSOAS_VER_TODAS' -> pessoasVerTodas. Nome desconhecido devolve null
+  /// (fail-closed: capacidade que o app não conhece nunca é concedida).
+  static Capacidade? fromJson(String nome) {
+    final partes = nome.toLowerCase().split('_');
+    final camel =
+        partes.first +
+        partes
+            .skip(1)
+            .map((p) => p.isEmpty ? p : p[0].toUpperCase() + p.substring(1))
+            .join();
+    for (final c in Capacidade.values) {
+      if (c.name == camel) return c;
+    }
+    return null;
+  }
+
+  String toJson() =>
+      name.replaceAllMapped(RegExp('[A-Z]'), (m) => '_${m[0]}').toUpperCase();
+}
+
+class Permissoes {
+  const Permissoes({
+    this.capacidades = const {},
+    this.ministeriosLiderados = const {},
+    this.basesLideradas = const {},
+    this.gruposLiderados = const {},
+    this.ehVoluntario = false,
+  });
+
+  final Set<Capacidade> capacidades;
+  final Set<String> ministeriosLiderados;
+  final Set<String> basesLideradas;
+  final Set<String> gruposLiderados;
+  final bool ehVoluntario;
+
+  bool tem(Capacidade c) => capacidades.contains(c);
+
+  bool get lideraAlgo =>
+      ministeriosLiderados.isNotEmpty ||
+      basesLideradas.isNotEmpty ||
+      gruposLiderados.isNotEmpty;
+
+  factory Permissoes.fromJson(Map<String, dynamic>? json) {
+    if (json == null) return const Permissoes();
+    Set<String> ids(String k) =>
+        (json[k] as List<dynamic>? ?? const []).map((e) => e as String).toSet();
+    return Permissoes(
+      capacidades: (json['capacidades'] as List<dynamic>? ?? const [])
+          .map((e) => Capacidade.fromJson(e as String))
+          .whereType<Capacidade>()
+          .toSet(),
+      ministeriosLiderados: ids('ministeriosLiderados'),
+      basesLideradas: ids('basesLideradas'),
+      gruposLiderados: ids('gruposLiderados'),
+      ehVoluntario: json['ehVoluntario'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'capacidades': (capacidades.map((c) => c.toJson()).toList()..sort()),
+    'ministeriosLiderados': ministeriosLiderados.toList()..sort(),
+    'basesLideradas': basesLideradas.toList()..sort(),
+    'gruposLiderados': gruposLiderados.toList()..sort(),
+    'ehVoluntario': ehVoluntario,
+  };
 }
 
 class AuthUser {
@@ -79,23 +155,33 @@ class AuthUser {
     required this.id,
     required this.nome,
     required this.email,
-    required this.roles,
+    required this.papeis,
+    required this.permissoes,
     required this.igrejaId,
     required this.igrejaTipo,
     required this.igrejaNome,
     this.pessoaId,
     this.igrejasVisiveis = const [],
+    this.permissoesAusentes = false,
   });
 
   final String id;
   final String nome;
   final String email;
-  final List<Role> roles;
+
+  /// Nomes dos papéis atribuídos (ex.: "PASTOR", "SECRETARIA", "CONTADOR").
+  /// Só para exibição; as decisões usam [permissoes].
+  final List<String> papeis;
+  final Permissoes permissoes;
   final String? pessoaId;
   final String igrejaId;
   final IgrejaTipo igrejaTipo;
   final String igrejaNome;
   final List<Igreja> igrejasVisiveis;
+
+  /// true quando a sessão persistida é do formato antigo (sem `permissoes`):
+  /// o app deve recarregar `/me`.
+  final bool permissoesAusentes;
 
   bool get isMatriz => igrejaTipo == IgrejaTipo.matriz;
 
@@ -104,9 +190,13 @@ class AuthUser {
       id: json['id'] as String,
       nome: json['nome'] as String,
       email: json['email'] as String,
-      roles: (json['roles'] as List<dynamic>)
-          .map((r) => roleFromString(r as String))
+      papeis: (json['papeis'] as List<dynamic>? ?? const [])
+          .map((p) => p as String)
           .toList(),
+      permissoes: Permissoes.fromJson(
+        json['permissoes'] as Map<String, dynamic>?,
+      ),
+      permissoesAusentes: json['permissoes'] == null,
       pessoaId: json['pessoaId'] as String?,
       igrejaId: json['igrejaId'] as String? ?? '',
       igrejaTipo: igrejaTipoFromString(json['igrejaTipo'] as String?),
@@ -121,7 +211,8 @@ class AuthUser {
         'id': id,
         'nome': nome,
         'email': email,
-        'roles': roles.map(roleToString).toList(),
+        'papeis': papeis,
+        'permissoes': permissoes.toJson(),
         'pessoaId': pessoaId,
         'igrejaId': igrejaId,
         'igrejaTipo': _enumToApi(igrejaTipo),
@@ -160,6 +251,7 @@ class Pessoa {
     this.batizado = false,
     this.concluiuTrilhaBase = false,
     this.usuarioId,
+    this.acessoStatus,
     this.papeis = const [],
   });
 
@@ -180,31 +272,64 @@ class Pessoa {
   final bool concluiuTrilhaBase;
   final String igrejaId;
   final String? usuarioId;
-  final List<Role> papeis;
+
+  /// null (sem conta), CONVIDADO, ATIVO ou DESATIVADO.
+  final String? acessoStatus;
+  final List<String> papeis;
 
   bool get temUsuario => usuarioId != null && usuarioId!.isNotEmpty;
 
   bool get temWhatsapp => whatsapp.trim().isNotEmpty;
+
+  List<String> get papeisExibiveis =>
+      papeis.isNotEmpty ? papeis : _papeisDeTipos(tipos);
 }
 
-List<PessoaTipo> pessoaTiposDePapeis(List<Role> papeis) {
-  final tipos = <PessoaTipo>[];
-  for (final r in papeis) {
-    switch (r) {
-      case Role.pastor:
-        tipos.add(PessoaTipo.pastor);
-      case Role.lider:
-        tipos.add(PessoaTipo.lider);
-      case Role.voluntario:
-        tipos.add(PessoaTipo.voluntario);
-      case Role.membro:
-        tipos.add(PessoaTipo.membro);
-      case Role.admin:
-      case Role.contador:
+List<String> _papeisDeTipos(List<PessoaTipo> tipos) {
+  final papeis = <String>[];
+  for (final t in tipos) {
+    switch (t) {
+      case PessoaTipo.membro:
+        papeis.add('MEMBRO');
+      case PessoaTipo.voluntario:
+        papeis.add('VOLUNTARIO');
+      case PessoaTipo.lider:
+        papeis.add('LIDER');
+      case PessoaTipo.pastor:
+        papeis.add('PASTOR');
+      case PessoaTipo.visitante:
         break;
     }
   }
+  return papeis;
+}
+
+/// `funcoes` vêm do servidor, derivadas por pessoa: PASTOR/SECRETARIA (papéis de
+/// sistema), LIDER (lidera algo), VOLUNTARIO (serve) e MEMBRO (tem conta ativa).
+/// Só PASTOR/LIDER/VOLUNTARIO/MEMBRO viram "tipo" de pessoa; vazio = visitante.
+List<PessoaTipo> pessoaTiposDeFuncoes(List<String> funcoes) {
+  final tipos = <PessoaTipo>[];
+  for (final r in funcoes) {
+    switch (r.toUpperCase()) {
+      case 'PASTOR':
+        tipos.add(PessoaTipo.pastor);
+      case 'LIDER':
+        tipos.add(PessoaTipo.lider);
+      case 'VOLUNTARIO':
+        tipos.add(PessoaTipo.voluntario);
+      case 'MEMBRO':
+        tipos.add(PessoaTipo.membro);
+    }
+  }
   return tipos.isNotEmpty ? tipos : <PessoaTipo>[PessoaTipo.visitante];
+}
+
+/// Resultado de `GET /api/pessoas/busca`.
+class PessoaResumo {
+  const PessoaResumo({required this.id, required this.nome});
+
+  final String id;
+  final String nome;
 }
 
 class PessoaHistorico {
@@ -307,30 +432,33 @@ class Ministerio {
   final String? baseMinisterialId;
   final String? baseMinisterialNome;
   final List<Servico> servicos;
+
+  List<Servico> get servicosReais => servicos.where((s) => !s.ficcao).toList();
 }
 
 class UsuarioConta {
   const UsuarioConta({
     required this.id,
-    required this.username,
     required this.email,
+    this.telefone,
     required this.igrejaId,
     required this.igrejaNome,
     required this.papeis,
-    required this.ativo,
+    required this.status,
     this.pessoaId,
     this.pessoaNome,
   });
 
   final String id;
-  final String username;
   final String email;
+  final String? telefone;
   final String? pessoaId;
   final String? pessoaNome;
   final String igrejaId;
   final String igrejaNome;
-  final List<Role> papeis;
-  final bool ativo;
+  final List<String> papeis;
+  /// CONVIDADO, ATIVO ou DESATIVADO.
+  final String status;
 }
 
 class EscalaItem {
@@ -460,11 +588,17 @@ class Escala {
   bool geraAuto() => status == EscalaStatus.sugerida;
 
   int preenchidosDoServico(String? servicoId) => voluntarios
-      .where((v) => v.servicoId == servicoId && v.status != EscalaItemStatus.recusado)
+      .where(
+        (v) =>
+            v.servicoId == servicoId && v.status != EscalaItemStatus.recusado,
+      )
       .length;
 
   List<EscalaVoluntario> voluntariosDoServico(String? servicoId) => voluntarios
-      .where((v) => v.servicoId == servicoId && v.status != EscalaItemStatus.recusado)
+      .where(
+        (v) =>
+            v.servicoId == servicoId && v.status != EscalaItemStatus.recusado,
+      )
       .toList();
 
   Escala copyWith({
@@ -702,7 +836,10 @@ class SugestaoItem {
 }
 
 class SmallGroupParticipante {
-  const SmallGroupParticipante({required this.pessoaId, required this.pessoaNome});
+  const SmallGroupParticipante({
+    required this.pessoaId,
+    required this.pessoaNome,
+  });
 
   final String pessoaId;
   final String pessoaNome;
@@ -739,6 +876,7 @@ class SmallGroup {
     required this.ativo,
     required this.nota,
     this.horario,
+    this.ministerioId,
     this.encontros = const [],
   });
 
@@ -751,6 +889,7 @@ class SmallGroup {
   final String liderNome;
   final bool ativo;
   final int nota;
+  final String? ministerioId;
   final List<SmallGroupEncontro> encontros;
 
   String get notaLabel => nota == 0 ? 'Sem nota' : '$nota / 5';
@@ -1175,11 +1314,7 @@ class MensagemVariavel {
 }
 
 const mensagemAniversarioVariaveis = [
-  MensagemVariavel(
-    chave: 'Nome',
-    rotulo: 'Nome do membro',
-    exemplo: 'Gustavo',
-  ),
+  MensagemVariavel(chave: 'Nome', rotulo: 'Nome do membro', exemplo: 'Gustavo'),
   MensagemVariavel(
     chave: 'Nome Completo',
     rotulo: 'Nome completo do membro',
@@ -1353,18 +1488,28 @@ String cultoStatusApiToString(CultoStatus status) => _enumToApi(status);
 CultoStatus cultoStatusFromApi(String value) =>
     _enumFromApi(CultoStatus.values, value, CultoStatus.agendado);
 
-String roleLabel(Role role) => switch (role) {
-      Role.admin => 'Admin',
-      Role.pastor => 'Pastor',
-      Role.lider => 'Líder',
-      Role.voluntario => 'Voluntário',
-      Role.membro => 'Membro',
-      Role.contador => 'Contador',
-    };
-
-Role roleFromString(String value) => _enumFromApi(Role.values, value, Role.membro);
-
-String roleToString(Role role) => _enumToApi(role);
+String papelLabel(String papel) {
+  switch (papel.toUpperCase()) {
+    case 'ADMIN':
+      return 'Admin';
+    case 'PASTOR':
+      return 'Pastor';
+    case 'SECRETARIA':
+      return 'Secretaria';
+    case 'LIDER':
+      return 'Líder';
+    case 'VOLUNTARIO':
+      return 'Voluntário';
+    case 'MEMBRO':
+      return 'Membro';
+    case 'CONTADOR':
+      return 'Contador';
+    default:
+      if (papel.isEmpty) return papel;
+      final lower = papel.toLowerCase();
+      return lower[0].toUpperCase() + lower.substring(1);
+  }
+}
 
 MinisterioTipo ministerioTipoFromString(String value) =>
     _enumFromApi(MinisterioTipo.values, value, MinisterioTipo.geral);

@@ -10,6 +10,7 @@ import 'router/app_router.dart';
 import 'screens/splash/splash_screen.dart';
 import 'services/aniversario_service.dart';
 import 'services/api_client.dart';
+import 'services/acesso_service.dart';
 import 'services/auth_service.dart';
 import 'services/base_ministerial_service.dart';
 import 'services/categoria_culto_service.dart';
@@ -29,7 +30,10 @@ import 'services/usuario_service.dart';
 import 'theme/app_theme.dart';
 
 class BaseChurchApp extends StatefulWidget {
-  const BaseChurchApp({super.key});
+  const BaseChurchApp({super.key, this.rotaInicial});
+
+  /// Caminho aberto no navegador ao carregar o app (web); null nos testes.
+  final String? rotaInicial;
 
   @override
   State<BaseChurchApp> createState() => _BaseChurchAppState();
@@ -49,10 +53,12 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
     final prefs = await SharedPreferences.getInstance();
     final api = ApiClient(prefs);
     final authService = AuthService(api, prefs);
+    final acessoService = AcessoService(api);
     final pessoaService = PessoaService(api);
     final dashboardService = DashboardService(api, pessoaService);
     final igrejaService = IgrejaService(api);
     final authProvider = AuthProvider(authService);
+    WidgetsBinding.instance.addObserver(authProvider);
     final igrejaContext = IgrejaContext(igrejaService, prefs);
     api.onUnauthorized = authProvider.expireSession;
 
@@ -67,6 +73,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider.value(value: igrejaContext),
         Provider.value(value: authService),
+        Provider.value(value: acessoService),
         Provider.value(value: pessoaService),
         Provider.value(value: MinisterioService(api)),
         Provider.value(value: BaseMinisterialService(api)),
@@ -84,7 +91,7 @@ class _BaseChurchAppState extends State<BaseChurchApp> {
         Provider.value(value: MensagemAniversarioService(api)),
         Provider.value(value: AniversarioService(api)),
       ];
-      _router = createRouter(authProvider);
+      _router = createRouter(authProvider, rotaInicial: widget.rotaInicial);
     });
   }
 

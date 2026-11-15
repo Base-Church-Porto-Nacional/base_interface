@@ -11,6 +11,7 @@ import '../../utils/format.dart';
 import '../../utils/route_access.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common.dart';
+import '../../widgets/seletor_pessoa.dart';
 import '../../widgets/filter_search.dart';
 
 class CronogramaScreen extends StatefulWidget {
@@ -46,7 +47,7 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
     if (!canCreateCronograma(context.read<AuthProvider>().user)) return;
     final igreja = context.read<IgrejaContext>().selected;
     if (igreja == null) return;
-    final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: igreja.id);
+    final pessoas = await context.read<PessoaService>().listarTodas(igrejaId: igreja.id);
     if (!mounted) return;
 
     final titulo = TextEditingController(text: 'Culto de domingo');
@@ -107,16 +108,12 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
                       decoration: const InputDecoration(labelText: 'Local'),
                     ),
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: supervisorId,
-                      decoration: const InputDecoration(
-                        labelText: 'Supervisor',
-                        helperText: 'Padrão: pastor da igreja',
-                      ),
-                      items: [
-                        for (final p in pessoas.content)
-                          DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                      ],
+                    SeletorPessoa(
+                      pessoas: pessoas,
+                      label: 'Supervisor',
+                      helperText: 'Padrão: pastor da igreja',
+                      inicialId: supervisorId,
+                      permitirVazio: false,
                       onChanged: (v) => setLocal(() => supervisorId = v ?? supervisorId),
                     ),
                   ],
@@ -134,7 +131,7 @@ class _CronogramaScreenState extends State<CronogramaScreen> {
 
     if (saved != true || !mounted) return;
     Pessoa? supervisor;
-    for (final p in pessoas.content) {
+    for (final p in pessoas) {
       if (p.id == supervisorId) supervisor = p;
     }
     try {

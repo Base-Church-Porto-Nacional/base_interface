@@ -18,6 +18,7 @@ bool pessoaMatchesFiltro(Pessoa pessoa, String? filtro) {
   }
 
   return switch (value) {
+    'COM_ACESSO' => pessoa.acessoStatus != null,
     'BATIZADO' => pessoa.batizado,
     'ACEITOU_JESUS' => pessoa.aceitouJesus,
     'TRILHA' => pessoa.concluiuTrilhaBase,

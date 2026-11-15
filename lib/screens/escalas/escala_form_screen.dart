@@ -12,6 +12,7 @@ import '../../services/pessoa_service.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
+import '../../widgets/seletor_pessoa.dart';
 import '../../widgets/competencia_picker.dart';
 
 class EscalaFormScreen extends StatefulWidget {
@@ -78,13 +79,13 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
     });
     try {
       final results = await Future.wait([
-        context.read<PessoaService>().list(size: 100, igrejaId: igrejaId),
+        context.read<PessoaService>().listarTodas(igrejaId: igrejaId),
         context.read<MinisterioService>().list(igrejaId: igrejaId),
         context.read<EscalaService>().list(igrejaId: igrejaId, competencia: _competencia),
         context.read<CronogramaService>().list(igrejaId: igrejaId),
       ]);
       if (!mounted) return;
-      final pessoas = (results[0] as PageResponse<Pessoa>).content;
+      final pessoas = results[0] as List<Pessoa>;
       final ministerios = results[1] as List<Ministerio>;
       final escalas = results[2] as List<Escala>;
       final eventos = (results[3] as List<CultoEvento>)
@@ -154,8 +155,8 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
 
   List<Ministerio> get _ministeriosPermitidos {
     final user = context.read<AuthProvider>().user;
-    if (isPastorOuAdmin(user) ||
-        isSupervisorNoMes(
+    if (user?.permissoes.tem(Capacidade.escalasGerir) == true ||
+        podeAtuarComoSupervisor(
           user: user,
           escalas: _escalas,
           competencia: _competencia,
@@ -390,31 +391,23 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
                   ),
                 ],
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _supervisorId,
-                  decoration: const InputDecoration(
-                    labelText: 'Supervisor',
-                    helperText: 'Padrão: pastor da igreja',
-                  ),
-                  items: [
-                    for (final p in _pessoas)
-                      DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                  ],
-                  onChanged: (v) => setState(() => _supervisorId = v),
+                SeletorPessoa(
+                  pessoas: _pessoas,
+                  label: 'Supervisor',
+                  helperText: 'Padrão: pastor da igreja',
+                  inicialId: _supervisorId,
+                  permitirVazio: false,
+                  onChanged: (v) => setState(() => _supervisorId = v ?? _supervisorId),
                 ),
                 if (_tipo == EscalaTipo.culto || _tipo == EscalaTipo.pregador) ...[
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: _pregadorId,
-                    decoration: const InputDecoration(
-                      labelText: 'Pregador',
-                      helperText: 'Padrão: pastor da igreja',
-                    ),
-                    items: [
-                      for (final p in _pessoas)
-                        DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                    ],
-                    onChanged: (v) => setState(() => _pregadorId = v),
+                  SeletorPessoa(
+                    pessoas: _pessoas,
+                    label: 'Pregador',
+                    helperText: 'Padrão: pastor da igreja',
+                    inicialId: _pregadorId,
+                    permitirVazio: false,
+                    onChanged: (v) => setState(() => _pregadorId = v ?? _pregadorId),
                   ),
                 ],
                 const SizedBox(height: 12),

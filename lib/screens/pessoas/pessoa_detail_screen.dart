@@ -8,6 +8,7 @@ import '../../services/usuario_service.dart';
 import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/route_access.dart';
+import '../../widgets/acesso_app_card.dart';
 import '../../widgets/common.dart';
 import '../../widgets/detail_widgets.dart';
 import '../../widgets/form_dialogs.dart';
@@ -61,32 +62,69 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
     }
   }
 
-  Future<void> _criarUsuario() async {
-    final p = _pessoa;
-    if (p == null || p.temUsuario) return;
-    if (!canCreateUsuario(context.read<AuthProvider>().user)) return;
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (_) => UsuarioFormDialog(
-        pessoaNome: p.nome,
-        email: p.email,
-        voluntario: p.tipos.contains(PessoaTipo.voluntario),
-      ),
-    );
-    if (result == null || !mounted) return;
+  /// Depois de qualquer ação de acesso: recarrega a pessoa sem trocar a tela
+  /// por um spinner e, se a conta é a do próprio usuário, as permissões.
+  Future<void> _aposAcesso() async {
+    final auth = context.read<AuthProvider>();
+    final usuarioId = _pessoa?.usuarioId;
     try {
-      await context.read<UsuarioService>().createFromPessoa(
-            pessoaId: p.id,
-            username: result['username'] as String,
-            email: result['email'] as String,
-            senha: result['senha'] as String,
-            papeis: (result['papeis'] as List<Role>),
-            igrejaId: p.igrejaId,
-          );
+      final p = await context.read<PessoaService>().getById(widget.pessoaId);
+      if (mounted) setState(() => _pessoa = p);
+    } catch (e) {
+      // A ação já foi feita; só a atualização da tela falhou.
       if (mounted) {
-        showSnack(context, 'Usuário criado. A pessoa já pode acompanhar escalas e eventos.');
-        _load();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ação feita, mas não foi possível atualizar a tela: $e')),
+        );
       }
+    }
+    if (usuarioId != null && usuarioId == auth.user?.id) await auth.recarregarMe();
+  }
+
+  Future<void> _gerirPapeis() async {
+    final p = _pessoa;
+    final auth = context.read<AuthProvider>();
+    final user = auth.user;
+    final usuarioId = p?.usuarioId;
+    if (p == null || usuarioId == null || user == null) return;
+    final podeGestao = user.permissoes.tem(Capacidade.papeisGestaoAtribuir);
+    final podeCustom = user.permissoes.tem(Capacidade.papeisCustomGerir);
+    if (!podeGestao && !podeCustom) return;
+    final usuarioService = context.read<UsuarioService>();
+    try {
+      final customizados =
+          podeCustom ? await usuarioService.listarPapeisCustomizados(p.igrejaId) : <String>[];
+      if (!mounted) return;
+      final novos = await showDialog<List<String>>(
+        context: context,
+        builder: (_) => PapeisDialog(
+          pessoaNome: p.nome,
+          atuais: p.papeis,
+          customizados: customizados,
+          podeGestao: podeGestao,
+          podeCustom: podeCustom,
+          onCriarPapel: podeCustom
+              ? (nome, contagem) async {
+                  await usuarioService.criarPapel(
+                    nome: nome,
+                    podeLancarContagem: contagem,
+                    igrejaId: p.igrejaId,
+                  );
+                  return usuarioService.listarPapeisCustomizados(p.igrejaId);
+                }
+              : null,
+        ),
+      );
+      if (novos == null || !mounted) return;
+      await usuarioService.alterarPapeis(usuarioId, novos);
+      // Mudou os papéis da própria conta: o servidor invalida o token e
+      // recalcula as permissões; recarregarMe() reflete isso no app.
+      if (usuarioId == user.id) await auth.recarregarMe();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Papéis atualizados.')),
+      );
+      _aposAcesso();
     } catch (e) {
       if (mounted) showSnack(context, e);
     }
@@ -95,7 +133,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
   Future<void> _editPessoa() async {
     final p = _pessoa;
     if (p == null) return;
-    if (!canMutatePessoas(context.read<AuthProvider>().user)) return;
+    if (!canCadastrarPessoas(context.read<AuthProvider>().user)) return;
 
     final result = await showDialog<Map<String, String>>(
       context: context,
@@ -139,6 +177,13 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
         _buildHero(p),
+        const SizedBox(height: 16),
+        AcessoAppCard(
+          pessoa: p,
+          user: context.watch<AuthProvider>().user,
+          onAlterado: _aposAcesso,
+          onPapeis: _podeGerirPapeis(p) ? _gerirPapeis : null,
+        ),
         const SizedBox(height: 20),
         SectionTabBar(
           tabs: const ['Perfil', 'Jornada', 'Histórico'],
@@ -158,11 +203,18 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
     );
   }
 
+  bool _podeGerirPapeis(Pessoa p) {
+    final user = context.read<AuthProvider>().user;
+    return p.temUsuario &&
+        user != null &&
+        (user.permissoes.tem(Capacidade.papeisGestaoAtribuir) ||
+            user.permissoes.tem(Capacidade.papeisCustomGerir));
+  }
+
   Widget _buildHero(Pessoa p) {
-    final papeis = p.papeis.map(roleLabel).join(' · ');
+    final papeis = p.papeisExibiveis.map(papelLabel).join(' · ');
     final user = context.watch<AuthProvider>().user;
-    final podeEditar = canMutatePessoas(user);
-    final podeCriarConta = canCreateUsuario(user) && !p.temUsuario;
+    final podeEditar = canCadastrarPessoas(user);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,7 +247,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
           ),
         ),
         const SizedBox(width: 12),
-        if (podeEditar || podeCriarConta)
+        if (podeEditar)
           Column(
             children: [
               if (podeEditar)
@@ -209,19 +261,6 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
                   ),
                   child: const Text('Editar'),
                 ),
-              if (podeCriarConta) ...[
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: _criarUsuario,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(0, 36),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  child: const Text('Criar usuário'),
-                ),
-              ],
             ],
           ),
       ],
@@ -243,7 +282,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
           ),
         ),
         DetailInfoRow('Cadastro', formatDate(p.dataCadastro)),
-        DetailInfoRow('Usuário', p.temUsuario ? 'Sim' : 'Não'),
+        DetailInfoRow('Acesso ao app', acessoStatusLabel(p.acessoStatus)),
         if (p.ministerios.isNotEmpty)
           DetailInfoRow('Ministérios', p.ministerios.join(', ')),
       ],

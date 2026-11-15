@@ -1,6 +1,13 @@
 import '../models/models.dart';
 import 'api_client.dart';
 
+class LinkAcesso {
+  const LinkAcesso({required this.link, required this.enviadoWhatsapp});
+
+  final String link;
+  final bool enviadoWhatsapp;
+}
+
 class UsuarioService {
   UsuarioService(this._api);
 
@@ -12,58 +19,81 @@ class UsuarioService {
     return list.map((e) => _map(e as Map<String, dynamic>)).toList();
   }
 
-  Future<UsuarioConta> createFromPessoa({
-    required String pessoaId,
-    required String username,
-    required String email,
-    required String senha,
-    required List<Role> papeis,
-    required String igrejaId,
-  }) async {
-    if (papeis.contains(Role.contador)) await _garantirPapelContador(igrejaId);
-    final json = await _api.post('/pessoas/$pessoaId/usuario', body: {
-      'username': username,
-      'email': email,
-      'senha': senha,
-      'papeis': papeis.map(roleToString).toList(),
-      'igrejaId': igrejaId,
+  /// Cria a conta CONVIDADO (ou reenvia o convite) e devolve o link de acesso.
+  Future<LinkAcesso> convidar(String pessoaId) async {
+    final json = await _api.post('/pessoas/$pessoaId/convite', body: const {}) as Map<String, dynamic>;
+    return _link(json);
+  }
+
+  /// Gera link de redefinição de senha (válido por 1 hora) de conta ATIVA.
+  Future<LinkAcesso> gerarRedefinicao(String usuarioId) async {
+    final json = await _api.post('/usuarios/$usuarioId/redefinicao-senha', body: const {})
+        as Map<String, dynamic>;
+    return _link(json);
+  }
+
+  Future<UsuarioConta> desativar(String usuarioId) async {
+    final json = await _api.post('/usuarios/$usuarioId/desativar', body: const {}) as Map<String, dynamic>;
+    return _map(json);
+  }
+
+  Future<UsuarioConta> reativar(String usuarioId) async {
+    final json = await _api.post('/usuarios/$usuarioId/reativar', body: const {}) as Map<String, dynamic>;
+    return _map(json);
+  }
+
+  LinkAcesso _link(Map<String, dynamic> json) => LinkAcesso(
+        link: json['link'] as String,
+        enviadoWhatsapp: json['enviadoWhatsapp'] as bool? ?? false,
+      );
+
+  /// Substitui os papéis do usuário. PASTOR/SECRETARIA exigem
+  /// `papeisGestaoAtribuir`; papéis customizados exigem `papeisCustomGerir`.
+  Future<UsuarioConta> alterarPapeis(String usuarioId, List<String> papeis) async {
+    final json = await _api.put('/usuarios/$usuarioId/papeis', {
+      'papeis': papeis,
     }) as Map<String, dynamic>;
     return _map(json);
   }
 
-  Future<void> _garantirPapelContador(String igrejaId) async {
-    final papeis = await _api.get('/papeis', query: {'igrejaId': igrejaId}) as List<dynamic>;
-    Map<String, dynamic>? contador;
-    for (final e in papeis) {
-      final papel = e as Map<String, dynamic>;
-      if ((papel['nome'] as String?)?.toUpperCase() == 'CONTADOR') contador = papel;
-    }
-    final body = {
-      'nome': 'CONTADOR',
-      'descricao': contador?['descricao'] ?? 'Recepção — lança a contagem do culto',
-      'podeLancarContagem': true,
+  /// Cria um papel customizado da igreja (`POST /papeis`). Nomes reservados
+  /// (PASTOR, LIDER, ...) são recusados pelo servidor. Devolve o nome salvo.
+  Future<String> criarPapel({
+    required String nome,
+    required bool podeLancarContagem,
+    required String igrejaId,
+  }) async {
+    final json = await _api.post('/papeis', body: {
+      'nome': nome,
+      'podeLancarContagem': podeLancarContagem,
       'igrejaId': igrejaId,
-    };
-    if (contador == null) {
-      await _api.post('/papeis', body: body);
-    } else if (contador['podeLancarContagem'] != true) {
-      await _api.put('/papeis/${contador['id']}', body);
-    }
+    }) as Map<String, dynamic>;
+    return json['nome'] as String;
+  }
+
+  /// Nomes dos papéis customizados (não-sistema) da igreja.
+  Future<List<String>> listarPapeisCustomizados(String igrejaId) async {
+    final list = await _api.get('/papeis', query: {'igrejaId': igrejaId})
+        as List<dynamic>;
+    return [
+      for (final e in list)
+        if ((e as Map<String, dynamic>)['sistema'] != true) e['nome'] as String,
+    ];
   }
 
   UsuarioConta _map(Map<String, dynamic> json) {
     return UsuarioConta(
       id: json['id'] as String,
-      username: json['username'] as String? ?? json['email'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      telefone: json['telefone'] as String?,
       pessoaId: json['pessoaId'] as String?,
       pessoaNome: json['pessoaNome'] as String?,
       igrejaId: json['igrejaId'] as String? ?? '',
       igrejaNome: json['igrejaNome'] as String? ?? '',
       papeis: (json['papeis'] as List<dynamic>? ?? [])
-          .map((p) => roleFromString(p as String))
+          .map((p) => p as String)
           .toList(),
-      ativo: json['ativo'] as bool? ?? true,
+      status: json['status'] as String? ?? 'ATIVO',
     );
   }
 }

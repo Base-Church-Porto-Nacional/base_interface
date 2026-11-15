@@ -2,6 +2,8 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
 import '../screens/acesso/acesso_negado_screen.dart';
+import '../screens/acesso/definir_senha_screen.dart';
+import '../screens/acesso/esqueci_senha_screen.dart';
 import '../screens/aniversarios/aniversariantes_screen.dart';
 import '../screens/aniversarios/aniversario_envios_screen.dart';
 import '../screens/cronograma/cronograma_screen.dart';
@@ -30,19 +32,25 @@ import '../screens/pessoas/pessoas_screen.dart';
 import '../screens/pequenos_grupos/small_group_detail_screen.dart';
 import '../screens/pequenos_grupos/small_groups_screen.dart';
 import '../screens/shell/app_shell.dart';
-import '../screens/usuarios/usuarios_screen.dart';
 import '../screens/voluntariado/relatorios_screen.dart';
 import '../screens/voluntariado/voluntarios_screen.dart';
 import '../utils/route_access.dart';
 import '../widgets/placeholder_screen.dart';
 
-GoRouter createRouter(AuthProvider auth) {
+/// [rotaInicial]: caminho que o navegador abriu (capturado em `main()` antes do
+/// primeiro frame — a tela de carregamento reescreve a URL para "/" e o link
+/// `/acesso/{token}` se perderia).
+GoRouter createRouter(AuthProvider auth, {String? rotaInicial}) {
   return GoRouter(
-    initialLocation: '/dashboard',
+    initialLocation: (rotaInicial == null || rotaInicial == '/')
+        ? '/dashboard'
+        : rotaInicial,
+    overridePlatformDefaultLocation: rotaInicial != null && rotaInicial != '/',
     refreshListenable: auth,
     redirect: (context, state) {
       final loggedIn = auth.isAuthenticated;
       final path = state.uri.path;
+      if (ehRotaPublica(path)) return null;
       final onLogin = path == '/login';
       if (!loggedIn && !onLogin) return '/login';
       if (loggedIn && onLogin) return '/dashboard';
@@ -50,9 +58,15 @@ GoRouter createRouter(AuthProvider auth) {
       return null;
     },
     routes: [
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(
-        path: '/login',
-        builder: (_, _) => const LoginScreen(),
+        path: '/acesso/:token',
+        builder: (_, state) =>
+            DefinirSenhaScreen(token: state.pathParameters['token']!),
+      ),
+      GoRoute(
+        path: '/esqueci-senha',
+        builder: (_, _) => const EsqueciSenhaScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
@@ -65,29 +79,21 @@ GoRouter createRouter(AuthProvider auth) {
             path: '/acesso-negado',
             builder: (_, _) => const AcessoNegadoScreen(),
           ),
-          GoRoute(
-            path: '/igrejas',
-            builder: (_, _) => const IgrejasScreen(),
-          ),
+          GoRoute(path: '/igrejas', builder: (_, _) => const IgrejasScreen()),
           GoRoute(
             path: '/igrejas/:id',
-            builder: (_, state) => IgrejaDetailScreen(
-              igrejaId: state.pathParameters['id']!,
-            ),
+            builder: (_, state) =>
+                IgrejaDetailScreen(igrejaId: state.pathParameters['id']!),
           ),
-          GoRoute(
-            path: '/membros',
-            builder: (_, _) => const MembrosScreen(),
-          ),
+          GoRoute(path: '/membros', builder: (_, _) => const MembrosScreen()),
           GoRoute(
             path: '/membros/pessoas',
             builder: (_, _) => const PessoasScreen(),
           ),
           GoRoute(
             path: '/membros/pessoa/:id',
-            builder: (_, state) => PessoaDetailScreen(
-              pessoaId: state.pathParameters['id']!,
-            ),
+            builder: (_, state) =>
+                PessoaDetailScreen(pessoaId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: '/pequenos-grupos',
@@ -95,9 +101,8 @@ GoRouter createRouter(AuthProvider auth) {
           ),
           GoRoute(
             path: '/pequenos-grupos/:id',
-            builder: (_, state) => SmallGroupDetailScreen(
-              groupId: state.pathParameters['id']!,
-            ),
+            builder: (_, state) =>
+                SmallGroupDetailScreen(groupId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: '/voluntariado/ministerios',
@@ -125,9 +130,8 @@ GoRouter createRouter(AuthProvider auth) {
           ),
           GoRoute(
             path: '/voluntariado/escalas/:id/editar',
-            builder: (_, state) => EscalaEditScreen(
-              escalaId: state.pathParameters['id']!,
-            ),
+            builder: (_, state) =>
+                EscalaEditScreen(escalaId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: '/voluntariado/escalas/visao-mensal',
@@ -137,9 +141,8 @@ GoRouter createRouter(AuthProvider auth) {
           ),
           GoRoute(
             path: '/voluntariado/escalas/:id',
-            builder: (_, state) => EscalaDetailScreen(
-              escalaId: state.pathParameters['id']!,
-            ),
+            builder: (_, state) =>
+                EscalaDetailScreen(escalaId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: '/voluntariado/escalas',
@@ -147,9 +150,8 @@ GoRouter createRouter(AuthProvider auth) {
           ),
           GoRoute(
             path: '/cultos/culto/:id',
-            builder: (_, state) => CultoDetailScreen(
-              cultoId: state.pathParameters['id']!,
-            ),
+            builder: (_, state) =>
+                CultoDetailScreen(cultoId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: '/cultos/mes',
@@ -167,14 +169,7 @@ GoRouter createRouter(AuthProvider auth) {
               eventoId: state.uri.queryParameters['eventoId'],
             ),
           ),
-          GoRoute(
-            path: '/cultos',
-            builder: (_, _) => const CronogramaScreen(),
-          ),
-          GoRoute(
-            path: '/usuarios',
-            builder: (_, _) => const UsuariosScreen(),
-          ),
+          GoRoute(path: '/cultos', builder: (_, _) => const CronogramaScreen()),
           GoRoute(
             path: '/meu-servico',
             builder: (_, _) => const MeuServicoScreen(),

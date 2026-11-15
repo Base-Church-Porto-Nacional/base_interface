@@ -10,6 +10,7 @@ import '../../services/pessoa_service.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
+import '../../widgets/seletor_pessoa.dart';
 import '../../widgets/filter_search.dart';
 
 class CategoriasCultoScreen extends StatefulWidget {
@@ -27,7 +28,7 @@ class _CategoriasCultoScreenState extends State<CategoriasCultoScreen> {
   String? _error;
   String? _loadedFor;
 
-  bool get _canManage => isPastorOuAdmin(context.read<AuthProvider>().user);
+  bool get _canManage => isGestao(context.read<AuthProvider>().user);
 
   Future<void> _load() async {
     final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;
@@ -38,12 +39,12 @@ class _CategoriasCultoScreenState extends State<CategoriasCultoScreen> {
     try {
       final results = await Future.wait([
         context.read<CategoriaCultoService>().list(igrejaId: igrejaId),
-        context.read<PessoaService>().list(size: 100, igrejaId: igrejaId),
+        context.read<PessoaService>().listarTodas(igrejaId: igrejaId),
       ]);
       if (!mounted) return;
       setState(() {
         _categorias = results[0] as List<CategoriaCulto>;
-        _pessoas = (results[1] as PageResponse<Pessoa>).content;
+        _pessoas = results[1] as List<Pessoa>;
       });
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
@@ -124,20 +125,11 @@ class _CategoriasCultoScreenState extends State<CategoriasCultoScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<String?>(
-                      initialValue: pregadorId,
-                      decoration: const InputDecoration(
-                        labelText: 'Pregador padrão',
-                        helperText: 'Usado de padrão nos cultos gerados',
-                      ),
-                      items: [
-                        const DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text('— Sem padrão —'),
-                        ),
-                        for (final p in _pessoas)
-                          DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                      ],
+                    SeletorPessoa(
+                      pessoas: _pessoas,
+                      label: 'Pregador padrão',
+                      helperText: 'Usado de padrão nos cultos gerados. Apague para ficar sem padrão.',
+                      inicialId: pregadorId,
                       onChanged: (v) => setLocal(() => pregadorId = v),
                     ),
                     if (existing != null) ...[

@@ -11,7 +11,9 @@ import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
+import '../../widgets/seletor_pessoa.dart';
 import '../../widgets/form_dialogs.dart';
+import '../../widgets/lista_presenca.dart';
 
 class SmallGroupDetailScreen extends StatefulWidget {
   const SmallGroupDetailScreen({super.key, required this.groupId});
@@ -59,8 +61,8 @@ class _SmallGroupDetailScreenState extends State<SmallGroupDetailScreen> {
 
   Future<List<Pessoa>> _pessoasFromService() async {
     final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;
-    final response = await context.read<PessoaService>().list(size: 100, igrejaId: igrejaId);
-    return response.content;
+    final response = await context.read<PessoaService>().listarTodas(igrejaId: igrejaId);
+    return response;
   }
 
   Future<void> _refresh() async {
@@ -400,37 +402,20 @@ class _SemanaTileState extends State<_SemanaTile> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DropdownButtonFormField<String>(
-          initialValue: _anfitriaoId ?? '',
-          decoration: const InputDecoration(labelText: 'Anfitrião', isDense: true),
-          items: [
-            const DropdownMenuItem(value: '', child: Text('—')),
-            for (final p in widget.pessoas)
-              DropdownMenuItem(value: p.id, child: Text(p.nome)),
-          ],
-          onChanged: (v) =>
-              setState(() => _anfitriaoId = (v == null || v.isEmpty) ? null : v),
+        SeletorPessoa(
+          pessoas: widget.pessoas,
+          label: 'Anfitrião',
+          inicialId: _anfitriaoId,
+          onChanged: (v) => setState(() => _anfitriaoId = v),
         ),
         const SizedBox(height: 12),
         const Text('Compareceram', style: TextStyle(fontWeight: FontWeight.w500)),
         const SizedBox(height: 4),
-        for (final p in widget.pessoas)
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: Text(p.nome),
-            value: _compareceram.contains(p.id),
-            onChanged: (v) {
-              setState(() {
-                if (v == true) {
-                  _compareceram.add(p.id);
-                } else {
-                  _compareceram.remove(p.id);
-                }
-              });
-            },
-          ),
+        ListaPresenca(
+          pessoas: widget.pessoas,
+          marcados: _compareceram,
+          onChanged: (novos) => setState(() => _compareceram = novos),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: _anotacoes,

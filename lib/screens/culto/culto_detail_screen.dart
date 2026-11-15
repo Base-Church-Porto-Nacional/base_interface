@@ -13,6 +13,7 @@ import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
+import '../../widgets/seletor_pessoa.dart';
 
 class CultoDetailScreen extends StatefulWidget {
   const CultoDetailScreen({super.key, required this.cultoId});
@@ -100,7 +101,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
             ),
         context.read<CultoService>().getRelatorio(widget.cultoId),
         context.read<MinisterioService>().list(igrejaId: _igrejaId()),
-        context.read<PessoaService>().list(size: 100, igrejaId: _igrejaId()),
+        context.read<PessoaService>().listarTodas(igrejaId: _igrejaId()),
       ]);
       if (!mounted) return;
       final culto = results[0] as Culto;
@@ -108,7 +109,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
       final conteudo = conteudoOuNulo ?? CultoConteudo(cultoId: widget.cultoId);
       final relatorio = results[2] as CultoRelatorio;
       final ministerios = results[3] as List<Ministerio>;
-      final pessoas = (results[4] as PageResponse<Pessoa>).content;
+      final pessoas = results[4] as List<Pessoa>;
       setState(() {
         _culto = culto;
         _conteudo = conteudo;
@@ -175,7 +176,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
     final user = context.read<AuthProvider>().user;
     final canTexto = podeEditarTextoCulto(user, pregadorPessoaId: _pregadorId);
     final canLouvor = podeEditarLouvor(user, _ministerios);
-    final canManage = isPastorOuAdmin(user);
+    final canManage = isGestao(user);
 
     final temaAtual = _conteudo.tema ?? culto.tema ?? '';
     var mudou = false;
@@ -337,7 +338,7 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
     }
     final culto = _culto!;
     final user = context.watch<AuthProvider>().user;
-    final canManage = isPastorOuAdmin(user);
+    final canManage = isGestao(user);
     final canTexto = podeEditarTextoCulto(user, pregadorPessoaId: _pregadorId);
     final canLouvor = podeEditarLouvor(user, _ministerios);
 
@@ -436,7 +437,6 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
   }
 
   Widget _cardConteudo(bool canTexto, bool canLouvor, bool canManage) {
-    final selPregadorFora = _pregadorId != null && _pessoaById(_pregadorId) == null;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -476,26 +476,18 @@ class _CultoDetailScreenState extends State<CultoDetailScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String?>(
-              initialValue: _pregadorId,
-              decoration: InputDecoration(
-                labelText: 'Pregador',
-                helperText: canManage
-                    ? 'Trocar o pregador é permitido só a pastores/administradores'
-                    : null,
-              ),
-              items: [
-                if (selPregadorFora)
-                  DropdownMenuItem<String?>(
-                    value: _pregadorId,
-                    child: Text(_culto?.pregadorNome ?? 'Pregador atual'),
-                  ),
-                for (final p in _pessoas)
-                  DropdownMenuItem(value: p.id, child: Text(p.nome)),
-              ],
-              onChanged: canManage
-                  ? (v) => setState(() => _pregadorId = v)
-                  : null,
+            SeletorPessoa(
+              // Recria quando o culto é recarregado, para mostrar o pregador salvo.
+              key: ValueKey('pregador-${_culto?.id}-${_culto?.pregadorId}'),
+              pessoas: _pessoas,
+              label: 'Pregador',
+              helperText: canManage ? 'Trocar o pregador é permitido só a pastor ou secretaria' : null,
+              inicialId: _pregadorId,
+              // Pregador de fora da lista (ex.: de outra igreja) continua visível.
+              inicialNome: _culto?.pregadorNome ?? 'Pregador atual',
+              enabled: canManage,
+              permitirVazio: false,
+              onChanged: (v) => setState(() => _pregadorId = v ?? _pregadorId),
             ),
             if (canTexto || canLouvor || canManage) ...[
               const SizedBox(height: 12),

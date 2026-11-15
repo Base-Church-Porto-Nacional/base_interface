@@ -15,7 +15,6 @@ services:
           memory: 64M
       labels:
         traefik.enable: "true"
-        traefik.docker.network: ${TRAEFIK_NETWORK:-traefik-public}
         traefik.swarm.network: ${TRAEFIK_NETWORK:-traefik-public}
         traefik.http.routers.base-web.rule: Host(`${WEB_HOST:-base.veigagustavo.com.br}`)
         traefik.http.routers.base-web.entrypoints: ${TRAEFIK_ENTRYPOINT:-websecure}

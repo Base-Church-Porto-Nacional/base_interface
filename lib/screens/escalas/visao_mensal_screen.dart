@@ -9,7 +9,6 @@ import '../../services/escala_service.dart';
 import '../../services/ministerio_service.dart';
 import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
-import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
 import '../../widgets/competencia_picker.dart';
 import '../../widgets/filter_search.dart';
@@ -52,8 +51,9 @@ class _VisaoMensalScreenState extends State<VisaoMensalScreen> {
       final todos =
           await context.read<MinisterioService>().list(igrejaId: igrejaId);
       final selectables = todos.where((m) {
-        if (isPastorOuAdmin(user)) return true;
-        return m.liderPessoaId == user?.pessoaId ||
+        if (user?.permissoes.tem(Capacidade.escalasGerir) == true) return true;
+        return user?.permissoes.ministeriosLiderados.contains(m.id) == true ||
+            m.liderPessoaId == user?.pessoaId ||
             m.coordenadorPessoaId == user?.pessoaId;
       }).toList();
       if (!mounted) return;

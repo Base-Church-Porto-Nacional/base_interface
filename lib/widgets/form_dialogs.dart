@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../models/models.dart';
@@ -11,6 +13,7 @@ class PessoaFormDialog extends StatefulWidget {
     this.initialEmail = '',
     this.initialWhatsapp = '',
     this.title = 'Nova pessoa',
+    this.servicos,
   });
 
   final String initialNome;
@@ -18,6 +21,11 @@ class PessoaFormDialog extends StatefulWidget {
   final String initialEmail;
   final String initialWhatsapp;
   final String title;
+
+  /// Quando não nulo (líder cadastrando), o campo "Serviço" é obrigatório e
+  /// só oferece estes serviços. Observações e "ativo" (dados pastorais) nunca
+  /// aparecem aqui: o formulário só cobre contato.
+  final List<Servico>? servicos;
 
   @override
   State<PessoaFormDialog> createState() => _PessoaFormDialogState();
@@ -28,6 +36,8 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
   late final TextEditingController _telefone;
   late final TextEditingController _email;
   late final TextEditingController _whatsapp;
+  String? _servicoId;
+  String? _erroServico;
 
   @override
   void initState() {
@@ -81,6 +91,25 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
               ),
               keyboardType: TextInputType.phone,
             ),
+            if (widget.servicos != null) ...[
+              const SizedBox(height: 12),
+              if (widget.servicos!.isEmpty)
+                const Text('Você não lidera nenhum serviço para vincular a pessoa.')
+              else
+                DropdownButtonFormField<String>(
+                  initialValue: _servicoId,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: 'Serviço *', errorText: _erroServico),
+                  items: [
+                    for (final sv in widget.servicos!)
+                      DropdownMenuItem(value: sv.id, child: Text(sv.nome)),
+                  ],
+                  onChanged: (v) => setState(() {
+                    _servicoId = v;
+                    _erroServico = null;
+                  }),
+                ),
+            ],
           ],
         ),
       ),
@@ -90,13 +119,21 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
           child: const Text('Cancelar'),
         ),
         FilledButton(
-          onPressed: () {
+          // Líder sem nenhum serviço não tem onde vincular a pessoa.
+          onPressed: widget.servicos != null && widget.servicos!.isEmpty
+              ? null
+              : () {
             if (_nome.text.trim().isEmpty) return;
+            if (widget.servicos != null && _servicoId == null) {
+              setState(() => _erroServico = 'Escolha o serviço.');
+              return;
+            }
             Navigator.pop(context, {
               'nome': _nome.text.trim(),
               'telefone': _telefone.text.trim(),
               'email': _email.text.trim(),
               'whatsapp': _whatsapp.text.trim(),
+              if (_servicoId != null) 'servicoId': _servicoId!,
             });
           },
           child: const Text('Salvar'),
@@ -411,9 +448,13 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
 }
 
 class FilialFormDialog extends StatefulWidget {
-  const FilialFormDialog({super.key, required this.pessoas});
+  const FilialFormDialog({super.key, required this.pessoas, this.excluirIds = const {}});
 
   final List<Pessoa> pessoas;
+
+  /// Pessoas que não podem ser escolhidas (pastor titular da matriz, o próprio
+  /// usuário): o servidor recusaria a transferência.
+  final Set<String> excluirIds;
 
   @override
   State<FilialFormDialog> createState() => _FilialFormDialogState();
@@ -421,18 +462,57 @@ class FilialFormDialog extends StatefulWidget {
 
 class _FilialFormDialogState extends State<FilialFormDialog> {
   final _nome = TextEditingController();
-  final _adminNome = TextEditingController();
-  final _adminEmail = TextEditingController();
-  final _adminUsername = TextEditingController();
+  final _pastorNome = TextEditingController();
+  final _pastorEmail = TextEditingController();
+  final _pastorWhatsapp = TextEditingController();
   String? _pastorId;
+  bool _novaPessoa = false;
+  String? _erro;
+
+  /// Só pessoas ativas e elegíveis (inativas e excluídas o servidor recusa).
+  late final List<Pessoa> _elegiveis = [
+    for (final p in widget.pessoas)
+      if (p.status == PessoaStatus.ativo && !widget.excluirIds.contains(p.id)) p,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _novaPessoa = _elegiveis.isEmpty;
+  }
 
   @override
   void dispose() {
     _nome.dispose();
-    _adminNome.dispose();
-    _adminEmail.dispose();
-    _adminUsername.dispose();
+    _pastorNome.dispose();
+    _pastorEmail.dispose();
+    _pastorWhatsapp.dispose();
     super.dispose();
+  }
+
+  void _criar() {
+    if (_nome.text.trim().isEmpty) return;
+    if (!_novaPessoa) {
+      if (_pastorId == null) return;
+      Navigator.pop(context, {
+        'nome': _nome.text.trim(),
+        'pastorPessoaId': _pastorId,
+      });
+      return;
+    }
+    final email = _pastorEmail.text.trim();
+    final whatsapp = _pastorWhatsapp.text.trim();
+    if (_pastorNome.text.trim().isEmpty) return;
+    if (email.isEmpty && whatsapp.isEmpty) {
+      setState(() => _erro = 'Informe e-mail ou WhatsApp.');
+      return;
+    }
+    Navigator.pop(context, {
+      'nome': _nome.text.trim(),
+      'pastorNome': _pastorNome.text.trim(),
+      if (email.isNotEmpty) 'pastorEmail': email,
+      if (whatsapp.isNotEmpty) 'pastorWhatsapp': whatsapp,
+    });
   }
 
   @override
@@ -448,19 +528,18 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
               decoration: const InputDecoration(labelText: 'Nome da filial *'),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _pastorId,
-              decoration: const InputDecoration(labelText: 'Pastor *'),
-              items: [
-                for (final p in widget.pessoas)
-                  DropdownMenuItem(value: p.id, child: Text(p.nome)),
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(value: false, label: Text('Pessoa já cadastrada')),
+                ButtonSegment(value: true, label: Text('Nova pessoa')),
               ],
-              onChanged: (v) => setState(() => _pastorId = v),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _adminNome,
-              decoration: const InputDecoration(labelText: 'Nome do admin *'),
+              selected: {_novaPessoa},
+              onSelectionChanged: (v) => setState(() {
+                _novaPessoa = v.first;
+                _erro = null;
+                // O seletor é recriado vazio: a escolha anterior não vale mais.
+                _pastorId = null;
+              }),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -484,114 +563,155 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
           child: const Text('Cancelar'),
         ),
         FilledButton(
-          onPressed: () {
-            if (_nome.text.trim().isEmpty ||
-                _pastorId == null ||
-                _adminNome.text.trim().isEmpty ||
-                _adminEmail.text.trim().isEmpty ||
-                _adminUsername.text.trim().isEmpty) {
-              return;
-            }
-            Navigator.pop(context, {
-              'nome': _nome.text.trim(),
-              'pastorPessoaId': _pastorId,
-              'adminNome': _adminNome.text.trim(),
-              'adminEmail': _adminEmail.text.trim(),
-              'adminUsername': _adminUsername.text.trim(),
-            });
-          },
-          child: const Text('Criar'),
+          onPressed: _id == null ? null : () => Navigator.pop(context, _id),
+          child: const Text('Trocar'),
         ),
       ],
     );
   }
 }
 
-class UsuarioFormDialog extends StatefulWidget {
-  const UsuarioFormDialog({
+/// Atribuição de papéis de uma conta. PASTOR/SECRETARIA só aparecem com
+/// `podeGestao` (capacidade papeisGestaoAtribuir); os customizados só com
+/// `podeCustom` (papeisCustomGerir). Devolve a lista COMPLETA de papéis: os
+/// que o diálogo não gerencia (ex.: MEMBRO, LIDER) são preservados.
+class PapeisDialog extends StatefulWidget {
+  const PapeisDialog({
     super.key,
     required this.pessoaNome,
-    required this.email,
-    this.voluntario = false,
+    required this.atuais,
+    required this.customizados,
+    required this.podeGestao,
+    required this.podeCustom,
+    this.onCriarPapel,
   });
 
+  static const papeisGestao = ['PASTOR', 'SECRETARIA'];
+
   final String pessoaNome;
-  final String email;
-  final bool voluntario;
+  final List<String> atuais;
+  final List<String> customizados;
+  final bool podeGestao;
+  final bool podeCustom;
+
+  /// Cria um papel customizado e devolve a lista atualizada de customizados.
+  /// Só usado com `podeCustom`; erros do servidor aparecem no diálogo.
+  final Future<List<String>> Function(String nome, bool podeLancarContagem)? onCriarPapel;
 
   @override
-  State<UsuarioFormDialog> createState() => _UsuarioFormDialogState();
+  State<PapeisDialog> createState() => _PapeisDialogState();
 }
 
-class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
-  late final TextEditingController _username;
-  late final TextEditingController _email;
-  final _senha = TextEditingController();
-  late bool _membro;
-  late bool _voluntario;
-  bool _contador = false;
+class _PapeisDialogState extends State<PapeisDialog> {
+  late final Set<String> _sel;
+  late List<String> _customizados;
+  final _novoNome = TextEditingController();
+  bool _novoContagem = false;
+  bool _criando = false;
+  String? _erroNovo;
+
+  List<String> get _gerenciaveis => [
+        if (widget.podeGestao) ...PapeisDialog.papeisGestao,
+        if (widget.podeCustom) ..._customizados,
+      ];
+
+  bool get _podeCriar => widget.podeCustom && widget.onCriarPapel != null;
 
   @override
   void initState() {
     super.initState();
-    _username = TextEditingController(
-      text: widget.email.contains('@') ? widget.email.split('@').first : '',
-    );
-    _email = TextEditingController(text: widget.email);
-    _membro = true;
-    _voluntario = widget.voluntario;
+    _sel = widget.atuais.map((p) => p.toUpperCase()).toSet();
+    _customizados = [...widget.customizados];
   }
 
   @override
   void dispose() {
-    _username.dispose();
-    _email.dispose();
-    _senha.dispose();
+    _novoNome.dispose();
     super.dispose();
+  }
+
+  Future<void> _criarPapel() async {
+    final nome = _novoNome.text.trim();
+    if (nome.isEmpty) {
+      setState(() => _erroNovo = 'Informe o nome do papel.');
+      return;
+    }
+    setState(() {
+      _criando = true;
+      _erroNovo = null;
+    });
+    try {
+      final lista = await widget.onCriarPapel!(nome, _novoContagem);
+      if (!mounted) return;
+      setState(() {
+        _customizados = lista;
+        _novoNome.clear();
+        _novoContagem = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _erroNovo = e.toString().replaceFirst('Exception: ', ''));
+      }
+    } finally {
+      if (mounted) setState(() => _criando = false);
+    }
+  }
+
+  Widget _novoPapelForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Divider(),
+        const Text('Novo papel', style: TextStyle(fontWeight: FontWeight.w600)),
+        TextField(
+          key: const Key('novoPapelNome'),
+          controller: _novoNome,
+          decoration: InputDecoration(labelText: 'Nome', errorText: _erroNovo),
+          textCapitalization: TextCapitalization.characters,
+        ),
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Pode lançar contagem do culto'),
+          value: _novoContagem,
+          onChanged: (v) => setState(() => _novoContagem = v ?? false),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: OutlinedButton(
+            onPressed: _criando ? null : _criarPapel,
+            child: const Text('Criar papel'),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final itens = _gerenciaveis;
     return AlertDialog(
-      title: Text('Criar usuário — ${widget.pessoaNome}'),
+      title: Text('Papéis — ${widget.pessoaNome}'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: _username,
-              decoration: const InputDecoration(labelText: 'Usuário *'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _email,
-              decoration: const InputDecoration(labelText: 'E-mail *'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _senha,
-              decoration: const InputDecoration(labelText: 'Senha *'),
-              obscureText: true,
-            ),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Membro'),
-              value: _membro,
-              onChanged: (v) => setState(() => _membro = v ?? true),
-            ),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Voluntário'),
-              value: _voluntario,
-              onChanged: (v) => setState(() => _voluntario = v ?? false),
-            ),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Contador'),
-              subtitle: const Text('Lança a contagem dos cultos'),
-              value: _contador,
-              onChanged: (v) => setState(() => _contador = v ?? false),
-            ),
+            if (itens.isEmpty)
+              const Text('Nenhum papel disponível para atribuir.'),
+            for (final papel in itens)
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(papelLabel(papel)),
+                value: _sel.contains(papel),
+                onChanged: (v) => setState(() {
+                  if (v ?? false) {
+                    _sel.add(papel);
+                  } else {
+                    _sel.remove(papel);
+                  }
+                }),
+              ),
+            if (_podeCriar) _novoPapelForm(),
           ],
         ),
       ),
@@ -601,26 +721,19 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
           child: const Text('Cancelar'),
         ),
         FilledButton(
-          onPressed: () {
-            if (_username.text.trim().isEmpty ||
-                _email.text.trim().isEmpty ||
-                _senha.text.trim().isEmpty) {
-              return;
-            }
-            final papeis = <Role>[
-              if (_membro) Role.membro,
-              if (_voluntario) Role.voluntario,
-              if (_contador) Role.contador,
-            ];
-            if (papeis.isEmpty) papeis.add(Role.membro);
-            Navigator.pop(context, {
-              'username': _username.text.trim(),
-              'email': _email.text.trim(),
-              'senha': _senha.text.trim(),
-              'papeis': papeis,
-            });
-          },
-          child: const Text('Criar'),
+          onPressed: itens.isEmpty
+              ? null
+              : () {
+                  final gerenciados = itens.toSet();
+                  final preservados = widget.atuais
+                      .map((p) => p.toUpperCase())
+                      .where((p) => !gerenciados.contains(p));
+                  Navigator.pop(context, <String>[
+                    ...preservados,
+                    ...itens.where(_sel.contains),
+                  ]);
+                },
+          child: const Text('Salvar'),
         ),
       ],
     );
@@ -659,6 +772,7 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
   late bool _ativo;
   late DiaSemana _diaSemana;
   String? _liderId;
+  String? _erroLider;
   late int _nota;
 
   @override
@@ -768,7 +882,15 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
         ),
         FilledButton(
           onPressed: () {
-            if (_nome.text.trim().isEmpty || _liderId == null) return;
+            if (_nome.text.trim().isEmpty) return;
+            if (_liderId == null) {
+              setState(() => _erroLider = 'Escolha o líder.');
+              return;
+            }
+            Pessoa? lider;
+            for (final p in widget.pessoas) {
+              if (p.id == _liderId) lider = p;
+            }
             Navigator.pop(context, {
               'nome': _nome.text.trim(),
               'diaSemana': _diaSemana,
@@ -779,6 +901,166 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
             });
           },
           child: const Text('Salvar'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Líder (ou gestão) vincula uma pessoa já cadastrada da igreja a um serviço
+/// real do ministério: busca só por nome (sem ver a ficha) e escolhe o serviço.
+/// Fecha com `true` quando o vínculo é criado.
+class AdicionarPessoaExistenteDialog extends StatefulWidget {
+  const AdicionarPessoaExistenteDialog({
+    super.key,
+    required this.ministerio,
+    required this.buscar,
+    required this.vincular,
+  });
+
+  final Ministerio ministerio;
+  final Future<List<PessoaResumo>> Function(String termo) buscar;
+  final Future<void> Function(String pessoaId, String servicoId) vincular;
+
+  @override
+  State<AdicionarPessoaExistenteDialog> createState() => _AdicionarPessoaExistenteDialogState();
+}
+
+class _AdicionarPessoaExistenteDialogState extends State<AdicionarPessoaExistenteDialog> {
+  final _busca = TextEditingController();
+  Timer? _debounce;
+  List<PessoaResumo> _resultados = const [];
+  PessoaResumo? _pessoa;
+  String? _servicoId;
+  bool _buscando = false;
+  bool _salvando = false;
+  String? _erro;
+
+  List<Servico> get _servicos =>
+      widget.ministerio.servicos.where((s) => !s.ficcao && s.ativo).toList();
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _busca.dispose();
+    super.dispose();
+  }
+
+  void _onBusca(String texto) {
+    _debounce?.cancel();
+    final termo = texto.trim();
+    if (termo.length < 2) {
+      setState(() => _resultados = const []);
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 300), () => _buscar(termo));
+  }
+
+  Future<void> _buscar(String termo) async {
+    setState(() {
+      _buscando = true;
+      _erro = null;
+    });
+    try {
+      final r = await widget.buscar(termo);
+      if (mounted) setState(() => _resultados = r);
+    } catch (e) {
+      if (mounted) setState(() => _erro = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _buscando = false);
+    }
+  }
+
+  Future<void> _adicionar() async {
+    final pessoa = _pessoa;
+    final servicoId = _servicoId;
+    if (pessoa == null || servicoId == null) return;
+    setState(() {
+      _salvando = true;
+      _erro = null;
+    });
+    try {
+      await widget.vincular(pessoa.id, servicoId);
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) setState(() => _erro = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _salvando = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final servicos = _servicos;
+    return AlertDialog(
+      title: const Text('Adicionar pessoa existente'),
+      content: SizedBox(
+        width: 400,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_pessoa == null) ...[
+                TextField(
+                  key: const Key('buscaPessoaExistente'),
+                  controller: _busca,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome da pessoa',
+                    helperText: 'Digite ao menos 2 letras',
+                  ),
+                  onChanged: _onBusca,
+                ),
+                if (_buscando) const LinearProgressIndicator(),
+                for (final r in _resultados)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(r.nome),
+                    onTap: () => setState(() => _pessoa = r),
+                  ),
+                if (!_buscando && _busca.text.trim().length >= 2 && _resultados.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text('Nenhuma pessoa encontrada.'),
+                  ),
+              ] else ...[
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(_pessoa!.nome),
+                  trailing: TextButton(
+                    onPressed: () => setState(() => _pessoa = null),
+                    child: const Text('Trocar'),
+                  ),
+                ),
+                if (servicos.isEmpty)
+                  const Text('Este ministério ainda não tem serviços para vincular.')
+                else
+                  DropdownButtonFormField<String>(
+                    key: const Key('servicoPessoaExistente'),
+                    initialValue: _servicoId,
+                    decoration: const InputDecoration(labelText: 'Serviço'),
+                    items: [
+                      for (final s in servicos)
+                        DropdownMenuItem(value: s.id, child: Text(s.nome)),
+                    ],
+                    onChanged: (v) => setState(() => _servicoId = v),
+                  ),
+              ],
+              if (_erro != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(_erro!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        FilledButton(
+          onPressed: _salvando || _pessoa == null || _servicoId == null ? null : _adicionar,
+          child: const Text('Adicionar'),
         ),
       ],
     );

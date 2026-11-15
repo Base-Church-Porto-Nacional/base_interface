@@ -65,7 +65,7 @@ class _MinisterioDetailScreenState extends State<MinisterioDetailScreen> {
     final m = _ministerio;
     if (m == null) return;
     final igrejaId = context.read<IgrejaContext>().selectedIgrejaId;
-    final pessoas = await context.read<PessoaService>().list(size: 100, igrejaId: igrejaId);
+    final pessoas = await context.read<PessoaService>().listarTodas(igrejaId: igrejaId);
     if (!mounted) return;
 
     final result = await showDialog<Map<String, dynamic>>(
@@ -78,7 +78,7 @@ class _MinisterioDetailScreenState extends State<MinisterioDetailScreen> {
         initialTipo: m.tipo,
         initialLiderId: m.liderPessoaId,
         initialCoordenadorId: m.coordenadorPessoaId,
-        pessoas: pessoas.content,
+        pessoas: pessoas,
       ),
     );
     if (result == null || !mounted) return;
@@ -100,6 +100,27 @@ class _MinisterioDetailScreenState extends State<MinisterioDetailScreen> {
     } catch (e) {
       if (mounted) showSnack(context, e);
     }
+  }
+
+  Future<void> _adicionarPessoaExistente() async {
+    final m = _ministerio;
+    if (m == null) return;
+    final pessoaService = context.read<PessoaService>();
+    final ministerioService = context.read<MinisterioService>();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AdicionarPessoaExistenteDialog(
+        ministerio: m,
+        buscar: pessoaService.buscarPorNome,
+        vincular: (pessoaId, servicoId) =>
+            ministerioService.vincularPessoa(pessoaId: pessoaId, servicoId: servicoId),
+      ),
+    );
+    if (ok != true || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Pessoa adicionada ao ministério.')),
+    );
+    _load();
   }
 
   Future<void> _saveNotas() async {
@@ -147,6 +168,11 @@ class _MinisterioDetailScreenState extends State<MinisterioDetailScreen> {
           actions: [
             OutlinedButton(onPressed: () => context.pop(), child: const Text('Voltar')),
             if (canManage) OutlinedButton(onPressed: _edit, child: const Text('Editar')),
+            if (canManage)
+              OutlinedButton(
+                onPressed: _adicionarPessoaExistente,
+                child: const Text('Adicionar pessoa existente'),
+              ),
           ],
         ),
         Card(

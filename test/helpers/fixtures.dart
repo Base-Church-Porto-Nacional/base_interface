@@ -6,8 +6,6 @@ const mockIgrejaMatriz = Igreja(
   tipo: IgrejaTipo.matriz,
   pastorPessoaId: 'p1',
   pastorNome: 'Ana Costa',
-  adminUsuarioId: 'u1',
-  adminNome: 'Ana Costa',
   ativo: true,
 );
 
@@ -18,18 +16,37 @@ const mockIgrejaFilial = Igreja(
   igrejaMatrizId: 'i1',
   pastorPessoaId: 'p8',
   pastorNome: 'Pedro Alves',
-  adminUsuarioId: 'u2',
-  adminNome: 'Luciana Rocha',
   ativo: true,
 );
 
 final mockIgrejas = <Igreja>[mockIgrejaMatriz, mockIgrejaFilial];
 
+const _todasCapacidades = <Capacidade>{...Capacidade.values};
+
+const permissoesPastor = Permissoes(capacidades: _todasCapacidades);
+
+const permissoesSecretaria = Permissoes(
+  capacidades: {
+    Capacidade.configurar,
+    Capacidade.contasGerir,
+    Capacidade.cultoContagem,
+    Capacidade.dadosPastoraisEditar,
+    Capacidade.escalasGerir,
+    Capacidade.exportar,
+    Capacidade.ministeriosGerir,
+    Capacidade.papeisCustomGerir,
+    Capacidade.pessoasGerir,
+    Capacidade.pessoasVerTodas,
+    Capacidade.relatoriosVer,
+  },
+);
+
 const mockUser = AuthUser(
   id: 'u1',
   nome: 'Ana Costa',
   email: 'ana.costa@base.church',
-  roles: [Role.admin, Role.pastor],
+  papeis: ['PASTOR'],
+  permissoes: permissoesPastor,
   pessoaId: 'p1',
   igrejaId: 'i1',
   igrejaTipo: IgrejaTipo.matriz,
@@ -41,7 +58,8 @@ const mockUserFilial = AuthUser(
   id: 'u2',
   nome: 'Luciana Rocha',
   email: 'luciana.rocha@base.church',
-  roles: [Role.admin],
+  papeis: ['SECRETARIA'],
+  permissoes: permissoesSecretaria,
   pessoaId: 'p9',
   igrejaId: 'i2',
   igrejaTipo: IgrejaTipo.filial,
@@ -53,7 +71,12 @@ const mockUserLider = AuthUser(
   id: 'u3',
   nome: 'João da Silva',
   email: 'joao.silva@email.com',
-  roles: [Role.lider, Role.voluntario, Role.membro],
+  papeis: [],
+  permissoes: Permissoes(
+    ministeriosLiderados: {'m1'},
+    basesLideradas: {'b1'},
+    ehVoluntario: true,
+  ),
   pessoaId: 'p2',
   igrejaId: 'i1',
   igrejaTipo: IgrejaTipo.matriz,
@@ -65,7 +88,12 @@ const mockUserCoordenador = AuthUser(
   id: 'u5',
   nome: 'Maria Oliveira',
   email: 'maria.oliveira@email.com',
-  roles: [Role.voluntario, Role.membro],
+  papeis: [],
+  permissoes: Permissoes(
+    ministeriosLiderados: {'m1'},
+    basesLideradas: {'b1'},
+    ehVoluntario: true,
+  ),
   pessoaId: 'p3',
   igrejaId: 'i1',
   igrejaTipo: IgrejaTipo.matriz,
@@ -77,7 +105,12 @@ const mockUserMidia = AuthUser(
   id: 'u4',
   nome: 'Carlos Lima',
   email: 'carlos.lima@email.com',
-  roles: [Role.lider, Role.voluntario, Role.membro],
+  papeis: [],
+  permissoes: Permissoes(
+    ministeriosLiderados: {'m2'},
+    basesLideradas: {'b3'},
+    ehVoluntario: true,
+  ),
   pessoaId: 'p7',
   igrejaId: 'i1',
   igrejaTipo: IgrejaTipo.matriz,
@@ -89,7 +122,8 @@ const mockUserMembro = AuthUser(
   id: 'u6',
   nome: 'Fernanda Dias',
   email: 'fernanda.dias@email.com',
-  roles: [Role.voluntario, Role.membro],
+  papeis: [],
+  permissoes: Permissoes(),
   pessoaId: 'p5',
   igrejaId: 'i1',
   igrejaTipo: IgrejaTipo.matriz,
@@ -101,7 +135,8 @@ const mockUserContador = AuthUser(
   id: 'u8',
   nome: 'Bruno Santos',
   email: 'bruno.santos@email.com',
-  roles: [Role.contador, Role.voluntario, Role.membro],
+  papeis: ['CONTADOR'],
+  permissoes: Permissoes(capacidades: {Capacidade.cultoContagem}),
   pessoaId: 'p4',
   igrejaId: 'i1',
   igrejaTipo: IgrejaTipo.matriz,
@@ -113,12 +148,26 @@ const mockUserPastorFilial = AuthUser(
   id: 'u7',
   nome: 'Pedro Alves',
   email: 'pedro.alves@base.church',
-  roles: [Role.pastor],
+  papeis: ['PASTOR'],
+  permissoes: permissoesPastor,
   pessoaId: 'p8',
   igrejaId: 'i2',
   igrejaTipo: IgrejaTipo.filial,
   igrejaNome: 'Base Church — Zona Sul',
   igrejasVisiveis: [mockIgrejaFilial],
+);
+
+const mockUserSecretaria = AuthUser(
+  id: 'u10',
+  nome: 'Rita Nunes',
+  email: 'rita.nunes@base.church',
+  papeis: ['SECRETARIA'],
+  permissoes: permissoesSecretaria,
+  pessoaId: 'p11',
+  igrejaId: 'i1',
+  igrejaTipo: IgrejaTipo.matriz,
+  igrejaNome: 'Base Church',
+  igrejasVisiveis: [mockIgrejaMatriz],
 );
 
 final mockBasesMinisteriais = <BaseMinisterial>[

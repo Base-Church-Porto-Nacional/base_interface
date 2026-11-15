@@ -15,11 +15,21 @@ class PessoaService {
     String filtro = 'TODOS',
     String? igrejaId,
   }) async {
+    final mapped = filtrar(
+      await listarTodas(igrejaId: igrejaId),
+      search: search,
+      filtro: filtro,
+    );
+    return paginate(mapped, page: page, size: size);
+  }
 
-    final query = igrejaId == null ? null : {'igrejaId': igrejaId};
-    final list = await _api.get('/pessoas', query: query) as List<dynamic>;
-    var mapped = list.map((e) => _mapPessoa(e as Map<String, dynamic>)).toList();
-
+  /// Busca (nome, e-mail, telefone) e filtro de tipo sobre uma lista já carregada.
+  static List<Pessoa> filtrar(
+    List<Pessoa> pessoas, {
+    String search = '',
+    String filtro = 'TODOS',
+  }) {
+    var mapped = pessoas;
     final q = search.trim().toLowerCase();
     if (q.isNotEmpty) {
       mapped = mapped
@@ -34,7 +44,29 @@ class PessoaService {
     if (filtro != 'TODOS') {
       mapped = mapped.where((p) => pessoaMatchesFiltro(p, filtro)).toList();
     }
-    return paginate(mapped, page: page, size: size);
+    return mapped;
+  }
+
+  /// Todas as pessoas visíveis (da igreja informada ou de toda a rede do
+  /// usuário), sem paginação — para seletores com busca.
+  Future<List<Pessoa>> listarTodas({String? igrejaId}) async {
+    final query = igrejaId == null ? null : {'igrejaId': igrejaId};
+    final list = await _api.get('/pessoas', query: query) as List<dynamic>;
+    return list.map((e) => _mapPessoa(e as Map<String, dynamic>)).toList();
+  }
+
+  /// Busca leve por nome (mín. 2 caracteres, máx. 20 resultados no servidor).
+  Future<List<PessoaResumo>> buscarPorNome(String termo) async {
+    final list = await _api.get('/pessoas/busca', query: {'nome': termo.trim()})
+        as List<dynamic>;
+    return list
+        .map(
+          (e) => PessoaResumo(
+            id: (e as Map<String, dynamic>)['id'] as String,
+            nome: e['nome'] as String,
+          ),
+        )
+        .toList();
   }
 
   Future<List<JornadaEtapa>> jornada(String pessoaId) async {
@@ -89,6 +121,7 @@ class PessoaService {
     String? email,
     String? whatsapp,
     String? igrejaId,
+    String? servicoId,
   }) async {
     final wa = _whatsappNormalizado(whatsapp);
     final json = await _api.post('/pessoas', body: {
@@ -97,23 +130,25 @@ class PessoaService {
       if (email != null && email.isNotEmpty) 'email': email,
       if (wa != null) 'whatsapp': wa,
       if (igrejaId != null) 'igrejaId': igrejaId,
+      if (servicoId != null) 'servicoId': servicoId,
     }) as Map<String, dynamic>;
     return _mapPessoa(json);
   }
 
+  /// PUT parcial: só envia os campos que o formulário edita. Campo ausente não
+  /// é alterado no servidor; texto vazio limpa o campo.
   Future<Pessoa> update(
     String id, {
-    required String nome,
+    String? nome,
     String? telefone,
     String? email,
     String? whatsapp,
   }) async {
-    final wa = _whatsappNormalizado(whatsapp);
     final json = await _api.put('/pessoas/$id', {
-      'nome': nome,
-      'telefone': telefone,
-      'email': email,
-      'whatsapp': wa,
+      'nome': ?nome,
+      if (telefone != null) 'telefone': telefone.trim(),
+      if (email != null) 'email': email.trim(),
+      if (whatsapp != null) 'whatsapp': whatsapp.trim(),
     }) as Map<String, dynamic>;
     return _mapPessoa(json);
   }
@@ -143,7 +178,10 @@ class PessoaService {
 
   Pessoa _mapPessoa(Map<String, dynamic> json) {
     final papeis = (json['papeis'] as List<dynamic>? ?? const [])
-        .map((r) => roleFromString(r as String))
+        .map((r) => r as String)
+        .toList();
+    final funcoes = (json['funcoes'] as List<dynamic>? ?? const [])
+        .map((r) => r as String)
         .toList();
     return Pessoa(
       id: json['id'] as String,
@@ -154,11 +192,12 @@ class PessoaService {
       status: (json['ativo'] as bool? ?? true)
           ? PessoaStatus.ativo
           : PessoaStatus.inativo,
-      tipos: pessoaTiposDePapeis(papeis),
+      tipos: pessoaTiposDeFuncoes(funcoes),
       ministerios: const [],
       dataCadastro: json['dataCadastro'] as String? ?? '',
       igrejaId: json['igrejaId'] as String? ?? '',
       usuarioId: json['usuarioId'] as String?,
+      acessoStatus: json['acessoStatus'] as String?,
       papeis: papeis,
       aceitouJesus: json['aceitouJesus'] == true,
       batizado: json['batizado'] == true,

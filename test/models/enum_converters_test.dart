@@ -2,37 +2,16 @@ import 'package:base_church/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('Role', () {
-    test('ida e volta com as siglas da API', () {
-      const esperado = {
-        Role.admin: 'ADMIN',
-        Role.pastor: 'PASTOR',
-        Role.lider: 'LIDER',
-        Role.voluntario: 'VOLUNTARIO',
-        Role.membro: 'MEMBRO',
-        Role.contador: 'CONTADOR',
-      };
-      esperado.forEach((role, api) {
-        expect(roleToString(role), api);
-        expect(roleFromString(api), role);
-        expect(roleFromString(api.toLowerCase()), role);
-      });
-    });
-
-    test('valores desconhecidos viram membro', () {
-      expect(roleFromString(''), Role.membro);
-      expect(roleFromString('SUPERADMIN'), Role.membro);
-    });
-
-    test('rótulos', () {
-      expect(Role.values.map(roleLabel).toList(), [
-        'Admin',
-        'Pastor',
-        'Líder',
-        'Voluntário',
-        'Membro',
-        'Contador',
-      ]);
+  group('papelLabel', () {
+    test('rótulos dos papéis de sistema e fallback capitalizado', () {
+      expect(
+        ['ADMIN', 'PASTOR', 'secretaria', 'LIDER', 'VOLUNTARIO', 'MEMBRO', 'CONTADOR']
+            .map(papelLabel)
+            .toList(),
+        ['Admin', 'Pastor', 'Secretaria', 'Líder', 'Voluntário', 'Membro', 'Contador'],
+      );
+      expect(papelLabel('RECEPCAO'), 'Recepcao');
+      expect(papelLabel(''), '');
     });
   });
 
@@ -151,7 +130,7 @@ void main() {
         'id': 'u1',
         'nome': 'Ana',
         'email': 'ana@x.com',
-        'roles': ['PASTOR', 'contador', 'XPTO'],
+        'papeis': ['PASTOR', 'CONTADOR'],
         'pessoaId': 'p1',
         'igrejaId': 'i1',
         'igrejaTipo': 'matriz',
@@ -164,15 +143,13 @@ void main() {
             'tipo': 'FILIAL',
             'pastorPessoaId': 'p9',
             'pastorNome': 'Beto',
-            'adminUsuarioId': 'u9',
-            'adminNome': 'Carla',
             'ativo': false,
             'igrejaMatrizId': 'i1',
           },
         ],
       };
       final user = AuthUser.fromJson(json);
-      expect(user.roles, [Role.pastor, Role.contador, Role.membro]);
+      expect(user.papeis, ['PASTOR', 'CONTADOR']);
       expect(user.isMatriz, isTrue);
       expect(user.igrejasVisiveis.first.isMatriz, isTrue);
       expect(user.igrejasVisiveis.first.ativo, isTrue);
@@ -182,7 +159,7 @@ void main() {
 
       final volta = AuthUser.fromJson(user.toJson());
       expect(volta.toJson(), user.toJson());
-      expect(user.toJson()['roles'], ['PASTOR', 'CONTADOR', 'MEMBRO']);
+      expect(user.toJson()['papeis'], ['PASTOR', 'CONTADOR']);
       expect(user.toJson()['igrejaTipo'], 'MATRIZ');
       expect((user.toJson()['igrejasVisiveis'] as List).last, {
         'id': 'i2',
@@ -190,8 +167,6 @@ void main() {
         'tipo': 'FILIAL',
         'pastorPessoaId': 'p9',
         'pastorNome': 'Beto',
-        'adminUsuarioId': 'u9',
-        'adminNome': 'Carla',
         'ativo': false,
         'igrejaMatrizId': 'i1',
       });
@@ -202,7 +177,7 @@ void main() {
         'id': 'u1',
         'nome': 'Ana',
         'email': 'a',
-        'roles': <String>[],
+        'papeis': <String>[],
       });
       expect(user.igrejaTipo, IgrejaTipo.filial);
       expect(user.igrejaId, '');

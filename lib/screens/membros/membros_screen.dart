@@ -7,7 +7,9 @@ import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/export_service.dart';
+import '../../services/ministerio_service.dart';
 import '../../services/pessoa_service.dart';
+import '../../utils/permissions.dart';
 import '../../utils/route_access.dart';
 import '../../widgets/common.dart';
 import '../../widgets/export_menu.dart';
@@ -24,6 +26,7 @@ class MembrosScreen extends StatefulWidget {
 class _MembrosScreenState extends State<MembrosScreen> {
   List<Pessoa> _items = [];
   String _search = '';
+  bool _comAcesso = false;
   bool _loading = true;
   String? _error;
 
@@ -40,7 +43,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
     });
     try {
       final response = await context.read<PessoaService>().list(
-            filtro: 'MEMBRO',
+            filtro: _comAcesso ? 'COM_ACESSO' : 'MEMBRO',
             search: _search,
             size: 50,
             igrejaId: context.read<IgrejaContext>().selectedIgrejaId,
@@ -54,7 +57,17 @@ class _MembrosScreenState extends State<MembrosScreen> {
   }
 
   Future<void> _openForm([Pessoa? editing]) async {
-    if (!canMutatePessoas(context.read<AuthProvider>().user)) return;
+    final user = context.read<AuthProvider>().user;
+    if (!canCadastrarPessoas(user)) return;
+    // Líder (sem gestão) só cadastra vinculando a um serviço que lidera.
+    List<Servico>? servicos;
+    if (editing == null && !isGestao(user)) {
+      final ministerios = await context.read<MinisterioService>().list(
+            igrejaId: context.read<IgrejaContext>().selectedIgrejaId,
+          );
+      servicos = servicosLiderados(user, ministerios);
+    }
+    if (!mounted) return;
     final result = await showDialog<Map<String, String>>(
       context: context,
       builder: (_) => PessoaFormDialog(
@@ -63,6 +76,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
         initialTelefone: editing?.telefone ?? '',
         initialEmail: editing?.email ?? '',
         initialWhatsapp: editing?.whatsapp ?? '',
+        servicos: servicos,
       ),
     );
     if (result == null || !mounted) return;
@@ -76,6 +90,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
           email: result['email'],
           whatsapp: result['whatsapp'],
           igrejaId: context.read<IgrejaContext>().selectedIgrejaId,
+          servicoId: result['servicoId'],
         );
         if (mounted) context.push('/membros/pessoa/${created.id}');
       } else {
@@ -95,7 +110,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final podeMutar = canMutatePessoas(context.watch<AuthProvider>().user);
+    final podeMutar = canCadastrarPessoas(context.watch<AuthProvider>().user);
     return Column(
       children: [
         const SectionTabs(
@@ -122,7 +137,19 @@ class _MembrosScreenState extends State<MembrosScreen> {
                   _load();
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilterChip(
+                  label: const Text('Com acesso'),
+                  selected: _comAcesso,
+                  onSelected: (v) {
+                    setState(() => _comAcesso = v);
+                    _load();
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
               if (_loading)
                 const LoadingView()
               else if (_error != null)
@@ -138,7 +165,7 @@ class _MembrosScreenState extends State<MembrosScreen> {
                       subtitle: p.ministerios.isNotEmpty
                           ? p.ministerios.join(', ')
                           : pessoaStatusLabel(p.status),
-                      badges: p.papeis.map(roleLabel).toList(),
+                      badges: p.papeisExibiveis.map(papelLabel).toList(),
                       trailing: StatusBadge(
                         label: pessoaStatusLabel(p.status),
                         success: p.status == PessoaStatus.ativo,

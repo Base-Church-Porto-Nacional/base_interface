@@ -1,123 +1,90 @@
 import '../models/models.dart';
 import 'permissions.dart';
 
-/// Fail-closed: se a rota não for reconhecida como pública para o papel, bloqueia.
+bool _temCap(AuthUser? user, Capacidade c) => user?.permissoes.tem(c) ?? false;
+
+bool _veTodasOuLidera(AuthUser user) =>
+    isGestao(user) || user.permissoes.lideraAlgo;
+
+bool _acessaVoluntariado(AuthUser user) =>
+    _veTodasOuLidera(user) ||
+    user.permissoes.ehVoluntario ||
+    user.permissoes.tem(Capacidade.escalasGerir);
+
+/// Telas de acesso abertas com ou sem sessão: link de convite/redefinição e
+/// "esqueci minha senha".
+bool ehRotaPublica(String path) =>
+    path == '/esqueci-senha' || path.startsWith('/acesso/');
+
+/// Fail-closed: se a rota não for reconhecida, bloqueia. As decisões vêm das
+/// permissões calculadas pelo servidor (`GET /api/me`).
 bool canAccessPath(AuthUser? user, String path) {
+  if (ehRotaPublica(path)) return true;
   if (user == null) return false;
 
-  if (path == '/dashboard' || path == '/perfil') {
-    return hasPermission(user.roles, 'dashboard:view') || isPastorOuAdmin(user);
-  }
   if (path == '/login' || path == '/acesso-negado') return true;
+  if (path == '/dashboard' || path == '/perfil') return true;
 
   if (path.startsWith('/igrejas')) {
-    return hasPermission(user.roles, 'igrejas:manage') || isPastorOuAdmin(user);
-  }
-  if (path.startsWith('/usuarios')) {
-    return hasPermission(user.roles, 'usuarios:view') || isPastorOuAdmin(user);
+    return _temCap(user, Capacidade.filialCriar) || isGestao(user);
   }
 
   if (path.startsWith('/membros/pessoa/')) {
     final id = path.substring('/membros/pessoa/'.length).split('/').first;
-    return hasPermission(user.roles, 'pessoas:view') ||
-        isPastorOuAdmin(user) ||
-        (hasPermission(user.roles, 'pessoas:own') && user.pessoaId == id);
-  }
-  if (path.startsWith('/membros/pessoas')) {
-    return hasPermission(user.roles, 'pessoas:view') || isPastorOuAdmin(user);
+    return _veTodasOuLidera(user) || user.pessoaId == id;
   }
   if (path == '/membros' || path.startsWith('/membros/')) {
-    return hasPermission(user.roles, 'membros:view') || isPastorOuAdmin(user);
+    return _veTodasOuLidera(user);
   }
 
-  if (path.startsWith('/pequenos-grupos')) {
-    return hasPermission(user.roles, 'small_groups:view') || isPastorOuAdmin(user);
-  }
+  if (path.startsWith('/pequenos-grupos')) return _veTodasOuLidera(user);
 
-  if (path.startsWith('/voluntariado/escalas/nova')) {
-    return _podeAbrirCriacaoEscala(user);
-  }
-  if (path.startsWith('/voluntariado/escalas')) {
-    return hasPermission(user.roles, 'escalas:view') ||
-        hasPermission(user.roles, 'escalas:manage_own') ||
-        isPastorOuAdmin(user);
-  }
-  if (path.startsWith('/voluntariado/ministerios')) {
-    return hasPermission(user.roles, 'ministerios:view') || isPastorOuAdmin(user);
-  }
   if (path.startsWith('/voluntariado/relatorios')) {
-    return hasPermission(user.roles, 'relatorios:view') || isPastorOuAdmin(user);
+    return _temCap(user, Capacidade.relatoriosVer);
   }
-  if (path.startsWith('/voluntariado')) {
-    return hasPermission(user.roles, 'voluntarios:view') || isPastorOuAdmin(user);
-  }
+  if (path.startsWith('/voluntariado')) return _acessaVoluntariado(user);
 
-  if (path.startsWith('/cultos/mes') ||
-      path.startsWith('/cultos/categorias') ||
-      path.startsWith('/cultos/culto/') ||
-      path.startsWith('/cultos/conteudo')) {
-    return hasPermission(user.roles, 'culto:view') || isPastorOuAdmin(user);
-  }
-  if (path.startsWith('/cultos')) {
-    return hasPermission(user.roles, 'cronograma:view') || isPastorOuAdmin(user);
-  }
+  if (path.startsWith('/cultos')) return true;
 
-  if (path.startsWith('/meu-servico')) {
-    return hasPermission(user.roles, 'meu_servico:view') || isPastorOuAdmin(user);
-  }
-  if (path.startsWith('/perfil/disponibilidade')) {
-    return hasPermission(user.roles, 'disponibilidade:view') || isPastorOuAdmin(user);
+  if (path.startsWith('/meu-servico') ||
+      path.startsWith('/perfil/disponibilidade')) {
+    return true;
   }
 
   if (path == '/aniversariantes/envios') {
-    return isPastorOuAdmin(user);
+    return _temCap(user, Capacidade.configurar);
   }
-  if (path.startsWith('/aniversariantes')) {
-    return podeVerAniversarios(user);
-  }
+  if (path.startsWith('/aniversariantes')) return podeVerAniversarios(user);
 
   if (path.startsWith('/configuracoes')) {
-    return hasPermission(user.roles, 'mensagens:manage') || isPastorOuAdmin(user);
+    return _temCap(user, Capacidade.configurar);
   }
 
   return false;
 }
 
-bool _podeAbrirCriacaoEscala(AuthUser user) {
-  if (isPastorOuAdmin(user)) return true;
-  if (hasPermission(user.roles, 'escalas:manage_own')) return true;
-  // Supervisor não é papel: voluntário pode abrir o form; a tela recusa se não puder criar.
-  return user.roles.contains(Role.voluntario) || user.roles.contains(Role.lider);
-}
+bool canMutatePessoas(AuthUser? user) => _temCap(user, Capacidade.pessoasGerir);
 
-bool canMutatePessoas(AuthUser? user) {
-  if (user == null) return false;
-  return hasPermission(user.roles, 'pessoas:create') ||
-      hasPermission(user.roles, 'pessoas:edit') ||
-      isPastorOuAdmin(user);
-}
+/// Gestão cadastra livremente; líder cadastra pessoa num serviço que lidera.
+bool canCadastrarPessoas(AuthUser? user) =>
+    _temCap(user, Capacidade.pessoasGerir) ||
+    (user?.permissoes.lideraAlgo ?? false);
 
-bool canCreateMinisterio(AuthUser? user) {
-  if (user == null) return false;
-  return hasPermission(user.roles, 'ministerios:create') || isPastorOuAdmin(user);
-}
+bool canCreateMinisterio(AuthUser? user) =>
+    _temCap(user, Capacidade.ministeriosGerir);
 
-bool canCreateBaseMinisterial(AuthUser? user) {
-  if (user == null) return false;
-  return isPastorOuAdmin(user);
-}
+bool canCreateBaseMinisterial(AuthUser? user) =>
+    _temCap(user, Capacidade.ministeriosGerir);
 
-bool canCreateUsuario(AuthUser? user) {
-  if (user == null) return false;
-  return hasPermission(user.roles, 'usuarios:create') || isPastorOuAdmin(user);
-}
+/// Redefinir senha, desativar e reativar contas.
+bool podeGerirContas(AuthUser? user) => _temCap(user, Capacidade.contasGerir);
 
-bool canCreateCronograma(AuthUser? user) {
-  if (user == null) return false;
-  return hasPermission(user.roles, 'cronograma:create') || isPastorOuAdmin(user);
-}
+/// Convidar/reenviar: gestão de contas, ou líder (o servidor confere se a
+/// pessoa está no escopo dele; mesma regra de quem edita contato de pessoa).
+bool podeConvidar(AuthUser? user) =>
+    podeGerirContas(user) || canCadastrarPessoas(user);
 
-bool canEditMensagemAniversario(AuthUser? user) {
-  if (user == null) return false;
-  return hasPermission(user.roles, 'mensagens:manage') || isPastorOuAdmin(user);
-}
+bool canCreateCronograma(AuthUser? user) => isGestao(user);
+
+bool canEditMensagemAniversario(AuthUser? user) =>
+    _temCap(user, Capacidade.configurar);
