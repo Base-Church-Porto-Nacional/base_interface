@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/pessoa_service.dart';
 import '../../services/small_group_service.dart';
+import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
@@ -352,7 +353,7 @@ class _SemanaTileState extends State<_SemanaTile> {
         child: ExpansionTile(
           leading: Icon(
             hasReport ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: hasReport ? Colors.green : Colors.grey,
+            color: hasReport ? context.brand.success : context.brand.textMuted,
           ),
           title: Text(formatDate(widget.data)),
           subtitle: Text(subtitle),

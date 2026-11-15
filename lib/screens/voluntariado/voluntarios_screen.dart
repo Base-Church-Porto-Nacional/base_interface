@@ -9,7 +9,7 @@ import '../../services/base_ministerial_service.dart';
 import '../../services/export_service.dart';
 import '../../services/ministerio_service.dart';
 import '../../services/pessoa_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 import '../../widgets/common.dart';
 import '../../widgets/export_menu.dart';
 import '../../widgets/filter_search.dart';
@@ -138,9 +138,11 @@ class _VoluntariosScreenState extends State<VoluntariosScreen> {
                       label: Text(_filtroLabel(f)),
                       selected: _filtro == f,
                       onSelected: (_) => setState(() => _filtro = f),
-                      selectedColor: AppColors.black,
-                      labelStyle: TextStyle(
-                        color: _filtro == f ? AppColors.white : AppColors.black,
+                      selectedColor: context.brand.primary,
+                      labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: _filtro == f
+                            ? context.brand.onPrimary
+                            : context.brand.textPrimary,
                       ),
                     ),
                 ],

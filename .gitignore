@@ -48,3 +48,6 @@ app.*.map.json
 .widget_preview/
 AGENTS.md
 CLAUDE.md
+
+.superpowers/
+.playwright-mcp/

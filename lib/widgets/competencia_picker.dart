@@ -13,7 +13,9 @@ List<int> anosCompetencia(int selecionado) {
   final now = DateTime.now();
   final parts = competencia.split('-');
   final year = int.tryParse(parts[0]) ?? now.year;
-  final month = parts.length > 1 ? int.tryParse(parts[1]) ?? now.month : now.month;
+  final month = parts.length > 1
+      ? int.tryParse(parts[1]) ?? now.month
+      : now.month;
   return (year, month);
 }
 
@@ -56,7 +58,10 @@ Future<String?> pickCompetencia(BuildContext context, String atual) async {
           },
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, (year, month)),
             child: const Text('Aplicar'),

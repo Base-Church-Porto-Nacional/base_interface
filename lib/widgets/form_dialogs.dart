@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/models.dart';
+import '../theme/brand_colors.dart';
 
 class PessoaFormDialog extends StatefulWidget {
   const PessoaFormDialog({
@@ -84,7 +85,10 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty) return;
@@ -178,35 +182,47 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
               decoration: const InputDecoration(labelText: 'Tipo'),
               items: [
                 for (final t in MinisterioTipo.values)
-                  DropdownMenuItem(value: t, child: Text(ministerioTipoLabel(t))),
+                  DropdownMenuItem(
+                    value: t,
+                    child: Text(ministerioTipoLabel(t)),
+                  ),
               ],
-              onChanged: (v) => setState(() => _tipo = v ?? MinisterioTipo.geral),
+              onChanged: (v) =>
+                  setState(() => _tipo = v ?? MinisterioTipo.geral),
             ),
             const SizedBox(height: 12),
             if (widget.bases.isNotEmpty) ...[
               DropdownButtonFormField<String>(
                 initialValue: _baseMinisterialId ?? '',
-                decoration: const InputDecoration(labelText: 'Base ministerial'),
+                decoration: const InputDecoration(
+                  labelText: 'Base ministerial',
+                ),
                 items: [
                   const DropdownMenuItem(value: '', child: Text('—')),
                   for (final b in widget.bases)
                     DropdownMenuItem(value: b.id, child: Text(b.nome)),
                 ],
-                onChanged: (v) =>
-                    setState(() => _baseMinisterialId = (v == null || v.isEmpty) ? null : v),
+                onChanged: (v) => setState(
+                  () =>
+                      _baseMinisterialId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
             ],
             if (widget.pessoas.isNotEmpty) ...[
               DropdownButtonFormField<String>(
                 initialValue: _liderId ?? '',
-                decoration: const InputDecoration(labelText: 'Líder espiritual'),
+                decoration: const InputDecoration(
+                  labelText: 'Líder espiritual',
+                ),
                 items: [
                   const DropdownMenuItem(value: '', child: Text('—')),
                   for (final p in widget.pessoas)
                     DropdownMenuItem(value: p.id, child: Text(p.nome)),
                 ],
-                onChanged: (v) => setState(() => _liderId = (v == null || v.isEmpty) ? null : v),
+                onChanged: (v) => setState(
+                  () => _liderId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
@@ -220,7 +236,9 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
                   for (final p in widget.pessoas)
                     DropdownMenuItem(value: p.id, child: Text(p.nome)),
                 ],
-                onChanged: (v) => setState(() => _coordenadorId = (v == null || v.isEmpty) ? null : v),
+                onChanged: (v) => setState(
+                  () => _coordenadorId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
             ],
@@ -240,7 +258,10 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty) return;
@@ -282,7 +303,8 @@ class BaseMinisterialFormDialog extends StatefulWidget {
   final String title;
 
   @override
-  State<BaseMinisterialFormDialog> createState() => _BaseMinisterialFormDialogState();
+  State<BaseMinisterialFormDialog> createState() =>
+      _BaseMinisterialFormDialogState();
 }
 
 class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
@@ -331,7 +353,9 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
                   for (final p in widget.pessoas)
                     DropdownMenuItem(value: p.id, child: Text(p.nome)),
                 ],
-                onChanged: (v) => setState(() => _liderId = (v == null || v.isEmpty) ? null : v),
+                onChanged: (v) => setState(
+                  () => _liderId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
@@ -342,8 +366,9 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
                   for (final p in widget.pessoas)
                     DropdownMenuItem(value: p.id, child: Text(p.nome)),
                 ],
-                onChanged: (v) =>
-                    setState(() => _coordenadorId = (v == null || v.isEmpty) ? null : v),
+                onChanged: (v) => setState(
+                  () => _coordenadorId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
             ],
@@ -363,7 +388,10 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty) return;
@@ -443,13 +471,18 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
             const SizedBox(height: 12),
             TextField(
               controller: _adminUsername,
-              decoration: const InputDecoration(labelText: 'Usuário do admin *'),
+              decoration: const InputDecoration(
+                labelText: 'Usuário do admin *',
+              ),
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty ||
@@ -563,7 +596,10 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: () {
             if (_username.text.trim().isEmpty ||
@@ -666,7 +702,8 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
                 for (final d in DiaSemana.values)
                   DropdownMenuItem(value: d, child: Text(diaSemanaLabel(d))),
               ],
-              onChanged: (v) => setState(() => _diaSemana = v ?? DiaSemana.domingo),
+              onChanged: (v) =>
+                  setState(() => _diaSemana = v ?? DiaSemana.domingo),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -684,8 +721,9 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
                   for (final p in widget.pessoas)
                     DropdownMenuItem(value: p.id, child: Text(p.nome)),
                 ],
-                onChanged: (v) =>
-                    setState(() => _liderId = (v == null || v.isEmpty) ? null : v),
+                onChanged: (v) => setState(
+                  () => _liderId = (v == null || v.isEmpty) ? null : v,
+                ),
               ),
               const SizedBox(height: 12),
             ],
@@ -700,7 +738,7 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
                       padding: const EdgeInsets.symmetric(horizontal: 2),
                       child: Icon(
                         i <= _nota ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
+                        color: context.brand.warning,
                         size: 28,
                       ),
                     ),
@@ -724,7 +762,10 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
           onPressed: () {
             if (_nome.text.trim().isEmpty || _liderId == null) return;

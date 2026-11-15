@@ -56,7 +56,10 @@ void main() {
     });
 
     test('ignora o dia', () {
-      expect(competenciaFrom(DateTime(2026, 5, 1)), competenciaFrom(DateTime(2026, 5, 31)));
+      expect(
+        competenciaFrom(DateTime(2026, 5, 1)),
+        competenciaFrom(DateTime(2026, 5, 31)),
+      );
     });
   });
 
@@ -157,6 +160,35 @@ void main() {
     test('nome único e vazio', () {
       expect(initials('joão'), 'J');
       expect(initials('   '), '?');
+    });
+  });
+
+  group('saudacao', () {
+    test('escolhe o período do dia e usa o primeiro nome em caixa-alta', () {
+      expect(
+        saudacao(DateTime(2026, 1, 1, 8), 'Gustavo Veiga'),
+        'BOM DIA, GUSTAVO',
+      );
+      expect(
+        saudacao(DateTime(2026, 1, 1, 14), 'Gustavo Veiga'),
+        'BOA TARDE, GUSTAVO',
+      );
+      expect(
+        saudacao(DateTime(2026, 1, 1, 23), 'Gustavo Veiga'),
+        'BOA NOITE, GUSTAVO',
+      );
+    });
+
+    test('sem nome não acrescenta sufixo', () {
+      expect(saudacao(DateTime(2026, 1, 1, 3), ''), 'BOA NOITE');
+      expect(saudacao(DateTime(2026, 1, 1, 12), '  '), 'BOA TARDE');
+    });
+
+    test('limites das faixas', () {
+      expect(saudacao(DateTime(2026, 1, 1, 5), ''), 'BOM DIA');
+      expect(saudacao(DateTime(2026, 1, 1, 11), ''), 'BOM DIA');
+      expect(saudacao(DateTime(2026, 1, 1, 17), ''), 'BOA TARDE');
+      expect(saudacao(DateTime(2026, 1, 1, 18), ''), 'BOA NOITE');
     });
   });
 }

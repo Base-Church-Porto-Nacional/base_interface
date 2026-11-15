@@ -5,7 +5,7 @@ import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/pessoa_service.dart';
 import '../../services/usuario_service.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/route_access.dart';
 import '../../widgets/common.dart';
@@ -303,7 +303,7 @@ class _PessoaDetailScreenState extends State<PessoaDetailScreen> {
                         formatDate(h.dataRegistro),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
+                              color: context.brand.textSecondary,
                             ),
                       ),
                     ),
@@ -357,18 +357,18 @@ class _JornadaStep extends StatelessWidget {
                   height: 20,
                   decoration: BoxDecoration(
                     color: concluido
-                        ? AppColors.black
+                        ? context.brand.primary
                         : atual
-                            ? AppColors.white
-                            : AppColors.gray50,
+                            ? context.brand.surface
+                            : context.brand.surfaceRaised,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: concluido || atual ? AppColors.black : AppColors.borderStrong,
+                      color: concluido || atual ? context.brand.primary : context.brand.borderStrong,
                       width: atual ? 2 : 1,
                     ),
                   ),
                   child: concluido
-                      ? const Icon(Icons.check, size: 12, color: AppColors.white)
+                      ? Icon(Icons.check, size: 12, color: context.brand.onPrimary)
                       : null,
                 ),
                 if (!isLast)
@@ -376,7 +376,7 @@ class _JornadaStep extends StatelessWidget {
                     child: Container(
                       width: 1,
                       margin: const EdgeInsets.symmetric(vertical: 4),
-                      color: AppColors.border,
+                      color: context.brand.border,
                     ),
                   ),
               ],
@@ -401,7 +401,7 @@ class _JornadaStep extends StatelessWidget {
                     Text(
                       'Etapa atual',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: context.brand.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                     ),
