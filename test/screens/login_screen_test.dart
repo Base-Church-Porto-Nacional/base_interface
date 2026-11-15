@@ -43,6 +43,15 @@ void main() {
     expect(find.text('Entrar'), findsOneWidget);
   });
 
+  testWidgets('identificadorUsaTecladoDeTextoParaEmailOuTelefone', (t) async {
+    await _montar(t);
+    final campo = t.widget<TextField>(
+      find.widgetWithText(TextField, 'E-mail ou telefone'),
+    );
+    expect(campo.keyboardType, TextInputType.text);
+    expect(find.text('Esqueci minha senha'), findsOneWidget);
+  });
+
   testWidgets('largo usa selo 240 girando', (t) async {
     await _montar(t, size: const Size(1280, 800));
     final seal = t.widget<BrandSeal>(find.byType(BrandSeal));

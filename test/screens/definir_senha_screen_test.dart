@@ -5,6 +5,8 @@ import 'package:base_church/services/api_client.dart';
 import 'package:base_church/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../helpers/pump.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,7 +46,10 @@ Future<_AcessoFalso> _abrir(
         Provider<AcessoService>.value(value: acesso),
         ChangeNotifierProvider(create: (_) => AuthProvider(authService)),
       ],
-      child: const MaterialApp(home: DefinirSenhaScreen(token: 'abc')),
+      child: MaterialApp(
+        theme: brandTheme(Brightness.light),
+        home: const DefinirSenhaScreen(token: 'abc'),
+      ),
     ),
   );
   await tester.pumpAndSettle();

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../models/models.dart';
 import '../theme/brand_colors.dart';
+import 'seletor_pessoa.dart';
 
 class PessoaFormDialog extends StatefulWidget {
   const PessoaFormDialog({
@@ -94,12 +95,17 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
             if (widget.servicos != null) ...[
               const SizedBox(height: 12),
               if (widget.servicos!.isEmpty)
-                const Text('Você não lidera nenhum serviço para vincular a pessoa.')
+                const Text(
+                  'Você não lidera nenhum serviço para vincular a pessoa.',
+                )
               else
                 DropdownButtonFormField<String>(
                   initialValue: _servicoId,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: 'Serviço *', errorText: _erroServico),
+                  decoration: InputDecoration(
+                    labelText: 'Serviço *',
+                    errorText: _erroServico,
+                  ),
                   items: [
                     for (final sv in widget.servicos!)
                       DropdownMenuItem(value: sv.id, child: Text(sv.nome)),
@@ -123,19 +129,19 @@ class _PessoaFormDialogState extends State<PessoaFormDialog> {
           onPressed: widget.servicos != null && widget.servicos!.isEmpty
               ? null
               : () {
-            if (_nome.text.trim().isEmpty) return;
-            if (widget.servicos != null && _servicoId == null) {
-              setState(() => _erroServico = 'Escolha o serviço.');
-              return;
-            }
-            Navigator.pop(context, {
-              'nome': _nome.text.trim(),
-              'telefone': _telefone.text.trim(),
-              'email': _email.text.trim(),
-              'whatsapp': _whatsapp.text.trim(),
-              if (_servicoId != null) 'servicoId': _servicoId!,
-            });
-          },
+                  if (_nome.text.trim().isEmpty) return;
+                  if (widget.servicos != null && _servicoId == null) {
+                    setState(() => _erroServico = 'Escolha o serviço.');
+                    return;
+                  }
+                  Navigator.pop(context, {
+                    'nome': _nome.text.trim(),
+                    'telefone': _telefone.text.trim(),
+                    'email': _email.text.trim(),
+                    'whatsapp': _whatsapp.text.trim(),
+                    if (_servicoId != null) 'servicoId': _servicoId!,
+                  });
+                },
           child: const Text('Salvar'),
         ),
       ],
@@ -247,35 +253,19 @@ class _MinisterioFormDialogState extends State<MinisterioFormDialog> {
               const SizedBox(height: 12),
             ],
             if (widget.pessoas.isNotEmpty) ...[
-              DropdownButtonFormField<String>(
-                initialValue: _liderId ?? '',
-                decoration: const InputDecoration(
-                  labelText: 'Líder espiritual',
-                ),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final p in widget.pessoas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) => setState(
-                  () => _liderId = (v == null || v.isEmpty) ? null : v,
-                ),
+              SeletorPessoa(
+                pessoas: widget.pessoas,
+                label: 'Líder espiritual',
+                inicialId: _liderId,
+                onChanged: (v) => setState(() => _liderId = v),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _coordenadorId ?? '',
-                decoration: const InputDecoration(
-                  labelText: 'Coordenador',
-                  helperText: 'Serviço ficção do ministério, não é um papel.',
-                ),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final p in widget.pessoas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) => setState(
-                  () => _coordenadorId = (v == null || v.isEmpty) ? null : v,
-                ),
+              SeletorPessoa(
+                pessoas: widget.pessoas,
+                label: 'Coordenador',
+                helperText: 'Serviço ficção do ministério, não é um papel.',
+                inicialId: _coordenadorId,
+                onChanged: (v) => setState(() => _coordenadorId = v),
               ),
               const SizedBox(height: 12),
             ],
@@ -382,30 +372,18 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
             ),
             const SizedBox(height: 12),
             if (widget.pessoas.isNotEmpty) ...[
-              DropdownButtonFormField<String>(
-                initialValue: _liderId ?? '',
-                decoration: const InputDecoration(labelText: 'Líder'),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final p in widget.pessoas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) => setState(
-                  () => _liderId = (v == null || v.isEmpty) ? null : v,
-                ),
+              SeletorPessoa(
+                pessoas: widget.pessoas,
+                label: 'Líder',
+                inicialId: _liderId,
+                onChanged: (v) => setState(() => _liderId = v),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _coordenadorId ?? '',
-                decoration: const InputDecoration(labelText: 'Coordenador'),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final p in widget.pessoas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) => setState(
-                  () => _coordenadorId = (v == null || v.isEmpty) ? null : v,
-                ),
+              SeletorPessoa(
+                pessoas: widget.pessoas,
+                label: 'Coordenador',
+                inicialId: _coordenadorId,
+                onChanged: (v) => setState(() => _coordenadorId = v),
               ),
               const SizedBox(height: 12),
             ],
@@ -448,7 +426,11 @@ class _BaseMinisterialFormDialogState extends State<BaseMinisterialFormDialog> {
 }
 
 class FilialFormDialog extends StatefulWidget {
-  const FilialFormDialog({super.key, required this.pessoas, this.excluirIds = const {}});
+  const FilialFormDialog({
+    super.key,
+    required this.pessoas,
+    this.excluirIds = const {},
+  });
 
   final List<Pessoa> pessoas;
 
@@ -472,7 +454,8 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
   /// Só pessoas ativas e elegíveis (inativas e excluídas o servidor recusa).
   late final List<Pessoa> _elegiveis = [
     for (final p in widget.pessoas)
-      if (p.status == PessoaStatus.ativo && !widget.excluirIds.contains(p.id)) p,
+      if (p.status == PessoaStatus.ativo && !widget.excluirIds.contains(p.id))
+        p,
   ];
 
   @override
@@ -530,7 +513,10 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
             const SizedBox(height: 12),
             SegmentedButton<bool>(
               segments: const [
-                ButtonSegment(value: false, label: Text('Pessoa já cadastrada')),
+                ButtonSegment(
+                  value: false,
+                  label: Text('Pessoa já cadastrada'),
+                ),
                 ButtonSegment(value: true, label: Text('Nova pessoa')),
               ],
               selected: {_novaPessoa},
@@ -542,19 +528,85 @@ class _FilialFormDialogState extends State<FilialFormDialog> {
               }),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _adminEmail,
-              decoration: const InputDecoration(labelText: 'E-mail do admin *'),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _adminUsername,
-              decoration: const InputDecoration(
-                labelText: 'Usuário do admin *',
+            if (!_novaPessoa)
+              SeletorPessoa(
+                pessoas: _elegiveis,
+                label: 'Pastor *',
+                onChanged: (v) => setState(() => _pastorId = v),
+              )
+            else ...[
+              TextField(
+                controller: _pastorNome,
+                decoration: const InputDecoration(
+                  labelText: 'Nome do pastor *',
+                ),
               ),
-            ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _pastorEmail,
+                decoration: const InputDecoration(labelText: 'E-mail'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _pastorWhatsapp,
+                decoration: const InputDecoration(labelText: 'WhatsApp'),
+                keyboardType: TextInputType.phone,
+              ),
+              if (_erro != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    _erro!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+            ],
           ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(onPressed: _criar, child: const Text('Criar')),
+      ],
+    );
+  }
+}
+
+/// Escolha do novo pastor entre as pessoas ativas da própria igreja (sem o atual).
+class TrocarPastorDialog extends StatefulWidget {
+  const TrocarPastorDialog({super.key, required this.pessoas, this.atualId});
+
+  final List<Pessoa> pessoas;
+  final String? atualId;
+
+  @override
+  State<TrocarPastorDialog> createState() => _TrocarPastorDialogState();
+}
+
+class _TrocarPastorDialogState extends State<TrocarPastorDialog> {
+  String? _id;
+
+  late final List<Pessoa> _elegiveis = [
+    for (final p in widget.pessoas)
+      if (p.id != widget.atualId && p.status == PessoaStatus.ativo) p,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Trocar pastor'),
+      content: SizedBox(
+        width: 400,
+        child: SeletorPessoa(
+          pessoas: _elegiveis,
+          label: 'Novo pastor *',
+          onChanged: (v) => setState(() => _id = v),
         ),
       ),
       actions: [
@@ -596,7 +648,8 @@ class PapeisDialog extends StatefulWidget {
 
   /// Cria um papel customizado e devolve a lista atualizada de customizados.
   /// Só usado com `podeCustom`; erros do servidor aparecem no diálogo.
-  final Future<List<String>> Function(String nome, bool podeLancarContagem)? onCriarPapel;
+  final Future<List<String>> Function(String nome, bool podeLancarContagem)?
+  onCriarPapel;
 
   @override
   State<PapeisDialog> createState() => _PapeisDialogState();
@@ -611,9 +664,9 @@ class _PapeisDialogState extends State<PapeisDialog> {
   String? _erroNovo;
 
   List<String> get _gerenciaveis => [
-        if (widget.podeGestao) ...PapeisDialog.papeisGestao,
-        if (widget.podeCustom) ..._customizados,
-      ];
+    if (widget.podeGestao) ...PapeisDialog.papeisGestao,
+    if (widget.podeCustom) ..._customizados,
+  ];
 
   bool get _podeCriar => widget.podeCustom && widget.onCriarPapel != null;
 
@@ -650,7 +703,9 @@ class _PapeisDialogState extends State<PapeisDialog> {
       });
     } catch (e) {
       if (mounted) {
-        setState(() => _erroNovo = e.toString().replaceFirst('Exception: ', ''));
+        setState(
+          () => _erroNovo = e.toString().replaceFirst('Exception: ', ''),
+        );
       }
     } finally {
       if (mounted) setState(() => _criando = false);
@@ -827,17 +882,15 @@ class _SmallGroupFormDialogState extends State<SmallGroupFormDialog> {
             ),
             const SizedBox(height: 12),
             if (widget.pessoas.isNotEmpty) ...[
-              DropdownButtonFormField<String>(
-                initialValue: _liderId ?? '',
-                decoration: const InputDecoration(labelText: 'Líder *'),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  for (final p in widget.pessoas)
-                    DropdownMenuItem(value: p.id, child: Text(p.nome)),
-                ],
-                onChanged: (v) => setState(
-                  () => _liderId = (v == null || v.isEmpty) ? null : v,
-                ),
+              SeletorPessoa(
+                pessoas: widget.pessoas,
+                label: 'Líder *',
+                inicialId: _liderId,
+                errorText: _erroLider,
+                onChanged: (v) => setState(() {
+                  _liderId = v;
+                  if (v != null) _erroLider = null;
+                }),
               ),
               const SizedBox(height: 12),
             ],
@@ -923,10 +976,12 @@ class AdicionarPessoaExistenteDialog extends StatefulWidget {
   final Future<void> Function(String pessoaId, String servicoId) vincular;
 
   @override
-  State<AdicionarPessoaExistenteDialog> createState() => _AdicionarPessoaExistenteDialogState();
+  State<AdicionarPessoaExistenteDialog> createState() =>
+      _AdicionarPessoaExistenteDialogState();
 }
 
-class _AdicionarPessoaExistenteDialogState extends State<AdicionarPessoaExistenteDialog> {
+class _AdicionarPessoaExistenteDialogState
+    extends State<AdicionarPessoaExistenteDialog> {
   final _busca = TextEditingController();
   Timer? _debounce;
   List<PessoaResumo> _resultados = const [];
@@ -965,7 +1020,8 @@ class _AdicionarPessoaExistenteDialogState extends State<AdicionarPessoaExistent
       final r = await widget.buscar(termo);
       if (mounted) setState(() => _resultados = r);
     } catch (e) {
-      if (mounted) setState(() => _erro = e.toString().replaceFirst('Exception: ', ''));
+      if (mounted)
+        setState(() => _erro = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _buscando = false);
     }
@@ -983,7 +1039,8 @@ class _AdicionarPessoaExistenteDialogState extends State<AdicionarPessoaExistent
       await widget.vincular(pessoa.id, servicoId);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) setState(() => _erro = e.toString().replaceFirst('Exception: ', ''));
+      if (mounted)
+        setState(() => _erro = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _salvando = false);
     }
@@ -1019,7 +1076,9 @@ class _AdicionarPessoaExistenteDialogState extends State<AdicionarPessoaExistent
                     title: Text(r.nome),
                     onTap: () => setState(() => _pessoa = r),
                   ),
-                if (!_buscando && _busca.text.trim().length >= 2 && _resultados.isEmpty)
+                if (!_buscando &&
+                    _busca.text.trim().length >= 2 &&
+                    _resultados.isEmpty)
                   const Padding(
                     padding: EdgeInsets.only(top: 8),
                     child: Text('Nenhuma pessoa encontrada.'),
@@ -1034,7 +1093,9 @@ class _AdicionarPessoaExistenteDialogState extends State<AdicionarPessoaExistent
                   ),
                 ),
                 if (servicos.isEmpty)
-                  const Text('Este ministério ainda não tem serviços para vincular.')
+                  const Text(
+                    'Este ministério ainda não tem serviços para vincular.',
+                  )
                 else
                   DropdownButtonFormField<String>(
                     key: const Key('servicoPessoaExistente'),
@@ -1050,16 +1111,26 @@ class _AdicionarPessoaExistenteDialogState extends State<AdicionarPessoaExistent
               if (_erro != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(_erro!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  child: Text(
+                    _erro!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
                 ),
             ],
           ),
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         FilledButton(
-          onPressed: _salvando || _pessoa == null || _servicoId == null ? null : _adicionar,
+          onPressed: _salvando || _pessoa == null || _servicoId == null
+              ? null
+              : _adicionar,
           child: const Text('Adicionar'),
         ),
       ],

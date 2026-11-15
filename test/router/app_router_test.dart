@@ -7,6 +7,8 @@ import 'package:base_church/services/api_client.dart';
 import 'package:base_church/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../helpers/pump.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,11 +32,13 @@ Future<void> _abrir(WidgetTester tester, {String? rotaInicial}) async {
         ChangeNotifierProvider.value(value: auth),
       ],
       child: MaterialApp.router(
+        theme: brandTheme(Brightness.light),
         routerConfig: createRouter(auth, rotaInicial: rotaInicial),
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
 }
 
 void main() {

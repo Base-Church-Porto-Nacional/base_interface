@@ -3,6 +3,8 @@ import 'package:base_church/widgets/form_dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/pump.dart';
+
 const _pastor = Pessoa(
   id: 'p1',
   nome: 'Ana Costa',
@@ -34,6 +36,7 @@ Future<void> _abrirDialogo<T>(
 ) async {
   await tester.pumpWidget(
     MaterialApp(
+      theme: brandTheme(Brightness.light),
       home: Builder(
         builder: (context) => Scaffold(
           body: TextButton(
@@ -56,6 +59,7 @@ Future<Map<String, dynamic>?> _abrir(
 ) async {
   await tester.pumpWidget(
     MaterialApp(
+      theme: brandTheme(Brightness.light),
       home: Builder(
         builder: (context) => Scaffold(
           body: TextButton(

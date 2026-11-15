@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../services/acesso_service.dart';
 import '../../services/api_client.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 
 const _mensagemEnviado =
     'Se houver uma conta com esse contato, enviamos um link pelo WhatsApp. '
@@ -55,7 +55,7 @@ class _EsqueciSenhaScreenState extends State<EsqueciSenhaScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.brand.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

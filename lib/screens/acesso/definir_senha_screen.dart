@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/acesso_service.dart';
 import '../../services/api_client.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/brand_colors.dart';
 
 const _mensagemLinkExpirado =
     'Este link expirou ou já foi usado. Peça um novo convite.';
@@ -120,7 +120,7 @@ class _DefinirSenhaScreenState extends State<DefinirSenhaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.brand.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
