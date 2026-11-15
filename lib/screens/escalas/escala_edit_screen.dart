@@ -10,6 +10,8 @@ import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
+import '../../widgets/competencia_picker.dart';
+import '../../widgets/escala_status_badge.dart';
 
 class EscalaEditScreen extends StatefulWidget {
   const EscalaEditScreen({super.key, required this.escalaId});
@@ -69,12 +71,6 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
     } catch (_) {}
   }
 
-  bool _podeEditar(AuthUser? user) {
-    final e = _escala;
-    if (e == null || e.status == EscalaStatus.finalizada) return false;
-    return podeGerirEscalas(user);
-  }
-
   List<String> get _datasDisponiveis {
     final e = _escala;
     if (e == null) return [];
@@ -86,9 +82,7 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
     for (final i in e.itens) {
       if (i.data.isNotEmpty) set.add(i.data);
     }
-    final parts = e.competencia.split('-');
-    final y = int.tryParse(parts[0]) ?? 2026;
-    final m = int.tryParse(parts.length > 1 ? parts[1] : '1') ?? 1;
+    final (y, m) = partesCompetencia(e.competencia);
     for (final d in sundaysInMonth(y, m)) {
       set.add(isoDate(d));
     }
@@ -193,7 +187,6 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
       await context.read<EscalaService>().addServico(
             widget.escalaId,
             servicoId: result.$1.servicoId,
-            servicoNome: result.$1.nome.split(' · ').last,
             quantidadeNecessaria: result.$2,
           );
       await _reload();
@@ -260,7 +253,6 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
             widget.escalaId,
             pessoaId: escolhido.pessoaId,
             servicoId: servico.servicoId ?? '',
-            servicoNome: servico.servicoNome,
             data: _data,
           );
       await _reload();
@@ -341,7 +333,6 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
             widget.escalaId,
             v.id,
             pessoaId: escolhido.pessoaId,
-            pessoaNome: escolhido.pessoaNome,
           );
       await _reload();
     } catch (e) {
@@ -365,7 +356,7 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
 
   void _snack(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    showSnack(context, message);
   }
 
   @override
@@ -376,7 +367,7 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
     }
     final e = _escala!;
     final user = context.watch<AuthProvider>().user;
-    if (!_podeEditar(user)) {
+    if (!podeEditarEscala(user, _escala)) {
       return const ErrorView(message: 'Você não pode editar esta escala.');
     }
     final datas = _datasDisponiveis;
@@ -504,22 +495,9 @@ class _EscalaEditScreenState extends State<EscalaEditScreen> {
                 child: MobileListTile(
                   title: v.pessoaNome ?? '—',
                   subtitle: '${escalaItemStatusLabel(v.status)}${v.data != null ? ' · ${formatDate(v.data!)}' : ''}',
-                  trailing: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      StatusBadge(
-                        label: v.status.name.toUpperCase(),
-                        success: v.status == EscalaItemStatus.confirmado,
-                      ),
-                      if (v.aprovadoPeloVoluntario) ...[
-                        const SizedBox(height: 4),
-                        const StatusBadge(
-                          label: 'APROVADO PELO VOLUNTÁRIO',
-                          success: true,
-                        ),
-                      ],
-                    ],
+                  trailing: EscalaItemStatusBadge(
+                    status: v.status,
+                    aprovadoPeloVoluntario: v.aprovadoPeloVoluntario,
                   ),
                   actions: [
                     TextButton.icon(

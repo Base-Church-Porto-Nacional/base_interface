@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/common.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,8 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final message = auth.error;
       if (!mounted || message == null) return;
       auth.error = null;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      showSnack(context, message);
     });
   }
 
@@ -41,8 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.read<AuthProvider>();
     final ok = await auth.login(_userController.text, _passController.text);
     if (!ok && mounted && auth.error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(auth.error!)));
+      showSnack(context, auth.error!);
     }
   }
 

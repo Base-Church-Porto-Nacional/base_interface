@@ -27,7 +27,7 @@ class AniversarioService {
 
   Future<EnvioAniversarioResumo> enviarHoje({required String igrejaId}) async {
     final json =
-        await _api.post('$_base/enviar', null, true, {'igrejaId': igrejaId})
+        await _api.post('$_base/enviar', query: {'igrejaId': igrejaId})
             as Map<String, dynamic>;
     return _mapResumo(json);
   }

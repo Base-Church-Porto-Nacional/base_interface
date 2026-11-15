@@ -58,7 +58,7 @@ class IgrejaService {
             'email': ?pastorEmail,
             'whatsapp': ?pastorWhatsapp,
           };
-    final json = await _api.post('/igrejas/$matrizId/filiais', {
+    final json = await _api.post('/igrejas/$matrizId/filiais', body: {
       'nome': nome,
       'pastor': pastor,
     }) as Map<String, dynamic>;

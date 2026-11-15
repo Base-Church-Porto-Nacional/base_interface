@@ -22,7 +22,7 @@ class EscalaService {
   }
 
   Future<Escala> create(Escala escala) async {
-    final json = await _api.post('/escalas', {
+    final json = await _api.post('/escalas', body: {
       'titulo': escala.titulo,
       'descricao': escala.descricao,
       'competencia': escala.competencia,
@@ -78,10 +78,9 @@ class EscalaService {
   Future<EscalaServico> addServico(
     String id, {
     required String servicoId,
-    required String servicoNome,
     int quantidadeNecessaria = 1,
   }) async {
-    final json = await _api.post('/escalas/$id/servicos', {
+    final json = await _api.post('/escalas/$id/servicos', body: {
       'servicoId': servicoId,
       'quantidadeNecessaria': quantidadeNecessaria,
     }) as Map<String, dynamic>;
@@ -107,13 +106,12 @@ class EscalaService {
     String id, {
     required String pessoaId,
     required String servicoId,
-    String? servicoNome,
     String? observacoes,
     String? data,
     String? eventoId,
     String? horario,
   }) async {
-    final json = await _api.post('/escalas/$id/voluntarios', {
+    final json = await _api.post('/escalas/$id/voluntarios', body: {
       'pessoaId': pessoaId,
       'servicoId': servicoId,
       'observacoes': observacoes,
@@ -128,9 +126,7 @@ class EscalaService {
     String id,
     String designacaoId, {
     String? pessoaId,
-    String? pessoaNome,
     String? servicoId,
-    String? servicoNome,
     String? observacoes,
   }) async {
     final body = <String, dynamic>{
@@ -163,9 +159,8 @@ class EscalaService {
     String designacaoId, {
     required EscalaItemStatus status,
     String? observacoes,
-    String? pessoaId,
   }) async {
-    final json = await _api.post('/escalas/$id/voluntarios/$designacaoId/resposta', {
+    final json = await _api.post('/escalas/$id/voluntarios/$designacaoId/resposta', body: {
       'status': escalaItemStatusToString(status),
       'observacoes': observacoes,
     }) as Map<String, dynamic>;
@@ -197,17 +192,10 @@ class EscalaService {
     return _mapSugestao(json);
   }
 
-  Future<String> automatizarProximoMes() async {
-    final text = await _api.post('/escalas/automacao/proximo-mes') as String;
-    return text;
-  }
-
   Future<List<VisaoMensalEscala>> visaoMensal({
     String? igrejaId,
     String? competencia,
     String? ministerioId,
-    String? pessoaId,
-    bool administrador = false,
   }) async {
     final query = <String, String>{
       'igrejaId': ?igrejaId,
@@ -320,7 +308,7 @@ class EscalaService {
 
   DiaDisponivel _mapDiaDisponivel(dynamic e) {
     return DiaDisponivel(
-      diaSemana: diaSemanaFromString(e['diaSemana'] as String? ?? 'DOMINGO'),
+      diaSemana: diaSemanaFromApi(e['diaSemana'] as String? ?? 'DOMINGO'),
       horaInicio: e['horaInicio'] as String?,
       horaFim: e['horaFim'] as String?,
       disponivel: e['disponivel'] as bool? ?? true,

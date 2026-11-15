@@ -19,7 +19,7 @@ class MinisterioService {
     required String pessoaId,
     required String servicoId,
   }) async {
-    await _api.post('/voluntarios', {
+    await _api.post('/voluntarios', body: {
       'pessoaId': pessoaId,
       'servicoId': servicoId,
     });
@@ -37,13 +37,10 @@ class MinisterioService {
     required bool ativo,
     MinisterioTipo? tipo,
     String? liderPessoaId,
-    String? liderNome,
     String? coordenadorPessoaId,
-    String? coordenadorNome,
     String? anotacoes,
     String? ordem,
     String? baseMinisterialId,
-    String? baseMinisterialNome,
   }) async {
     final json = await _api.put('/ministerios/$id', {
       'nome': nome,
@@ -66,13 +63,10 @@ class MinisterioService {
     String? descricao,
     bool ativo = true,
     String? liderPessoaId,
-    String? liderNome,
     String? coordenadorPessoaId,
-    String? coordenadorNome,
     String? baseMinisterialId,
-    String? baseMinisterialNome,
   }) async {
-    final json = await _api.post('/ministerios', {
+    final json = await _api.post('/ministerios', body: {
       'nome': nome,
       'descricao': descricao,
       'ativo': ativo,

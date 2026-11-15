@@ -10,6 +10,11 @@ bool podeGerirEscalas(AuthUser? user) =>
     _tem(user, Capacidade.escalasGerir) ||
     (user?.permissoes.lideraAlgo ?? false);
 
+bool podeEditarEscala(AuthUser? user, Escala? escala) {
+  if (escala == null || escala.status == EscalaStatus.finalizada) return false;
+  return podeGerirEscalas(user);
+}
+
 /// Serviços reais (não fictícios) dos ministérios que o usuário lidera.
 List<Servico> servicosLiderados(AuthUser? user, List<Ministerio> ministerios) {
   if (user == null) return const [];

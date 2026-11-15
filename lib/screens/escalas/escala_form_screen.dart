@@ -13,6 +13,7 @@ import '../../utils/format.dart';
 import '../../utils/permissions.dart';
 import '../../widgets/common.dart';
 import '../../widgets/seletor_pessoa.dart';
+import '../../widgets/competencia_picker.dart';
 
 class EscalaFormScreen extends StatefulWidget {
   const EscalaFormScreen({super.key, this.competencia});
@@ -54,10 +55,10 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
     _dataEvento = TextEditingController();
     _horaInicio = TextEditingController(text: '18:00:00');
     _horaFim = TextEditingController(text: '20:00:00');
-    final raw = widget.competencia ?? competenciaFrom(DateTime(2026, 8));
-    final parts = raw.split('-');
-    _year = int.tryParse(parts[0]) ?? 2026;
-    _month = int.tryParse(parts.length > 1 ? parts[1] : '8') ?? 8;
+    final (year, month) =
+        partesCompetencia(widget.competencia ?? competenciaFrom(DateTime.now()));
+    _year = year;
+    _month = month;
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
@@ -186,9 +187,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
     if (igreja == null) return;
 
     if (_tipo == EscalaTipo.ministerio && _ministerioId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione o ministério.')),
-      );
+      showSnack(context, 'Selecione o ministério.');
       return;
     }
 
@@ -213,9 +212,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
       igrejaId: igreja.id,
     );
     if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Você não pode criar este tipo de escala.')),
-      );
+      showSnack(context, 'Você não pode criar este tipo de escala.');
       return;
     }
 
@@ -233,9 +230,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
       );
     }
     if (servicos.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione ao menos um serviço com quantidade.')),
-      );
+      showSnack(context, 'Selecione ao menos um serviço com quantidade.');
       return;
     }
 
@@ -279,9 +274,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
           );
       if (mounted) context.pop();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -355,7 +348,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
                         initialValue: _year,
                         decoration: const InputDecoration(labelText: 'Ano'),
                         items: [
-                          for (var y = 2025; y <= 2028; y++)
+                          for (final y in anosCompetencia(_year))
                             DropdownMenuItem(value: y, child: Text('$y')),
                         ],
                         onChanged: (v) {
@@ -494,10 +487,7 @@ class _EscalaFormScreenState extends State<EscalaFormScreen> {
         Text('Serviços necessários', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         if (_servicosDisponiveis.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: Text('Nenhum serviço disponível.')),
-          )
+          const EmptyView(message: 'Nenhum serviço disponível.')
         else
           for (final sel in _servicosDisponiveis)
             Padding(

@@ -21,16 +21,16 @@ class AcessoService {
 
   /// `POST /auth/definir-senha`. Devolve o LoginResponse.
   Future<Map<String, dynamic>> definirSenha(String token, String senha) async {
-    return await _api.post('/auth/definir-senha', {
+    return await _api.post('/auth/definir-senha', body: {
       'token': token,
       'senha': senha,
-    }, false) as Map<String, dynamic>;
+    }, auth: false) as Map<String, dynamic>;
   }
 
   /// `POST /auth/esqueci-senha`: o servidor responde 204 sempre.
   Future<void> esqueciSenha(String identificador) async {
-    await _api.post('/auth/esqueci-senha', {
+    await _api.post('/auth/esqueci-senha', body: {
       'identificador': identificador,
-    }, false);
+    }, auth: false);
   }
 }

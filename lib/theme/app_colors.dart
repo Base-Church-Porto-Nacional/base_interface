@@ -12,7 +12,5 @@ abstract final class AppColors {
   static const gray50 = Color(0xFFF5F5F5);
   static const success = Color(0xFF167A45);
   static const successBg = Color(0xFFE7F4EC);
-  static const warning = Color(0xFF8A6500);
   static const danger = Color(0xFFB42318);
-  static const dangerBg = Color(0xFFFCE8E6);
 }

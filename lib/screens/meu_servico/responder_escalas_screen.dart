@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/escala_service.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../widgets/common.dart';
+import '../../widgets/escala_status_badge.dart';
 import '../../widgets/filter_search.dart';
 
 class ResponderEscalasScreen extends StatefulWidget {
@@ -56,7 +58,9 @@ class _ResponderEscalasScreenState extends State<ResponderEscalasScreen> {
     for (final e in _escalas) {
       if (e.status != EscalaStatus.emAndamento) continue;
       for (final v in e.voluntarios) {
-        if (v.pessoaId != user?.pessoaId) continue;
+        if (v.pessoaId != user?.pessoaId || v.status != EscalaItemStatus.pendente) {
+          continue;
+        }
         result.add((e, v));
       }
     }
@@ -87,11 +91,10 @@ class _ResponderEscalasScreenState extends State<ResponderEscalasScreen> {
             escala.id,
             v.id,
             status: EscalaItemStatus.confirmado,
-            pessoaId: v.pessoaId,
           );
       await _load();
     } catch (e) {
-      _snack('$e');
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _actionLoading = false);
     }
@@ -102,7 +105,7 @@ class _ResponderEscalasScreenState extends State<ResponderEscalasScreen> {
     if (motivo == null || !mounted) return;
     final texto = motivo.trim();
     if (texto.isEmpty) {
-      _snack('Informe o motivo da recusa.');
+      showSnack(context, 'Informe o motivo da recusa.');
       return;
     }
     setState(() => _actionLoading = true);
@@ -112,11 +115,10 @@ class _ResponderEscalasScreenState extends State<ResponderEscalasScreen> {
             v.id,
             status: EscalaItemStatus.recusado,
             observacoes: texto,
-            pessoaId: v.pessoaId,
           );
       await _load();
     } catch (e) {
-      _snack('$e');
+      if (mounted) showSnack(context, e);
     } finally {
       if (mounted) setState(() => _actionLoading = false);
     }
@@ -148,135 +150,105 @@ class _ResponderEscalasScreenState extends State<ResponderEscalasScreen> {
     );
   }
 
-  void _snack(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final pendentes = _pendentes;
-    final respondidas = _respondidas;
-
     return Column(
       children: [
         const SectionTabs(
           currentPath: '/meu-servico/responder',
-          tabs: [
-            ('/meu-servico', 'Visão geral'),
-            ('/meu-servico/responder', 'Responder escalas'),
-            ('/perfil/disponibilidade', 'Disponibilidade'),
-          ],
+          tabs: meuServicoTabs,
         ),
-        Expanded(
-          child: _loading
-              ? const LoadingView()
-              : _error != null
-                  ? ErrorView(message: _error!, onRetry: _load)
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        const PageHeader(
-                          title: 'Responder escalas',
-                          description:
-                              'Confirmar ou recusar participação nas escalas já lançadas (EM_ANDAMENTO).',
-                        ),
-                        if (pendentes.isEmpty && respondidas.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(24),
-                            child: Center(
-                              child: Text('Nenhuma escala lançada aguardando sua resposta.'),
-                            ),
-                          ),
-                        if (pendentes.isNotEmpty) ...[
-                          Text(
-                            'Aguardando resposta',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          for (final (escala, v) in pendentes)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: MobileListTile(
-                                title: v.pessoaNome ?? 'Você',
-                                subtitle: [
-                                  escala.titulo,
-                                  if (v.servicoNome != null) v.servicoNome!,
-                                  if (v.data != null) formatDate(v.data!),
-                                ].join(' · '),
-                                trailing: StatusBadge(
-                                  label: escalaItemStatusLabel(v.status).toUpperCase(),
-                                  success: v.status == EscalaItemStatus.confirmado,
-                                ),
-                                actions: [
-                                  TextButton.icon(
-                                    onPressed: _actionLoading
-                                        ? null
-                                        : () => _confirmar(escala, v),
-                                    icon: const Icon(Icons.check, size: 16),
-                                    label: const Text('Confirmar'),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: AppColors.success,
-                                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ),
-                                  TextButton.icon(
-                                    onPressed: _actionLoading
-                                        ? null
-                                        : () => _recusar(escala, v),
-                                    icon: const Icon(Icons.close, size: 16),
-                                    label: const Text('Recusar'),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: AppColors.danger,
-                                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          const SizedBox(height: 16),
-                        ],
-                        if (respondidas.isNotEmpty) ...[
-                          Text(
-                            'Respostas enviadas',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          for (final (escala, v) in respondidas)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: MobileListTile(
-                                title: v.pessoaNome ?? 'Você',
-                                subtitle: [
-                                  escala.titulo,
-                                  if (v.servicoNome != null) v.servicoNome!,
-                                  if (v.data != null) formatDate(v.data!),
-                                ].join(' · '),
-                                trailing: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    StatusBadge(
-                                      label: escalaItemStatusLabel(v.status).toUpperCase(),
-                                      success: v.status == EscalaItemStatus.confirmado,
-                                    ),
-                                    if (v.aprovadoPeloVoluntario) ...[
-                                      const SizedBox(height: 4),
-                                      const StatusBadge(
-                                        label: 'APROVADO PELO VOLUNTÁRIO',
-                                        success: true,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                        ],
-                      ],
+        Expanded(child: _body()),
+      ],
+    );
+  }
+
+  Widget _body() {
+    if (_loading) return const LoadingView();
+    if (_error != null) return ErrorView(message: _error!, onRetry: _load);
+    final pendentes = _pendentes;
+    final respondidas = _respondidas;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const PageHeader(
+          title: 'Responder escalas',
+          description:
+              'Confirmar ou recusar participação nas escalas já lançadas (EM_ANDAMENTO).',
+        ),
+        if (pendentes.isEmpty && respondidas.isEmpty)
+          const EmptyView(message: 'Nenhuma escala lançada aguardando sua resposta.'),
+        if (pendentes.isNotEmpty) ...[
+          Text(
+            'Aguardando resposta',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          for (final (escala, v) in pendentes)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: MobileListTile(
+                title: v.pessoaNome ?? 'Você',
+                subtitle: [
+                  escala.titulo,
+                  if (v.servicoNome != null) v.servicoNome!,
+                  if (v.data != null) formatDate(v.data!),
+                ].join(' · '),
+                trailing: EscalaItemStatusBadge(status: v.status),
+                actions: [
+                  TextButton.icon(
+                    onPressed: _actionLoading
+                        ? null
+                        : () => _confirmar(escala, v),
+                    icon: const Icon(Icons.check, size: 16),
+                    label: const Text('Confirmar'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.success,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      visualDensity: VisualDensity.compact,
                     ),
-        ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _actionLoading
+                        ? null
+                        : () => _recusar(escala, v),
+                    icon: const Icon(Icons.close, size: 16),
+                    label: const Text('Recusar'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.danger,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 16),
+        ],
+        if (respondidas.isNotEmpty) ...[
+          Text(
+            'Respostas enviadas',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          for (final (escala, v) in respondidas)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: MobileListTile(
+                title: v.pessoaNome ?? 'Você',
+                subtitle: [
+                  escala.titulo,
+                  if (v.servicoNome != null) v.servicoNome!,
+                  if (v.data != null) formatDate(v.data!),
+                ].join(' · '),
+                trailing: EscalaItemStatusBadge(
+                  status: v.status,
+                  aprovadoPeloVoluntario: v.aprovadoPeloVoluntario,
+                ),
+              ),
+            ),
+        ],
       ],
     );
   }

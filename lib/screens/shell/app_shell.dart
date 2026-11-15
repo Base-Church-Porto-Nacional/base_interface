@@ -7,6 +7,7 @@ import '../../navigation/nav_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/format.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child});
@@ -59,7 +60,7 @@ class AppShell extends StatelessWidget {
               radius: 14,
               backgroundColor: AppColors.white,
               child: Text(
-                _initials(auth.user?.nome ?? ''),
+                initials(auth.user?.nome ?? ''),
                 style: const TextStyle(
                   color: AppColors.black,
                   fontSize: 11,
@@ -155,11 +156,4 @@ class AppShell extends StatelessWidget {
   bool _isActive(String path, String target) =>
       path == target || path.startsWith('$target/');
 
-  String _initials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
-    }
-    return name.isNotEmpty ? name[0].toUpperCase() : '?';
-  }
 }

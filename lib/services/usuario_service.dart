@@ -21,24 +21,24 @@ class UsuarioService {
 
   /// Cria a conta CONVIDADO (ou reenvia o convite) e devolve o link de acesso.
   Future<LinkAcesso> convidar(String pessoaId) async {
-    final json = await _api.post('/pessoas/$pessoaId/convite', {}) as Map<String, dynamic>;
+    final json = await _api.post('/pessoas/$pessoaId/convite', body: const {}) as Map<String, dynamic>;
     return _link(json);
   }
 
   /// Gera link de redefinição de senha (válido por 1 hora) de conta ATIVA.
   Future<LinkAcesso> gerarRedefinicao(String usuarioId) async {
-    final json = await _api.post('/usuarios/$usuarioId/redefinicao-senha', {})
+    final json = await _api.post('/usuarios/$usuarioId/redefinicao-senha', body: const {})
         as Map<String, dynamic>;
     return _link(json);
   }
 
   Future<UsuarioConta> desativar(String usuarioId) async {
-    final json = await _api.post('/usuarios/$usuarioId/desativar', {}) as Map<String, dynamic>;
+    final json = await _api.post('/usuarios/$usuarioId/desativar', body: const {}) as Map<String, dynamic>;
     return _map(json);
   }
 
   Future<UsuarioConta> reativar(String usuarioId) async {
-    final json = await _api.post('/usuarios/$usuarioId/reativar', {}) as Map<String, dynamic>;
+    final json = await _api.post('/usuarios/$usuarioId/reativar', body: const {}) as Map<String, dynamic>;
     return _map(json);
   }
 
@@ -63,7 +63,7 @@ class UsuarioService {
     required bool podeLancarContagem,
     required String igrejaId,
   }) async {
-    final json = await _api.post('/papeis', {
+    final json = await _api.post('/papeis', body: {
       'nome': nome,
       'podeLancarContagem': podeLancarContagem,
       'igrejaId': igrejaId,

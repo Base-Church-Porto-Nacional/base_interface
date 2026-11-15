@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
 import '../../navigation/nav_config.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/export_service.dart';
@@ -33,23 +32,11 @@ class _PessoasScreenState extends State<PessoasScreen> {
   String _filtro = 'TODOS';
   bool _loading = true;
   String? _error;
-  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _load();
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    super.dispose();
-  }
-
-  void _scheduleLoad() {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 250), _load);
   }
 
   Future<void> _load() async {
@@ -124,15 +111,11 @@ class _PessoasScreenState extends State<PessoasScreen> {
         );
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(editing == null ? 'Pessoa criada.' : 'Pessoa atualizada.')),
-        );
+        showSnack(context, editing == null ? 'Pessoa criada.' : 'Pessoa atualizada.');
         _load();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) showSnack(context, e);
     }
   }
 
@@ -148,12 +131,9 @@ class _PessoasScreenState extends State<PessoasScreen> {
     final podeMutar = canCadastrarPessoas(context.watch<AuthProvider>().user);
     return Column(
       children: [
-        SectionTabs(
+        const SectionTabs(
           currentPath: '/membros/pessoas',
-          tabs: const [
-            ('/membros', 'Membros'),
-            ('/membros/pessoas', 'Pessoas'),
-          ],
+          tabs: membrosTabs,
         ),
         Expanded(
           child: ListView(
@@ -183,7 +163,7 @@ class _PessoasScreenState extends State<PessoasScreen> {
                       onChanged: (v) {
                         _search = v;
                         _page = 0;
-                        _scheduleLoad();
+                        _load();
                       },
                     ),
                   ),
@@ -193,7 +173,7 @@ class _PessoasScreenState extends State<PessoasScreen> {
                     onChanged: (v) {
                       setState(() => _filtro = v);
                       _page = 0;
-                      _scheduleLoad();
+                      _load();
                     },
                   ),
                 ],
@@ -208,10 +188,7 @@ class _PessoasScreenState extends State<PessoasScreen> {
               else if (_error != null)
                 ErrorView(message: _error!, onRetry: _load)
               else if (_items.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: Text('Nenhuma pessoa encontrada.')),
-                )
+                const EmptyView(message: 'Nenhuma pessoa encontrada.')
               else
                 ..._items.map(
                   (p) => Padding(

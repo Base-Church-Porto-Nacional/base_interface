@@ -53,7 +53,7 @@ void main() {
         comResposta(
           401,
           {'message': 'Usuário ou senha inválidos'},
-          () => api.post('/auth/login', {'username': 'a', 'senha': 'b'}, false),
+          () => api.post('/auth/login', body: {'username': 'a', 'senha': 'b'}, auth: false),
         ),
         throwsA(
           isA<ApiException>().having(
@@ -71,7 +71,7 @@ void main() {
     await expectLater(
       comResposta(400, {
         'message': 'Hora fim deve ser posterior à hora início',
-      }, () => api.post('/disponibilidades/semanal', {})),
+      }, () => api.post('/disponibilidades/semanal', body: {})),
       throwsA(
         isA<ApiException>()
             .having((e) => e.status, 'status', 400)
@@ -114,7 +114,7 @@ void main() {
     await expectLater(
       comResposta(429, {
         'message': 'Muitas tentativas de login. Tente mais tarde.',
-      }, () => api.post('/auth/login', {}, false)),
+      }, () => api.post('/auth/login', body: {}, auth: false)),
       throwsA(
         isA<ApiException>()
             .having((e) => e.status, 'status', 429)

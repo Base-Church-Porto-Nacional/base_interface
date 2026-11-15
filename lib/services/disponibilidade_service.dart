@@ -32,7 +32,7 @@ class DisponibilidadeService {
       await _api.delete('/disponibilidades/semanal/${e['id']}');
     }
     for (final janela in janelasDisponiveis(semanal)) {
-      await _api.post('/disponibilidades/semanal', {
+      await _api.post('/disponibilidades/semanal', body: {
         'pessoaId': pessoaId,
         'diaSemana': janela.dia.name.toUpperCase(),
         'horaInicio': janela.horaInicio,
@@ -48,7 +48,7 @@ class DisponibilidadeService {
     required String data,
     String? motivo,
   }) async {
-    final json = await _api.post('/disponibilidades/indisponibilidades', {
+    final json = await _api.post('/disponibilidades/indisponibilidades', body: {
       'pessoaId': pessoaId,
       'dataInicio': data,
       'dataFim': data,

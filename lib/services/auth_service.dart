@@ -28,10 +28,10 @@ class AuthService {
       throw Exception('Informe e-mail ou telefone e a senha.');
     }
 
-    final login = await _api.post('/auth/login', {
+    final login = await _api.post('/auth/login', body: {
       'identificador': identificador.trim(),
       'senha': senha,
-    }, false) as Map<String, dynamic>;
+    }, auth: false) as Map<String, dynamic>;
 
     return entrarComLogin(login);
   }

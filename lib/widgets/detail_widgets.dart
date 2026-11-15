@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../utils/format.dart';
 
 class SectionTabBar extends StatelessWidget {
   const SectionTabBar({
@@ -180,7 +181,7 @@ class PersonAvatar extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(
-        _initials(name),
+        initials(name),
         style: TextStyle(
           fontSize: size * 0.32,
           fontWeight: FontWeight.w600,
@@ -191,11 +192,4 @@ class PersonAvatar extends StatelessWidget {
     );
   }
 
-  String _initials(String value) {
-    final parts = value.trim().split(' ').where((p) => p.isNotEmpty).toList();
-    if (parts.length >= 2) {
-      return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
-    }
-    return value.isNotEmpty ? value[0].toUpperCase() : '?';
-  }
 }

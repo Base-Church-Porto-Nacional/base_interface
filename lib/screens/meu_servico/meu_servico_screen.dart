@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../navigation/section_tabs_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/igreja_context.dart';
 import '../../services/cronograma_service.dart';
 import '../../services/escala_service.dart';
 import '../../utils/format.dart';
 import '../../widgets/common.dart';
+import '../../widgets/escala_status_badge.dart';
 import '../../widgets/filter_search.dart';
 
 class MeuServicoScreen extends StatefulWidget {
@@ -56,67 +58,64 @@ class _MeuServicoScreenState extends State<MeuServicoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SectionTabs(
+          currentPath: '/meu-servico',
+          tabs: meuServicoTabs,
+        ),
+        Expanded(child: _body()),
+      ],
+    );
+  }
+
+  Widget _body() {
+    if (_loading) return const LoadingView();
+    if (_error != null) return ErrorView(message: _error!, onRetry: _load);
+
     final proximos = _eventos.take(5).toList();
     final escalasComDesignacoes = _escalas
         .where((e) => e.voluntarios.isNotEmpty || e.itens.isNotEmpty)
         .toList();
 
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.all(16),
       children: [
-        const SectionTabs(
-          currentPath: '/meu-servico',
-          tabs: [
-            ('/meu-servico', 'Visão geral'),
-            ('/meu-servico/responder', 'Responder escalas'),
-            ('/perfil/disponibilidade', 'Disponibilidade'),
-          ],
+        const PageHeader(
+          title: 'Meu serviço',
+          description: 'Eventos, cultos e as escalas em que você está.',
         ),
-        Expanded(
-          child: _loading
-              ? const LoadingView()
-              : _error != null
-                  ? ErrorView(message: _error!, onRetry: _load)
-                  : ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        const PageHeader(
-                          title: 'Meu serviço',
-                          description: 'Eventos, cultos e as escalas em que você está.',
-                        ),
-                        Text(
-                          'Próximos cultos e eventos',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        if (proximos.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 16),
-                            child: Text('Nenhum evento no período.'),
-                          )
-                        else
-                          for (final e in proximos)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: MobileListTile(
-                                title: e.titulo,
-                                subtitle:
-                                    '${formatDate(e.data)} · ${e.horaInicio} · ${tipoEventoLabel(e.tipo)}',
-                              ),
-                            ),
-                        const SizedBox(height: 8),
-                        Text('Minhas escalas', style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        if (escalasComDesignacoes.isEmpty)
-                          const Text('Você ainda não está em nenhuma escala.')
-                        else
-                          for (final e in escalasComDesignacoes)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: _EscalaCard(escala: e),
-                            ),
-                      ],
-                    ),
+        Text(
+          'Próximos cultos e eventos',
+          style: Theme.of(context).textTheme.titleMedium,
         ),
+        const SizedBox(height: 8),
+        if (proximos.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text('Nenhum evento no período.'),
+          )
+        else
+          for (final e in proximos)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: MobileListTile(
+                title: e.titulo,
+                subtitle:
+                    '${formatDate(e.data)} · ${e.horaInicio} · ${tipoEventoLabel(e.tipo)}',
+              ),
+            ),
+        const SizedBox(height: 8),
+        Text('Minhas escalas', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        if (escalasComDesignacoes.isEmpty)
+          const Text('Você ainda não está em nenhuma escala.')
+        else
+          for (final e in escalasComDesignacoes)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _EscalaCard(escala: e),
+            ),
       ],
     );
   }
@@ -149,22 +148,9 @@ class _EscalaCard extends StatelessWidget {
                 if (v.data != null) formatDate(v.data!),
                 escalaStatusLabel(escala.status),
               ].join(' · '),
-              trailing: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  StatusBadge(
-                    label: escalaItemStatusLabel(v.status).toUpperCase(),
-                    success: v.status == EscalaItemStatus.confirmado,
-                  ),
-                  if (v.aprovadoPeloVoluntario) ...[
-                    const SizedBox(height: 4),
-                    const StatusBadge(
-                      label: 'APROVADO PELO VOLUNTÁRIO',
-                      success: true,
-                    ),
-                  ],
-                ],
+              trailing: EscalaItemStatusBadge(
+                status: v.status,
+                aprovadoPeloVoluntario: v.aprovadoPeloVoluntario,
               ),
             ),
           ),
@@ -177,10 +163,7 @@ class _EscalaCard extends StatelessWidget {
                 if (i.data.isNotEmpty) formatDate(i.data),
                 escalaStatusLabel(escala.status),
               ].join(' · '),
-              trailing: StatusBadge(
-                label: escalaItemStatusLabel(i.status).toUpperCase(),
-                success: i.status == EscalaItemStatus.confirmado,
-              ),
+              trailing: EscalaItemStatusBadge(status: i.status),
             ),
           ),
       ],

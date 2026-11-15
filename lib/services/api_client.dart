@@ -53,18 +53,18 @@ class ApiClient {
         ? AppConfig.apiUrl.substring(0, AppConfig.apiUrl.length - 1)
         : AppConfig.apiUrl;
     final normalized = path.startsWith('/') ? path : '/$path';
-    return Uri.parse('$base$normalized').replace(queryParameters: query);
+    return Uri.parse('$base$normalized').replace(
+      queryParameters: query == null || query.isEmpty ? null : query,
+    );
   }
 
-  Map<String, String> _headers({bool json = true, bool auth = true}) {
-    final headers = <String, String>{
+  Map<String, String> _headers({bool auth = true}) {
+    final token = this.token;
+    return {
       'Accept': 'application/json',
-      if (json) 'Content-Type': 'application/json',
+      'Content-Type': 'application/json',
+      if (auth && token != null) 'Authorization': 'Bearer $token',
     };
-    if (auth && token != null) {
-      headers['Authorization'] = 'Bearer $token';
-    }
-    return headers;
   }
 
   Future<dynamic> get(
@@ -79,11 +79,11 @@ class ApiClient {
   }
 
   Future<dynamic> post(
-    String path, [
+    String path, {
     Object? body,
     bool auth = true,
     Map<String, String>? query,
-  ]) async {
+  }) async {
     final response = await _send(
       http.post(
         _uri(path, query),

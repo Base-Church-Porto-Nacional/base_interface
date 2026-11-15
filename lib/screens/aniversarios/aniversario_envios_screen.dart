@@ -45,7 +45,7 @@ class _AniversarioEnviosScreenState extends State<AniversarioEnviosScreen> {
       );
       if (mounted) setState(() => _items = items);
     } catch (e) {
-      if (mounted) setState(() => _error = '$e'.replaceFirst('Exception: ', ''));
+      if (mounted) setState(() => _error = '$e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -74,15 +74,15 @@ class _AniversarioEnviosScreenState extends State<AniversarioEnviosScreen> {
             ('/aniversariantes/envios', 'Envios'),
           ],
         ),
-        Expanded(
-          child: _loading
-              ? const LoadingView()
-              : _error != null
-                  ? ErrorView(message: _error!, onRetry: _load)
-                  : _corpo(),
-        ),
+        Expanded(child: _body()),
       ],
     );
+  }
+
+  Widget _body() {
+    if (_loading) return const LoadingView();
+    if (_error != null) return ErrorView(message: _error!, onRetry: _load);
+    return _corpo();
   }
 
   Widget _corpo() {
@@ -119,12 +119,7 @@ class _AniversarioEnviosScreenState extends State<AniversarioEnviosScreen> {
             ),
           ),
         if (_items.isEmpty)
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(child: Text('Nenhum envio no período.')),
-            ),
-          ),
+          const Card(child: EmptyView(message: 'Nenhum envio no período.')),
         for (final e in _items) ...[
           Card(
             child: Padding(
@@ -182,8 +177,6 @@ class _AniversarioEnviosScreenState extends State<AniversarioEnviosScreen> {
   }
 
   void _copiar(AniversarioEnvio envio) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(envio.mensagem)),
-    );
+    showSnack(context, envio.mensagem);
   }
 }
