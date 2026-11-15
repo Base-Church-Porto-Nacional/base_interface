@@ -75,7 +75,10 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 28),
             TextField(
               controller: _userController,
-              decoration: const InputDecoration(labelText: 'Usuário'),
+              decoration: const InputDecoration(
+                labelText: 'E-mail ou telefone',
+              ),
+              keyboardType: TextInputType.text,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.username],
             ),
@@ -106,6 +109,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Entrar'),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => context.go('/esqueci-senha'),
+              child: const Text('Esqueci minha senha'),
             ),
           ],
         ),

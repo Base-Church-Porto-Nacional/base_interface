@@ -8,6 +8,8 @@ import 'package:base_church/services/igreja_service.dart';
 import 'package:base_church/services/pessoa_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../helpers/pump.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -108,6 +110,7 @@ Future<_Tela> _abrir(
         ChangeNotifierProvider<IgrejaContext>(create: (_) => IgrejaContext(igrejas, prefs)),
       ],
       child: MaterialApp(
+        theme: brandTheme(Brightness.light),
         home: Scaffold(body: IgrejaDetailScreen(key: UniqueKey(), igrejaId: 'i2')),
       ),
     ),

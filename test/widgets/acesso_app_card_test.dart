@@ -5,6 +5,8 @@ import 'package:base_church/widgets/link_acesso_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../helpers/pump.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/fake_api.dart';
@@ -44,6 +46,7 @@ Future<FakeApi> abrir(
       Provider<UsuarioService>.value(
         value: UsuarioService(api),
         child: MaterialApp(
+          theme: brandTheme(Brightness.light),
           home: Scaffold(
             body: AcessoAppCard(
               pessoa: p,
@@ -270,6 +273,7 @@ void main() {
     }) async {
       await tester.pumpWidget(
         MaterialApp(
+          theme: brandTheme(Brightness.light),
           home: Scaffold(
             body: LinkAcessoDialog(
               link: 'https://app/acesso/abc',
